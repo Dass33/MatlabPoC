@@ -55,6 +55,13 @@ RUN pip install setuptools wheel && \
 
 # 9. Final App Copy
 COPY app.py .
-RUN pip install numpy matlab
+RUN pip install numpy matlab streamlit matplotlib tifffile
 
-CMD ["python", "app.py"]
+# 10. Expose Streamlit Port
+EXPOSE 8501
+
+# 11. Healthcheck
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+# 12. Run Streamlit
+CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
