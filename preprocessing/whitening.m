@@ -10,7 +10,7 @@ function X_tilde = whitening(X, options)
         case 'std_division'
 
             % global std
-            X_std_iqr = std_iqr(X(:));
+            X_std_iqr = 0.7413 * iqr(X(:));
         
             % time-std
             X_time_std_iqr = 0.7413 * iqr(X);
