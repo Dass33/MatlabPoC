@@ -1,7 +1,8 @@
-import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import streamlit as st
+
 
 def render_tracks_plot(denoised_y, final_tracks, config):
     """Helper to render the tracks plot."""
@@ -42,6 +43,7 @@ def render_tracks_plot(denoised_y, final_tracks, config):
     else:
         st.pyplot(fig, use_container_width=True)
 
+
 def render_image_tab(
     image, config, points_x=None, points_y=None, label=None, color="red"
 ):
@@ -62,6 +64,7 @@ def render_image_tab(
             st.pyplot(fig, use_container_width=True)
     else:
         st.pyplot(fig, use_container_width=True)
+
 
 def display_results(raw_data, results, config):
     """Renders the results tabs and details table."""
@@ -112,11 +115,13 @@ def display_results(raw_data, results, config):
 
     if len(det_frames) > 0:
         with st.expander("Detection Details"):
-            df = pd.DataFrame({
-                "Frame": det_frames + 1,
-                "Position": det_positions + 1,
-                "Position Refined": det_positions_refined + 1,
-                "Contrast": np.array(detections["contrast"]).flatten(),
-                "SNR": np.array(detections["snr"]).flatten(),
-            })
+            df = pd.DataFrame(
+                {
+                    "Frame": det_frames + 1,
+                    "Position": det_positions + 1,
+                    "Position Refined": det_positions_refined + 1,
+                    "Contrast": np.array(detections["contrast"]).flatten(),
+                    "SNR": np.array(detections["snr"]).flatten(),
+                }
+            )
             st.dataframe(df)

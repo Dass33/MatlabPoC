@@ -1,5 +1,6 @@
-import streamlit as st
 import json
+
+import streamlit as st
 
 # Default configuration values
 DEFAULT_CONFIG = {
@@ -26,6 +27,7 @@ DEFAULT_CONFIG = {
     "padding": 2,
 }
 
+
 def render_sidebar_config():
     """Renders sidebar and returns a dictionary of configuration parameters."""
     st.sidebar.header("Configuration")
@@ -38,7 +40,7 @@ def render_sidebar_config():
                 loaded_conf = json.load(uploaded_config)
                 for k, v in loaded_conf.items():
                     if k in st.session_state and st.session_state[k] != v:
-                         st.session_state[k] = v
+                        st.session_state[k] = v
                 st.success("Config loaded!")
             except Exception as e:
                 st.error(f"Error loading config: {e}")
@@ -47,67 +49,120 @@ def render_sidebar_config():
 
     with st.sidebar.expander("Preprocessing", expanded=True):
         config["kt_val"] = st.number_input(
-            "Kt (Background Estimation)", 
-            value=DEFAULT_CONFIG["kt_val"], 
-            step=1.0, 
-            key="kt_val"
+            "Kt (Background Estimation)",
+            value=DEFAULT_CONFIG["kt_val"],
+            step=1.0,
+            key="kt_val",
         )
 
     with st.sidebar.expander("Denoising"):
         config["space_filter"] = st.selectbox(
             "Space Filter",
             ["jinc", "gaussian", "laplacean_of_gaussian", "none"],
-            index=["jinc", "gaussian", "laplacean_of_gaussian", "none"].index(DEFAULT_CONFIG["space_filter"]),
-            key="space_filter"
+            index=["jinc", "gaussian", "laplacean_of_gaussian", "none"].index(
+                DEFAULT_CONFIG["space_filter"]
+            ),
+            key="space_filter",
         )
-        config["sigma_x"] = st.number_input("Sigma X", value=DEFAULT_CONFIG["sigma_x"], step=0.1, key="sigma_x")
+        config["sigma_x"] = st.number_input(
+            "Sigma X", value=DEFAULT_CONFIG["sigma_x"], step=0.1, key="sigma_x"
+        )
         config["time_filter"] = st.selectbox(
-            "Time Filter", 
-            ["imgaussfilt", "none"], 
-            index=["imgaussfilt", "none"].index(DEFAULT_CONFIG["time_filter"]), 
-            key="time_filter"
+            "Time Filter",
+            ["imgaussfilt", "none"],
+            index=["imgaussfilt", "none"].index(DEFAULT_CONFIG["time_filter"]),
+            key="time_filter",
         )
-        config["sigma_t"] = st.number_input("Sigma T", value=DEFAULT_CONFIG["sigma_t"], step=0.1, key="sigma_t")
+        config["sigma_t"] = st.number_input(
+            "Sigma T", value=DEFAULT_CONFIG["sigma_t"], step=0.1, key="sigma_t"
+        )
         config["non_linear_filter"] = st.selectbox(
-            "Non-Linear Filter", 
-            ["none", "nlm"], 
-            index=["none", "nlm"].index(DEFAULT_CONFIG["non_linear_filter"]), 
-            key="non_linear_filter"
+            "Non-Linear Filter",
+            ["none", "nlm"],
+            index=["none", "nlm"].index(DEFAULT_CONFIG["non_linear_filter"]),
+            key="non_linear_filter",
         )
 
     with st.sidebar.expander("Detection"):
         config["pfa"] = st.number_input(
-            "Probability of False Alarm (pfa)", value=DEFAULT_CONFIG["pfa"], format="%.e", key="pfa"
+            "Probability of False Alarm (pfa)",
+            value=DEFAULT_CONFIG["pfa"],
+            format="%.e",
+            key="pfa",
         )
-        config["local_min_range"] = st.number_input("Local Min Range", value=DEFAULT_CONFIG["local_min_range"], step=1, key="local_min_range")
+        config["local_min_range"] = st.number_input(
+            "Local Min Range",
+            value=DEFAULT_CONFIG["local_min_range"],
+            step=1,
+            key="local_min_range",
+        )
 
     with st.sidebar.expander("Feature Extraction"):
         config["refinement_method"] = st.selectbox(
-            "Refinement Method", 
-            ["centroid", "parabolic", "gaussian"], 
-            index=["centroid", "parabolic", "gaussian"].index(DEFAULT_CONFIG["refinement_method"]), 
-            key="refinement_method"
+            "Refinement Method",
+            ["centroid", "parabolic", "gaussian"],
+            index=["centroid", "parabolic", "gaussian"].index(
+                DEFAULT_CONFIG["refinement_method"]
+            ),
+            key="refinement_method",
         )
-        config["fitting_radius"] = st.number_input("Fitting Radius", value=DEFAULT_CONFIG["fitting_radius"], step=1, key="fitting_radius")
+        config["fitting_radius"] = st.number_input(
+            "Fitting Radius",
+            value=DEFAULT_CONFIG["fitting_radius"],
+            step=1,
+            key="fitting_radius",
+        )
 
     with st.sidebar.expander("Linking / Tracking"):
         config["cut_off_distance"] = st.number_input(
-            "Cut-off Distance", value=DEFAULT_CONFIG["cut_off_distance"], step=1.0, key="cut_off_distance"
+            "Cut-off Distance",
+            value=DEFAULT_CONFIG["cut_off_distance"],
+            step=1.0,
+            key="cut_off_distance",
         )
         config["unmatched_penalty"] = st.number_input(
-            "Unmatched Penalty", value=DEFAULT_CONFIG["unmatched_penalty"], step=1.0, key="unmatched_penalty"
+            "Unmatched Penalty",
+            value=DEFAULT_CONFIG["unmatched_penalty"],
+            step=1.0,
+            key="unmatched_penalty",
         )
-        config["flow_estimate"] = st.number_input("Flow Estimate", value=DEFAULT_CONFIG["flow_estimate"], step=0.1, key="flow_estimate")
-        config["min_track_len"] = st.number_input("Min Track Length", value=DEFAULT_CONFIG["min_track_len"], step=1, key="min_track_len")
+        config["flow_estimate"] = st.number_input(
+            "Flow Estimate",
+            value=DEFAULT_CONFIG["flow_estimate"],
+            step=0.1,
+            key="flow_estimate",
+        )
+        config["min_track_len"] = st.number_input(
+            "Min Track Length",
+            value=DEFAULT_CONFIG["min_track_len"],
+            step=1,
+            key="min_track_len",
+        )
 
         st.caption("Gap Closing")
-        config["max_pos_gap"] = st.number_input("Max Positive Gap", value=DEFAULT_CONFIG["max_pos_gap"], step=1, key="max_pos_gap")
-        config["max_neg_gap"] = st.number_input("Max Negative Gap", value=DEFAULT_CONFIG["max_neg_gap"], step=1, key="max_neg_gap")
+        config["max_pos_gap"] = st.number_input(
+            "Max Positive Gap",
+            value=DEFAULT_CONFIG["max_pos_gap"],
+            step=1,
+            key="max_pos_gap",
+        )
+        config["max_neg_gap"] = st.number_input(
+            "Max Negative Gap",
+            value=DEFAULT_CONFIG["max_neg_gap"],
+            step=1,
+            key="max_neg_gap",
+        )
         config["gap_closing_dist"] = st.number_input(
-            "Gap Closing Dist", value=DEFAULT_CONFIG["gap_closing_dist"], step=1.0, key="gap_closing_dist"
+            "Gap Closing Dist",
+            value=DEFAULT_CONFIG["gap_closing_dist"],
+            step=1.0,
+            key="gap_closing_dist",
         )
         config["gap_closing_penalty"] = st.number_input(
-            "Gap Closing Penalty", value=DEFAULT_CONFIG["gap_closing_penalty"], step=1.0, key="gap_closing_penalty"
+            "Gap Closing Penalty",
+            value=DEFAULT_CONFIG["gap_closing_penalty"],
+            step=1.0,
+            key="gap_closing_penalty",
         )
 
     config["plot_width"] = DEFAULT_CONFIG["plot_width"]
@@ -120,7 +175,7 @@ def render_sidebar_config():
         data=json.dumps(config, indent=4),
         file_name="config.json",
         mime="application/json",
-        use_container_width=True
+        use_container_width=True,
     )
 
     run_analysis = st.sidebar.button(

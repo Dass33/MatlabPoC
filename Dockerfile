@@ -60,10 +60,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy and install the SimPackage (binding)
-# Note: SimPackage must be present in the build context
-COPY SimPackage/ ./SimPackage/
-RUN cd SimPackage && python -m pip install .
+# Copy and install the SimPackage (binding) from pre-built wheel
+COPY libs/ ./libs/
+RUN pip install --no-cache-dir libs/*.whl
 
 # Copy application source
 COPY app/ ./app/

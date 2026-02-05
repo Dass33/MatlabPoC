@@ -1,6 +1,13 @@
 # MATLAB / SimPackage
 SimPackage/
+!SimPackage/setup.py
+!SimPackage/pyproject.toml
 matlab_src/tools/external/**/bm4dmx.mex*
+
+# Artifacts
+libs/*
+!libs/.gitkeep
+!libs/*.whl
 
 # Python
 __pycache__/

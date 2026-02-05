@@ -1,15 +1,17 @@
+import json
+
 import streamlit as st
 import tifffile
-import json
-from app.config import render_sidebar_config
+
 from app.analysis import init_matalab, run_matlab_analysis
-from app.visualization import display_results
+from app.config import render_sidebar_config
 from app.session import (
-    init_session_state, 
-    clear_results, 
-    get_aggregated_results, 
-    prepare_json_export
+    clear_results,
+    get_aggregated_results,
+    init_session_state,
+    prepare_json_export,
 )
+from app.visualization import display_results
 
 st.set_page_config(
     page_title="Data Processing",
@@ -19,11 +21,12 @@ st.set_page_config(
     menu_items={"About": "User interface for NSM data processing algorithm"},
 )
 
+
 def run():
     # 1. Setup
     init_session_state()
     config, uploaded_files, run_analysis = render_sidebar_config()
-    
+
     with st.spinner("Loading MATLAB Runtime..."):
         my_lib = init_matalab()
 
@@ -61,7 +64,7 @@ def run():
                 except Exception as e:
                     st.error(f"Error processing {uploaded_file.name}: {e}")
                 progress_bar.progress((i + 1) / len(files_to_process))
-            
+
             status_text.text("Processing complete!")
             st.success(f"Processed {len(files_to_process)} new files.")
 
@@ -84,7 +87,7 @@ def run():
         st.divider()
         with st.expander("Aggregated Results", expanded=False):
             combined_df, tracks_summary_df = get_aggregated_results(available_results)
-            
+
             if not tracks_summary_df.empty:
                 st.write("### Tracks Summary")
                 st.dataframe(tracks_summary_df, use_container_width=True)
@@ -92,7 +95,7 @@ def run():
             if not combined_df.empty:
                 st.write(f"### Detections (Total: {len(combined_df)})")
                 st.dataframe(combined_df.head(100), use_container_width=True)
-                
+
                 col_csv, col_json = st.columns(2)
                 with col_csv:
                     csv = combined_df.to_csv(index=False).encode("utf-8")
@@ -117,6 +120,7 @@ def run():
                     )
     elif not run_analysis:
         st.info("Click 'Run Analysis' to process the uploaded files.")
+
 
 if __name__ == "__main__":
     run()
