@@ -36,8 +36,18 @@ A Streamlit-based application for processing NSM data using a MATLAB-based pipel
    python -m pip install .
    ```
 3. Run the application:
+   Using the helper script (recommended):
    ```bash
-   export PYTHONPATH=$PYTHONPATH:.
+   ./scripts/run_app.sh
+   ```
+   
+   Or manually:
+   ```bash
+   cd SimPackage
+   source venv/bin/activate
+   pip install -e .
+   cd ..
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/MATLAB/R2025b/runtime/glnxa64
    streamlit run app/main.py
    ```
 

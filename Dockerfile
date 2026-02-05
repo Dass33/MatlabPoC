@@ -53,25 +53,46 @@ COPY --from=runtime-installer /usr/local/MATLAB/MATLAB_Runtime /usr/local/MATLAB
 
 # Set Environment Variables
 ENV LD_LIBRARY_PATH=/usr/local/MATLAB/MATLAB_Runtime/R2025b/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/sys/opengl/lib/glnxa64
+ENV PYTHONPATH=/workspace
 
-WORKDIR /app
+WORKDIR /workspace
+
+
 
 # Install Python dependencies first (to leverage cache)
+
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy and install the SimPackage (binding) from pre-built wheel
-COPY libs/ ./libs/
-RUN pip install --no-cache-dir libs/*.whl
+
+
+# Copy and install the SimPackage (binding)
+
+COPY SimPackage/ ./SimPackage/
+
+RUN pip install --no-cache-dir ./SimPackage
+
+
 
 # Copy application source
+
 COPY app/ ./app/
 
+
+
 # Expose Streamlit Port
+
 EXPOSE 8501
 
+
+
 # Healthcheck
+
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
+
+
 # Run Streamlit
+
 CMD ["streamlit", "run", "app/main.py", "--server.address=0.0.0.0"]
