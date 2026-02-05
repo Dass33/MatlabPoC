@@ -1,8 +1,0 @@
-pyproject.toml
-setup.py
-SimPackage/SimPackage.ctf
-SimPackage/__init__.py
-SimPackage_R2025b.egg-info/PKG-INFO
-SimPackage_R2025b.egg-info/SOURCES.txt
-SimPackage_R2025b.egg-info/dependency_links.txt
-SimPackage_R2025b.egg-info/top_level.txt

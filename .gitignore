@@ -1,3 +1,7 @@
+# MATLAB / SimPackage
+SimPackage/
+matlab_src/tools/external/**/bm4dmx.mex*
+
 # Python
 __pycache__/
 *.py[cod]
