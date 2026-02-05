@@ -16,7 +16,7 @@ def test_main_orchestration():
         patch("streamlit.spinner"),
         patch("app.main.render_sidebar_config") as mock_sidebar,
         patch("app.main.init_session_state") as mock_init_session,
-        patch("app.main.init_matalab") as mock_init_matlab,
+        patch("app.main.init_matlab") as mock_init_matlab,
         patch("app.main.display_results"),
     ):
         # Setup mocks

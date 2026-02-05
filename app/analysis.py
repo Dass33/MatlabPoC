@@ -1,4 +1,3 @@
-import matlab
 import numpy as np
 import streamlit as st
 
@@ -7,9 +6,14 @@ try:
 except ImportError:
     SimPackage = None  # type: ignore
 
+try:
+    import matlab
+except ImportError:
+    matlab = None  # type: ignore
+
 
 @st.cache_resource
-def init_matalab():
+def init_matlab():
     if SimPackage is None:
         st.error("SimPackage not found. Please ensure it is installed.")
         return None
@@ -18,6 +22,10 @@ def init_matalab():
 
 def run_matlab_analysis(my_lib, raw_data, config):
     """Executes the MATLAB analyze_image pipeline and returns processed results."""
+    if matlab is None:
+        st.error("MATLAB Python module not found. Please check your MATLAB Runtime installation.")
+        return None
+
     input_data = matlab.double(raw_data.astype(float).tolist())
 
     with st.spinner("Running MATLAB 'analyze_image' pipeline..."):

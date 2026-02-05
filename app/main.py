@@ -18,7 +18,7 @@ if project_root not in sys.path:
 import streamlit as st
 import tifffile
 
-from app.analysis import init_matalab, run_matlab_analysis
+from app.analysis import init_matlab, run_matlab_analysis
 from app.config import render_sidebar_config
 from app.session import (
     clear_results,
@@ -43,7 +43,7 @@ def run():
     config, uploaded_files, run_analysis = render_sidebar_config()
 
     with st.spinner("Loading MATLAB Runtime..."):
-        my_lib = init_matalab()
+        my_lib = init_matlab()
 
     if not uploaded_files:
         st.info("Please upload .tiff files to begin.")
@@ -72,10 +72,11 @@ def run():
                 try:
                     raw_data = tifffile.imread(uploaded_file)
                     results = run_matlab_analysis(my_lib, raw_data, config)
-                    st.session_state.results[uploaded_file.name] = {
-                        "raw_data": raw_data,
-                        "results": results,
-                    }
+                    if results:
+                        st.session_state.results[uploaded_file.name] = {
+                            "raw_data": raw_data,
+                            "results": results,
+                        }
                 except Exception as e:
                     st.error(f"Error processing {uploaded_file.name}: {e}")
                 progress_bar.progress((i + 1) / len(files_to_process))

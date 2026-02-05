@@ -53,7 +53,8 @@ COPY --from=runtime-installer /usr/local/MATLAB/MATLAB_Runtime /usr/local/MATLAB
 
 # Set Environment Variables
 ENV LD_LIBRARY_PATH=/usr/local/MATLAB/MATLAB_Runtime/R2025b/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/sys/opengl/lib/glnxa64
-ENV PYTHONPATH=/workspace
+ENV PYTHONPATH=/workspace:/usr/local/MATLAB/MATLAB_Runtime/R2025b/toolbox/compiler_sdk/pysdk_py/matlab_mod_dist:/usr/local/MATLAB/MATLAB_Runtime/R2025b/toolbox/compiler_sdk/pysdk_py:/usr/local/MATLAB/MATLAB_Runtime/R2025b/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2025b/extern/bin/glnxa64
+ENV XAPPLRESDIR=/usr/local/MATLAB/MATLAB_Runtime/R2025b/X11/app-defaults
 
 WORKDIR /workspace
 
