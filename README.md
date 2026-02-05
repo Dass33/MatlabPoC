@@ -49,4 +49,28 @@ docker run -p 8501:8501 nsm-app
 ```
 
 ## Development
-Please refer to [docs/AGENT_GUIDELINES.md](docs/AGENT_GUIDELINES.md) for coding standards and development workflow.
+
+### Workflow & Automation
+This project uses several tools to ensure code quality:
+- **Ruff**: For extremely fast linting and formatting.
+- **Mypy**: For static type checking.
+- **Pytest**: For unit testing (with MATLAB mocks).
+
+We use a `Makefile` to standardize these tasks:
+- `make lint`: Run linting checks.
+- `make format`: Auto-format code.
+- `make typecheck`: Run static type analysis.
+- `make test`: Run unit tests.
+- `make check`: Run all of the above (recommended before pushing).
+
+### CI/CD
+A GitHub Action is configured to run `make check` on every push and pull request to the `main` branch.
+
+### Pre-commit
+To install pre-commit hooks:
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Please refer to [docs/AGENT_GUIDELINES.md](docs/AGENT_GUIDELINES.md) for detailed coding standards.
