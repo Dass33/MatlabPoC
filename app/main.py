@@ -1,4 +1,19 @@
 import json
+import sys
+import os
+
+# Setup paths
+current_file = os.path.abspath(__file__)
+app_dir = os.path.dirname(current_file)
+project_root = os.path.dirname(app_dir)
+sim_package_path = os.path.join(project_root, 'SimPackage')
+
+# Add paths to sys.path
+# sim_package_path must be before project_root to avoid namespace package conflict
+if sim_package_path not in sys.path:
+    sys.path.insert(0, sim_package_path)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 import streamlit as st
 import tifffile
