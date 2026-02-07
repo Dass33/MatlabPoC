@@ -1,0 +1,13 @@
+.git
+.gitignore
+node_modules
+__pycache__/
+venv/
+SimPackage/venv/
+SimPackage/build/
+DemoData/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Exclude the large files since we now download the runtime
+MATLAB_Runtime_R2025b_Update_3_glnxa64.zip

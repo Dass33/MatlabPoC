@@ -26,10 +26,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /tmp_install
 
-# Copy Runtime Zip AND the Config File (only if they exist locally)
-# If you want to download instead, use:
-# ADD https://ssd.mathworks.com/supportfiles/downloads/R2025b/Release/3/deployment_files/installer/glnxa64/MATLAB_Runtime_R2025b_Update_3_glnxa64.zip .
-COPY MATLAB_Runtime_R2025b_Update_3_glnxa64.zip .
+# Download the MATLAB Runtime directly in the cloud to avoid large uploads
+ADD https://ssd.mathworks.com/supportfiles/downloads/R2025b/Release/3/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2025b_Update_3_glnxa64.zip .
+# COPY MATLAB_Runtime_R2025b_Update_3_glnxa64.zip .
 COPY installer_input.txt .
 
 RUN unzip -q MATLAB_Runtime_*.zip && \
@@ -95,5 +94,4 @@ HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
 
 # Run Streamlit
-
-CMD ["streamlit", "run", "app/main.py", "--server.address=0.0.0.0"]
+CMD streamlit run app/main.py --server.port=${PORT:-8080} --server.address=0.0.0.0 --server.maxUploadSize=1024

@@ -2,6 +2,33 @@
 
 A Streamlit-based application for processing NSM data using a MATLAB-based pipeline.
 
+## Goal of the project
+
+We have a algorithm for processing data, it is written in Matlab we have quite stable api for the inputs and outputs.
+Researcers which are working on the project have physics or chemistry background and they often are not familiar with Matlab.
+We want for the researchers to have very easy onboarding and have least amount of friction for their work.
+
+So we decided in create a web app whith graphical interface, which will call the Matlab code
+At this moment we are using Compiler SDK and bundle the Matlab runtime with our app
+(maybe different soulution could be better, maybe Matlab web server? I don't think so but I'm open minded).
+
+Other benefit is that in the future we would like to use algorithm that is hevier on resources
+and we want for the code to be able to run on cluster (the heavy computing part).
+
+We need for the solution to be as simple as possible.
+
+At this moment on consumer grade hardware we run experiments for about 10-20 minutes,
+but in the future we will have larger data sets (more microscope images),
+and hevier algorithm (because if we relax this constraint we would be able to track particles which are smaller)
+
+
+There are like 4-6 users which run experiments, and they use the microscope in sequential order,
+it woudl be nice to support paraller usage, but it could be potentially arranged to have sequential order.
+
+We would like to use existing cluster which is availabe to Fyzikální ústav Akademie věd České republiky.
+Im not sure how compatible it is with our usage.
+
+
 ## Project Structure
 
 ```text
@@ -15,7 +42,7 @@ A Streamlit-based application for processing NSM data using a MATLAB-based pipel
 ├── matlab_src/                 # MATLAB source code for the algorithm
 ├── tests/                      # Unit tests for Python logic
 ├── docs/                       # Guidelines & documentation
-├── Dockerfile                  # Optimized multi-stage build
+├── Dockerfile                  # Container build
 └── requirements.txt            # Python dependencies
 ```
 
@@ -57,6 +84,11 @@ The Dockerfile uses a multi-stage build to cache the MATLAB Runtime installation
 docker build -t nsm-app .
 docker run -p 8501:8501 nsm-app
 ```
+
+## Cloud Deployment
+
+The application is deployed on Google Cloud Run.
+**Public URL:** [https://matlab-poc-service-61598324860.europe-west1.run.app](https://matlab-poc-service-61598324860.europe-west1.run.app)
 
 ## Development
 
