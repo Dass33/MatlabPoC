@@ -10,7 +10,6 @@ We want for the researchers to have very easy onboarding and have least amount o
 
 So we decided in create a web app whith graphical interface, which will call the Matlab code
 At this moment we are using Compiler SDK and bundle the Matlab runtime with our app
-(maybe different soulution could be better, maybe Matlab web server? I don't think so but I'm open minded).
 
 Other benefit is that in the future we would like to use algorithm that is hevier on resources
 and we want for the code to be able to run on cluster (the heavy computing part).
@@ -23,11 +22,7 @@ and hevier algorithm (because if we relax this constraint we would be able to tr
 
 
 There are like 4-6 users which run experiments, and they use the microscope in sequential order,
-it woudl be nice to support paraller usage, but it could be potentially arranged to have sequential order.
-
-We would like to use existing cluster which is availabe to Fyzikální ústav Akademie věd České republiky.
-Im not sure how compatible it is with our usage.
-
+it would be nice to support paraller usage, but it could be potentially arranged to have sequential order.
 
 ## Project Structure
 

@@ -41,10 +41,8 @@ def test_matlab_binding():
 
 if __name__ == "__main__":
     if test_matlab_binding():
-        print("
-Smoke test PASSED!")
+        print("\nSmoke test PASSED!")
         sys.exit(0)
     else:
-        print("
-Smoke test FAILED!")
+        print("\nSmoke test FAILED!")
         sys.exit(1)

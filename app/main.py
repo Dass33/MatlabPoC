@@ -70,11 +70,11 @@ def run():
             for i, uploaded_file in enumerate(files_to_process):
                 status_text.text(f"Processing {uploaded_file.name}...")
                 try:
+                    uploaded_file.seek(0)
                     raw_data = tifffile.imread(uploaded_file)
                     results = run_matlab_analysis(my_lib, raw_data, config)
                     if results:
                         st.session_state.results[uploaded_file.name] = {
-                            "raw_data": raw_data,
                             "results": results,
                         }
                 except Exception as e:
@@ -97,7 +97,17 @@ def run():
         )
         if selected_file:
             data = st.session_state.results[selected_file]
-            display_results(data["raw_data"], data["results"], config)
+            # Find the uploaded file object to re-read it (saves memory)
+            uploaded_file = next(
+                (f for f in uploaded_files if f.name == selected_file), None
+            )
+            if uploaded_file:
+                with st.spinner(f"Loading {selected_file} for display..."):
+                    uploaded_file.seek(0)
+                    raw_data = tifffile.imread(uploaded_file)
+                display_results(raw_data, data["results"], config)
+            else:
+                st.error(f"Source file {selected_file} not found in uploaded files.")
 
         # 5. Aggregated Results
         st.divider()

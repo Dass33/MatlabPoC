@@ -23,10 +23,13 @@ def init_matlab():
 def run_matlab_analysis(my_lib, raw_data, config):
     """Executes the MATLAB analyze_image pipeline and returns processed results."""
     if matlab is None:
-        st.error("MATLAB Python module not found. Please check your MATLAB Runtime installation.")
+        st.error(
+            "MATLAB Python module not found. Please check your MATLAB Runtime installation."
+        )
         return None
 
-    input_data = matlab.double(raw_data.astype(float).tolist())
+    # Use tolist() directly; matlab.double handles the conversion to double
+    input_data = matlab.double(raw_data.tolist())
 
     with st.spinner("Running MATLAB 'analyze_image' pipeline..."):
         detections, denoised_y, contrast_c, final_tracks = my_lib.analyze_image(
