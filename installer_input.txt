@@ -1,3 +1,0 @@
-destinationFolder=/usr/local/MATLAB/MATLAB_Runtime
-mode=silent
-agreeToLicense=yes

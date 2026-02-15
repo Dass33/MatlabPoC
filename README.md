@@ -1,9 +1,5 @@
 # NSM Data Processing App
 
-A Streamlit-based application for processing NSM data using a MATLAB-based pipeline.
-
-## Goal of the project
-
 We have a algorithm for processing data, it is written in Matlab we have quite stable api for the inputs and outputs.
 Researcers which are working on the project have physics or chemistry background and they often are not familiar with Matlab.
 We want for the researchers to have very easy onboarding and have least amount of friction for their work.
@@ -24,24 +20,7 @@ and hevier algorithm (because if we relax this constraint we would be able to tr
 There are like 4-6 users which run experiments, and they use the microscope in sequential order,
 it would be nice to support paraller usage, but it could be potentially arranged to have sequential order.
 
-## Project Structure
-
-```text
-/
-├── app/                        # Python application source
-│   ├── main.py                 # Entry point (Streamlit app)
-│   ├── analysis.py             # MATLAB interface wrapper
-│   ├── config.py               # Sidebar & configuration management
-│   ├── session.py              # Results & session state management
-│   └── visualization.py        # Matplotlib rendering & results display
-├── matlab_src/                 # MATLAB source code for the algorithm
-├── tests/                      # Unit tests for Python logic
-├── docs/                       # Guidelines & documentation
-├── Dockerfile                  # Container build
-└── requirements.txt            # Python dependencies
-```
-
-## Getting Started
+## How to run
 
 ### Prerequisites
 - MATLAB Runtime R2025b
@@ -62,52 +41,10 @@ it would be nice to support paraller usage, but it could be potentially arranged
    ```bash
    ./scripts/run_app.sh
    ```
-   
-   Or manually:
-   ```bash
-   cd SimPackage
-   source venv/bin/activate
-   pip install -e .
-   cd ..
-   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/MATLAB/R2025b/runtime/glnxa64
-   streamlit run app/main.py
-   ```
 
 ### Running with Docker
-The Dockerfile uses a multi-stage build to cache the MATLAB Runtime installation.
 ```bash
 docker build -t nsm-app .
 docker run -p 8501:8501 nsm-app
+#8501 is the port Streamlit uses
 ```
-
-## Cloud Deployment
-
-The application is deployed on Google Cloud Run.
-**Public URL:** [https://matlab-poc-service-61598324860.europe-west1.run.app](https://matlab-poc-service-61598324860.europe-west1.run.app)
-
-## Development
-
-### Workflow & Automation
-This project uses several tools to ensure code quality:
-- **Ruff**: For extremely fast linting and formatting.
-- **Mypy**: For static type checking.
-- **Pytest**: For unit testing (with MATLAB mocks).
-
-We use a `Makefile` to standardize these tasks:
-- `make lint`: Run linting checks.
-- `make format`: Auto-format code.
-- `make typecheck`: Run static type analysis.
-- `make test`: Run unit tests.
-- `make check`: Run all of the above (recommended before pushing).
-
-### CI/CD
-A GitHub Action is configured to run `make check` on every push and pull request to the `main` branch.
-
-### Pre-commit
-To install pre-commit hooks:
-```bash
-pip install pre-commit
-pre-commit install
-```
-
-Please refer to [docs/AGENT_GUIDELINES.md](docs/AGENT_GUIDELINES.md) for detailed coding standards.
