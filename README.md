@@ -20,6 +20,10 @@ and hevier algorithm (because if we relax this constraint we would be able to tr
 There are like 4-6 users which run experiments, and they use the microscope in sequential order,
 it would be nice to support paraller usage, but it could be potentially arranged to have sequential order.
 
+## TODO
+- implement RunMat
+- add to the footer: "Powered by RunMat by Dystr"
+
 ## How to run
 
 ### Prerequisites
@@ -27,6 +31,12 @@ it would be nice to support paraller usage, but it could be potentially arranged
 - Python 3.10+
 
 ### Local Setup
+0. Virtual environment
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate
+    ```
+
 1. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
@@ -43,8 +53,9 @@ it would be nice to support paraller usage, but it could be potentially arranged
    ```
 
 ### Running with Docker
-```bash
-docker build -t nsm-app .
-docker run -p 8501:8501 nsm-app
-#8501 is the port Streamlit uses
+```bash docker build -t nsm-app . docker run -p 8501:8501 nsm-app
+# 8501 is the port Streamlit uses
 ```
+## Credit
+Credit to the 
+- RunMat by Dystr

@@ -34,7 +34,7 @@ MANIFEST
 DemoData
 
 # Virtual Env
-venv/
+*venv*/
 env/
 ENV/
 
@@ -44,3 +44,5 @@ installer_input.txt
 
 # OS
 .DS_Store
+
+**/**/tmp/
