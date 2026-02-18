@@ -1,5 +1,7 @@
-streamlit==1.32.0
-numpy
-matplotlib
-tifffile
-pandas
+streamlit>=1.32
+numpy>=1.26
+pandas>=2.2
+matplotlib>=3.8
+tifffile>=2024.2
+docker>=7.0
+h5py>=3.10
