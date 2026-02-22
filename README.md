@@ -15,7 +15,7 @@ MATLAB; the frontend is Streamlit.
 │   └── Dockerfile
 ├── matlab/
 │   ├── matlab_src/
-│   │   ├── analyze_experiment_app.m   # App entry point (compiled)
+│   │   ├── AnalyzeExperimentApp.m   # App entry point (compiled)
 │   │   ├── AnalyzeExperiment.m        # Original researcher script (reference, do not modify)
 │   │   ├── analyze_image.m            # Old entry point (kept for reference)
 │   │   └── ...                        # Algorithm implementation (kymographAnalysis/, Utils/, etc.)
@@ -25,7 +25,7 @@ MATLAB; the frontend is Streamlit.
 ├── docker-compose.yml
 ├── .env                     # HOST_DATA_DIR (required, not committed)
 └── scripts/
-    ├── compile_matlab.sh    # Compile analyze_experiment_app.m via mcc
+    ├── compile_matlab.sh    # Compile AnalyzeExperimentApp.m via mcc
     ├── build_matlab.sh      # Build the MATLAB Docker image
     └── deploy.sh            # Compile → build → docker compose up
 ```
@@ -41,7 +41,7 @@ MATLAB; the frontend is Streamlit.
 ### MATLAB container
 
 - Spawned per job by Streamlit via the Docker Python SDK (`detach=True, remove=True`).
-- Runs the compiled `analyze_experiment_app` binary, exits when done.
+- Runs the compiled `AnalyzeExperimentApp` binary, exits when done.
 - Never kept running between jobs.
 
 ## Job Lifecycle
@@ -71,9 +71,9 @@ The `tiff2` format (data acquired after September 2025) pairs each `.tiff` with 
 metadata file containing acquisition parameters (frame count, dimensions, exposure time, etc.).
 **Both files must be uploaded together.** The app accepts `.tif`, `.tiff`, and `.txt`.
 
-## MATLAB Pipeline (`analyze_experiment_app.m`)
+## MATLAB Pipeline (`AnalyzeExperimentApp.m`)
 
-Signature: `analyze_experiment_app(inputDir, outputDir)`
+Signature: `AnalyzeExperimentApp(inputDir, outputDir)`
 
 ```
 config.json → build_setting() → Setting struct
@@ -95,7 +95,7 @@ config.json → build_setting() → Setting struct
 ```
 
 The pipeline mirrors `AnalyzeExperiment.m` (the researcher's original script). That file is the
-authoritative reference — when the researcher updates it, `analyze_experiment_app.m` must be
+authoritative reference — when the researcher updates it, `AnalyzeExperimentApp.m` must be
 updated to match.
 
 **Key constraint:** `positionStart` and `positionEnd` must NOT be included in
@@ -116,7 +116,7 @@ updated to match.
 - Streamlit writes the full config to `config.json` (no partial configs).
 - MATLAB reads `config.json` via `jsondecode` and has no defaults of its own.
 - Users can export/import config as JSON via the sidebar.
-- Adding a new parameter requires changes in three places: `DEFAULT_CONFIG`, the sidebar widget, and `build_setting()` in `analyze_experiment_app.m`.
+- Adding a new parameter requires changes in three places: `DEFAULT_CONFIG`, the sidebar widget, and `build_setting()` in `AnalyzeExperimentApp.m`.
 
 ## Environment Variables
 
