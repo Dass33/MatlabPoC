@@ -1,49 +1,32 @@
-# MATLAB / SimPackage
-SimPackage/
-!SimPackage/setup.py
-!SimPackage/pyproject.toml
-matlab_src/tools/external/**/bm4dmx.mex*
+# MATLAB compiled output
+matlab/Compiled/
 
-# Artifacts
-libs/*
-!libs/.gitkeep
-!libs/*.whl
+# MATLAB Runtime installer
+MATLAB_Runtime_*.zip
+
+# Job data (inputs, outputs, configs generated at runtime)
+data/
+
+# Demo data
+DemoData/
 
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
-DemoData
-**/Compiled/
+.eggs/
+dist/
+build/
 
-# Virtual Env
+# Virtual environments
 *venv*/
 env/
 ENV/
 
-# Installer/Runtime
-MATLAB_Runtime_*.zip
-installer_input.txt
-
 # OS
 .DS_Store
 
-**/**/tmp/
+# Claude Code
+.claude
