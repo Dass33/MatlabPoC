@@ -1,0 +1,250 @@
+function analyze_experiment_app(inputDir, outputDir)
+% ANALYZE_EXPERIMENT_APP  App entry point for the AnalyzeExperiment pipeline.
+%
+% Reads inputDir/../config.json, builds the Setting struct, runs
+% kymographAnalysis → collectionPostprocessing → analyzePopulation, and
+% writes structured outputs to outputDir.
+%
+% Outputs written to outputDir/
+%   status.json        — {status, error}
+%   kymographs/*.png   — kymograph images with track overlays
+%   trajectories.mat   — flat scalar arrays per trajectory (scipy-readable v7)
+%   summary.json       — population stats per sweep
+%   results.mat        — full archive (v7.3)
+
+statusFile = fullfile(outputDir, 'status.json');
+
+try
+    if ~exist(outputDir, 'dir')
+        mkdir(outputDir);
+    end
+
+    write_status(statusFile, 'processing', '');
+
+    % ── Headless ──────────────────────────────────────────────────────────
+    set(0, 'DefaultFigureVisible', 'off');
+
+    % ── Load config ───────────────────────────────────────────────────────
+    configFile = fullfile(inputDir, '..', 'config.json');
+    if ~exist(configFile, 'file')
+        error('config.json not found at: %s', configFile);
+    end
+    config = jsondecode(fileread(configFile));
+
+    % ── Build Setting ─────────────────────────────────────────────────────
+    Setting = build_setting(config, outputDir);
+
+    % ── Add paths (source mode only) ──────────────────────────────────────
+    if ~isdeployed
+        addpath(genpath(Setting.Path.projectFolder));
+    end
+
+    % ── Kymograph analysis ────────────────────────────────────────────────
+    [collection, inputDataInfo] = kymographAnalysis(inputDir, Setting);
+
+    % ── Add positionStart + positionEnd (may not be in trajectoryProperties)
+    if ~isfield(collection, 'positionStart')
+        collection = setfield(collection, {1}, 'positionStart', []);
+    end
+    if ~isfield(collection, 'positionEnd')
+        collection = setfield(collection, {1}, 'positionEnd', []);
+    end
+    for iSweep = 1:length(collection)
+        collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionStart', [], []);
+        collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionEnd', [], []);
+    end
+
+    % ── Collection postprocessing ─────────────────────────────────────────
+    for iSweep = 1:length(collection)
+        [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = ...
+            collectionPostprocessing(collection(iSweep), Setting);
+    end
+
+    % ── Population analysis ───────────────────────────────────────────────
+    for iSweep = 1:length(collection)
+        if strcmp(Setting.populationAnalysis.Title, 'GMM')
+            population(iSweep) = analyzePopulation_GMM( ...
+                collectionPostprocessed(iSweep), Setting.populationAnalysis);
+        else
+            population(iSweep) = analyzePopulation_robustMean( ...
+                collectionPostprocessed(iSweep), Setting.populationAnalysis);
+        end
+    end
+
+    % ── Save outputs ──────────────────────────────────────────────────────
+    save_trajectories(outputDir, collectionPostprocessed);
+    save_summary(outputDir, population, collectionPostprocessed, ...
+        Setting.populationAnalysis.properties);
+    save(fullfile(outputDir, 'results.mat'), ...
+        'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
+        'population', 'inputDataInfo', '-v7.3');
+
+    write_status(statusFile, 'completed', '');
+
+catch ME
+    stackStr = '';
+    for k = 1:length(ME.stack)
+        stackStr = [stackStr, sprintf(' | %s line %d', ME.stack(k).name, ME.stack(k).line)]; %#ok<AGROW>
+    end
+    write_status(statusFile, 'failed', [ME.message, stackStr]);
+end
+
+end % analyze_experiment_app
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+function Setting = build_setting(config, outputDir)
+
+% Paths
+Setting.Path.exportFolder = outputDir;
+% In deployed mode addpath is a no-op, but the field must still exist
+Setting.Path.projectFolder = fileparts(fileparts(mfilename('fullpath')));
+
+% Export
+Setting.exportDpi = 150;
+Setting.exportOptinalFigures = false;
+
+% Acquisition
+Setting.Dt              = config.Dt;
+Setting.Dx              = config.Dx;
+Setting.flipIntensity   = config.flipIntensity;
+Setting.flowEstimate    = config.flowEstimate;
+Setting.flowEstimate_ums = Setting.Dx / Setting.Dt * Setting.flowEstimate;
+
+if isfield(config, 'inputDataFormat')
+    Setting.inputDataFormat = config.inputDataFormat;
+else
+    Setting.inputDataFormat = 'tiff2';
+end
+
+% Kymograph preprocessing
+Setting.kymographPreprocessing = config.kymographPreprocessing;
+
+% Detection
+Setting.Detection = config.Detection;
+Setting.Detection.boarderRange = Setting.Detection.localOptimumRange;
+
+% Feature extraction (not user-configurable)
+Setting.FeatureExtraction.positionRefinementMethod = 'centroid';
+Setting.FeatureExtraction.fittingRadius = Setting.Detection.localOptimumRange;
+
+% Trajectory detection (hardcoded to gabClosingTracker)
+Setting.trajectoryDetecton.Title = 'gabClosingTracker';
+
+% Linking
+Setting.Linking = config.Linking;
+Setting.Linking.flowEstimate_ums = Setting.flowEstimate_ums;
+Setting.Linking.showTrackIds = true;
+
+% Kymograph analysis (hardcoded titles)
+Setting.kymographAnalysis.Title          = 'OnePassKymographAnalysis';
+Setting.kymographAnalysis.plotKymograph  = 'off';
+Setting.kymographAnalysis.saveKymograph  = 'png';
+
+% jsondecode gives Nx1 cell for JSON string arrays; transpose to 1xN
+Setting.kymographAnalysis.trajectoryProperties = config.trajectoryProperties.';
+
+% Post-processing
+Setting.iOCcalibration = config.iOCcalibration;
+Setting.outlierFiltering.referenceProperty  = config.outlierFiltering.referenceProperty;
+Setting.outlierFiltering.filterProperties   = config.outlierFiltering.filterProperties.';
+Setting.outlierFiltering.thresholdDirection = config.outlierFiltering.thresholdDirection.';
+Setting.outlierFiltering.thresholdValue     = config.outlierFiltering.thresholdValue.';
+
+% Population analysis
+Setting.populationAnalysis.Title      = config.populationAnalysis.Title;
+Setting.populationAnalysis.properties = config.populationAnalysis.properties.';
+
+end % build_setting
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+function save_trajectories(outputDir, collectionPostprocessed)
+% Concatenate per-sweep trajectory scalars into flat arrays (scipy v7 compatible).
+
+iOC           = [];
+D             = [];
+velocity      = [];
+N             = [];
+positionStart = [];
+positionEnd   = [];
+sweepIdx      = [];
+sweepLegends  = {};
+
+for iSweep = 1:length(collectionPostprocessed)
+    c = collectionPostprocessed(iSweep);
+    n = length(c.iOC);
+
+    iOC           = [iOC;           c.iOC(:)];           %#ok<AGROW>
+    D             = [D;             c.D(:)];             %#ok<AGROW>
+    velocity      = [velocity;      c.velocity(:)];      %#ok<AGROW>
+    N             = [N;             c.N(:)];             %#ok<AGROW>
+    positionStart = [positionStart; c.positionStart(:)]; %#ok<AGROW>
+    positionEnd   = [positionEnd;   c.positionEnd(:)];   %#ok<AGROW>
+    sweepIdx      = [sweepIdx;      iSweep * ones(n, 1)]; %#ok<AGROW>
+    sweepLegends{end+1} = c.SweepLegend;                %#ok<AGROW>
+end
+
+save(fullfile(outputDir, 'trajectories.mat'), ...
+    'iOC', 'D', 'velocity', 'N', 'positionStart', 'positionEnd', ...
+    'sweepIdx', 'sweepLegends', '-v7');
+
+end % save_trajectories
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+function save_summary(outputDir, population, collectionPostprocessed, properties)
+% Write population statistics per sweep to summary.json.
+
+sweeps = cell(1, length(population));
+for iSweep = 1:length(population)
+    pop = population(iSweep);
+    s.legend        = collectionPostprocessed(iSweep).SweepLegend;
+    s.nTrajectories = pop.Ntrajectories;
+    for i = 1:length(properties)
+        prop = properties{i};
+        s.MEAN.(prop)       = pop.MEAN.(prop);
+        s.FWHM.(prop)       = pop.FWHM.(prop);
+        s.RESOLUTION.(prop) = pop.RESOLUTION.(prop);
+    end
+    sweeps{iSweep} = s;
+end
+
+summary.sweeps = sweeps;
+jsonStr = jsonencode(summary);
+
+fid = fopen(fullfile(outputDir, 'summary.json'), 'w');
+if fid ~= -1
+    fprintf(fid, '%s', jsonStr);
+    fclose(fid);
+end
+
+end % save_summary
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+function write_status(statusFile, status, errorMsg)
+
+if isempty(errorMsg)
+    jsonStr = sprintf('{"status": "%s", "error": null}\n', status);
+else
+    safe    = strrep(errorMsg, '\', '\\');
+    safe    = strrep(safe,     '"', '\"');
+    jsonStr = sprintf('{"status": "%s", "error": "%s"}\n', status, safe);
+end
+
+tmpFile = [statusFile '.tmp'];
+fid = fopen(tmpFile, 'w');
+if fid == -1
+    warning('write_status: could not open %s for writing', tmpFile);
+    return
+end
+fprintf(fid, '%s', jsonStr);
+fclose(fid);
+movefile(tmpFile, statusFile, 'f');
+
+end % write_status

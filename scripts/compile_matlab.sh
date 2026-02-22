@@ -7,4 +7,4 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 echo "Project root resolved to: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 cd ./matlab/Compiled
-matlab -batch "mcc -m ../matlab_src/analyze_image.m -a ../matlab_src/tools -o analyze_image"
+matlab -batch "mcc -m ../matlab_src/analyze_experiment_app.m -a ../matlab_src/ -o analyze_experiment_app"

@@ -6,7 +6,7 @@ Job lifecycle
   /data/jobs/{job_id}/
       input/          ← TIFF(s) written by Streamlit (streamed, not buffered)
       config.json     ← algorithm parameters
-      output/         ← .mat file(s) + status.json written by MATLAB container
+      output/         ← results written by MATLAB container
 
 status.json schema
 ──────────────────
@@ -33,6 +33,7 @@ import shutil
 import time
 import uuid
 from datetime import datetime
+from glob import glob
 from pathlib import Path
 from typing import Any
 
@@ -40,17 +41,14 @@ import docker
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy.io
 import streamlit as st
-import tifffile
 
 # ─────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/jobs"))
-# HOST_DATA_DIR must match DATA_DIR as seen by the host Docker daemon.
-# The daemon runs on the host, not inside the Streamlit container, so it
-# cannot resolve container-internal paths.
 HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
 MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "nsm-matlab:latest")
 MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "2"))
@@ -58,43 +56,41 @@ POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "5"))
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# Default algorithm parameters — single source of truth.
-# MATLAB reads these from config.json and has no defaults of its own.
 DEFAULT_CONFIG: dict[str, Any] = {
+    # Acquisition
+    "Dt": 0.007,
+    "Dx": 0.066,
+    "flipIntensity": True,
+    "flowEstimate": -3.4,
     # Preprocessing
-    "Kt": 159.0,
-    # Denoising
-    "spaceFilter": "jinc",
-    "sigma_x": 2.97,
-    "timeFilter": "imgaussfilt",
-    "sigma_t": 1.19,
-    "nonLinearFilter": "none",
+    "kymographPreprocessing": {"darkCalibration": 8, "Wx": 15, "Wt": 50, "ws": 2.36},
     # Detection
-    "pfa": 1e-5,
-    "localMinRange": 6,
-    # Feature extraction
-    "positionRefinementMethod": "centroid",
-    "fittingRadius": 3,
-    # Contrast image (internal pipeline parameters, not exposed in UI)
-    "Contrast_chainOrder": "preprocessing_denoising",
-    "Contrast_defluctuationMethod": "mean",
-    "Contrast_Kx": 1,
-    "Contrast_bacgroundEstimationMethod": "movmean",
-    "Contrast_Kt": 159,
-    "Contrast_backgroundRemovalMethod": "subtract_divide",
-    "Contrast_whiteningMethod": "std_division",
-    "Contrast_spaceFilter": "jinc",
-    "Contrast_sigma_x": 2.97,
-    "Contrast_k_max": 2,
+    "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
     # Linking
-    "cut_off_distance": 20.0,
-    "unmatched_penalty_distance": 15.0,
-    "flowEstimate": 0.0,
-    "maxPositiveGab": 3.0,
-    "maxNegativeGab": 2.0,
-    "gab_closing_cut_off_distance": 40.0,
-    "gab_closing_penalty_distance": 30.0,
-    "minTrackLength": 40.0,
+    "Linking": {
+        "minTrackLength": 10,
+        "cut_off_distance": 20,
+        "unmatched_penalty_distance": 15,
+        "maxNegativeGab": 2,
+        "maxPositiveGab": 3,
+        "gab_closing_cut_off_distance": 40,
+        "gab_closing_penalty_distance": 30,
+    },
+    # Trajectory properties to compute (positionStart/positionEnd always added separately)
+    "trajectoryProperties": [
+        "positionRefined", "timeFrame", "iOCprofile", "N",
+        "iOC", "STDiOC", "D", "velocity",
+    ],
+    # Post-processing
+    "iOCcalibration": "on",
+    "outlierFiltering": {
+        "referenceProperty": "iOC",
+        "filterProperties": ["STDiOC", "velocity", "N", "positionStart", "positionEnd"],
+        "thresholdDirection": ["upper", "both", "lower", "upper", "lower"],
+        "thresholdValue": ["3std", "3std", "3std", "3std", "3std"],
+    },
+    # Population analysis
+    "populationAnalysis": {"Title": "robustMean", "properties": ["iOC", "D", "velocity"]},
 }
 
 # ─────────────────────────────────────────────
@@ -129,7 +125,6 @@ def count_running_jobs() -> int:
 
 
 def list_all_jobs() -> list[dict]:
-    """Return all jobs sorted newest first."""
     jobs = []
     if not DATA_DIR.exists():
         return jobs
@@ -151,21 +146,12 @@ def list_all_jobs() -> list[dict]:
 
 
 def stream_upload_to_disk(uploaded_file, dest_path: Path) -> None:
-    """
-    Write a Streamlit UploadedFile to disk in chunks without buffering
-    the whole file in RAM.
-    """
     uploaded_file.seek(0)
     with open(dest_path, "wb") as f:
-        shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)  # 8 MB chunks
+        shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)
 
 
 def launch_matlab_container(job_id: str) -> None:
-    """
-    Fire-and-forget: start the MATLAB container via the Docker socket.
-    The entire job directory is mounted as /job so MATLAB can reach
-    config.json, read from /job/input, and write to /job/output.
-    """
     _, _, out = job_dirs(job_id)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -189,10 +175,6 @@ def launch_matlab_container(job_id: str) -> None:
 
 
 def submit_job(uploaded_files: list, config: dict) -> str:
-    """
-    Stream uploaded files to disk, write metadata and config, then
-    launch the MATLAB container. Returns the new job_id.
-    """
     job_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
@@ -224,159 +206,43 @@ def submit_job(uploaded_files: list, config: dict) -> str:
 # ─────────────────────────────────────────────
 
 
-def _load_mat_h5(mat_path: Path) -> dict:
-    """Load a MATLAB v7.3 .mat file (HDF5 format) using h5py."""
-    import h5py
-
-    def _flat(ds):
-        return np.array(ds).flatten()
-
-    with h5py.File(str(mat_path), "r") as f:
-        det = f["Detections"]
-        det_frames = _flat(det["frame"]) - 1
-        det_positions = _flat(det["position"]) - 1
-        det_positions_refined = _flat(det["position_refined"]) - 1
-        contrast = _flat(det["contrast"])
-        snr = _flat(det["snr"]) if "snr" in det else None
-
-        # h5py reads MATLAB arrays transposed (row-major vs column-major)
-        Y = np.array(f["Y"]).T if "Y" in f else np.array([])
-        C = np.array(f["C"]).T if "C" in f else np.array([])
-
-        ft = f["FinalTracks"] if "FinalTracks" in f else None
-        final_tracks = None
-        if ft is not None:
-            n_tracks = int(np.array(ft["nTracks"]).item())
-            frames_list, positions_list = [], []
-            if n_tracks > 0:
-                for ref in ft["frames"][0]:
-                    frames_list.append(np.array(f[ref]).flatten())
-                for ref in ft["positions_refined"][0]:
-                    positions_list.append(np.array(f[ref]).flatten())
-                # Note: track frame/position arrays are 1D so no transpose needed
-            final_tracks = {
-                "nTracks": n_tracks,
-                "frames": frames_list,
-                "positions_refined": positions_list,
-            }
-
-    return {
-        "det_frames": det_frames,
-        "det_positions": det_positions,
-        "det_positions_refined": det_positions_refined,
-        "det_contrast": contrast,
-        "det_snr": snr,
-        "denoised_y": Y,
-        "contrast_c": C,
-        "final_tracks": final_tracks,
-    }
-
-
-def load_mat_results(mat_path: Path) -> dict | None:
-    """Load a .mat file (v7.3 / HDF5) and return a normalised results dict."""
+def load_summary(output_dir: Path) -> dict | None:
+    p = output_dir / "summary.json"
+    if not p.exists():
+        return None
     try:
-        return _load_mat_h5(mat_path)
+        return json.loads(p.read_text())
     except Exception as e:
-        st.error(f"Could not load {mat_path.name}: {e}")
+        st.error(f"Could not read summary.json: {e}")
         return None
 
 
-# ─────────────────────────────────────────────
-# Visualisation
-# ─────────────────────────────────────────────
+def load_trajectories(output_dir: Path) -> dict | None:
+    p = output_dir / "trajectories.mat"
+    if not p.exists():
+        return None
+    try:
+        mat = scipy.io.loadmat(str(p))
+        return {
+            "iOC":           mat["iOC"].flatten(),
+            "D":             mat["D"].flatten(),
+            "velocity":      mat["velocity"].flatten(),
+            "N":             mat["N"].flatten(),
+            "positionStart": mat["positionStart"].flatten(),
+            "positionEnd":   mat["positionEnd"].flatten(),
+            "sweepIdx":      mat["sweepIdx"].flatten().astype(int),
+            "sweepLegends":  [str(s[0]) for s in mat["sweepLegends"].flatten()],
+        }
+    except Exception as e:
+        st.error(f"Could not read trajectories.mat: {e}")
+        return None
 
 
-def render_results(results: dict, raw_data: np.ndarray | None = None) -> None:
-    det_frames = results["det_frames"]
-    det_positions = results["det_positions"]
-    det_positions_refined = results["det_positions_refined"]
-    denoised_y = results["denoised_y"]
-    contrast_c = results["contrast_c"]
-    final_tracks = results["final_tracks"]
-
-    pw, ph = 12, 7
-
-    tab_labels = ["Tracks", "Denoised (Y)", "Contrast (C)"]
-    if raw_data is not None:
-        tab_labels.append("Raw (R)")
-    tabs = st.tabs(tab_labels)
-
-    # ── Tracks ──────────────────────────────────
-    with tabs[0]:
-        fig, ax = plt.subplots(figsize=(pw, ph))
-        im = ax.imshow(-denoised_y, aspect="auto", cmap="viridis", origin="lower")
-        n_tracks = 0
-        if final_tracks is not None:
-            try:
-                n_tracks = int(final_tracks["nTracks"])
-                frames_data = final_tracks["frames"]
-                pos_data = final_tracks["positions_refined"]
-                for i in range(n_tracks):
-                    ax.plot(
-                        np.array(pos_data[i]).flatten() - 1,
-                        np.array(frames_data[i]).flatten() - 1,
-                        "-",
-                        linewidth=1,
-                        alpha=0.9,
-                    )
-            except Exception as e:
-                st.warning(f"Could not render tracks: {e}")
-        plt.colorbar(im, ax=ax)
-        ax.set_title(f"Tracks (n = {n_tracks})")
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-
-    # ── Denoised Y ──────────────────────────────
-    with tabs[1]:
-        fig, ax = plt.subplots(figsize=(pw, ph))
-        im = ax.imshow(-denoised_y, aspect="auto", cmap="viridis", origin="lower")
-        if len(det_frames) > 0:
-            ax.scatter(det_positions, det_frames, color="red", s=10, label="Detections")
-            ax.legend()
-        plt.colorbar(im, ax=ax)
-        ax.set_title("Denoised (Y)")
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-
-    # ── Contrast C ──────────────────────────────
-    with tabs[2]:
-        fig, ax = plt.subplots(figsize=(pw, ph))
-        im = ax.imshow(-contrast_c, aspect="auto", cmap="viridis", origin="lower")
-        if len(det_frames) > 0:
-            ax.scatter(
-                det_positions_refined, det_frames, color="white", s=10, label="Refined"
-            )
-            ax.legend()
-        plt.colorbar(im, ax=ax)
-        ax.set_title("Contrast (C)")
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-
-    # ── Raw ─────────────────────────────────────
-    if raw_data is not None:
-        with tabs[3]:
-            fig, ax = plt.subplots(figsize=(pw, ph))
-            im = ax.imshow(raw_data, aspect="auto", cmap="gray", origin="lower")
-            plt.colorbar(im, ax=ax)
-            ax.set_title("Raw (R)")
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
-
-    # ── Detection table ─────────────────────────
-    if len(det_frames) > 0:
-        with st.expander("Detection details"):
-            st.dataframe(
-                pd.DataFrame({
-                    "Frame": det_frames + 1,
-                    "Position": det_positions + 1,
-                    "Position Refined": det_positions_refined + 1,
-                    "Contrast": results["det_contrast"],
-                    "SNR": results["det_snr"]
-                    if results["det_snr"] is not None
-                    else np.nan,
-                }),
-                use_container_width=True,
-            )
+def list_kymographs(output_dir: Path) -> list[Path]:
+    kymo_dir = output_dir / "kymographs"
+    if not kymo_dir.exists():
+        return []
+    return sorted(kymo_dir.glob("*.png"))
 
 
 # ─────────────────────────────────────────────
@@ -387,7 +253,7 @@ def render_results(results: dict, raw_data: np.ndarray | None = None) -> None:
 def render_config_sidebar() -> dict:
     st.sidebar.header("Algorithm Parameters")
 
-    with st.sidebar.expander("💾 Save / Load config"):
+    with st.sidebar.expander("Save / Load config"):
         uploaded_cfg = st.file_uploader(
             "Load config JSON", type=["json"], key="cfg_upload"
         )
@@ -401,128 +267,172 @@ def render_config_sidebar() -> dict:
             except Exception as e:
                 st.error(f"Could not load config: {e}")
 
-    config: dict[str, Any] = {}
+    cfg = DEFAULT_CONFIG
 
-    with st.sidebar.expander("Preprocessing", expanded=True):
-        config["Kt"] = st.number_input(
-            "Kt", value=DEFAULT_CONFIG["Kt"], step=1.0, key="Kt"
-        )
+    # ── Acquisition ──────────────────────────────────────────────────────
+    with st.sidebar.expander("Acquisition", expanded=True):
+        Dt = st.number_input("Dt (frame duration, s)", value=cfg["Dt"],
+                             format="%.4f", step=0.001, key="Dt")
+        Dx = st.number_input("Dx (pixel size, μm)", value=cfg["Dx"],
+                             format="%.4f", step=0.001, key="Dx")
+        flipIntensity = st.checkbox("Flip intensity", value=cfg["flipIntensity"],
+                                    key="flipIntensity")
+        flowEstimate = st.number_input("Flow estimate (px/frame)",
+                                       value=cfg["flowEstimate"],
+                                       format="%.2f", step=0.1, key="flowEstimate")
 
-    with st.sidebar.expander("Denoising"):
-        config["spaceFilter"] = st.selectbox(
-            "Space filter",
-            ["jinc", "gaussian", "laplacean_of_gaussian", "none"],
-            index=["jinc", "gaussian", "laplacean_of_gaussian", "none"].index(
-                DEFAULT_CONFIG["spaceFilter"]
-            ),
-            key="spaceFilter",
-        )
-        config["sigma_x"] = st.number_input(
-            "Sigma X", value=DEFAULT_CONFIG["sigma_x"], step=0.1, key="sigma_x"
-        )
-        config["timeFilter"] = st.selectbox(
-            "Time filter",
-            ["imgaussfilt", "none"],
-            index=["imgaussfilt", "none"].index(DEFAULT_CONFIG["timeFilter"]),
-            key="timeFilter",
-        )
-        config["sigma_t"] = st.number_input(
-            "Sigma T", value=DEFAULT_CONFIG["sigma_t"], step=0.1, key="sigma_t"
-        )
-        config["nonLinearFilter"] = st.selectbox(
-            "Non-linear filter",
-            ["none", "nlm"],
-            index=["none", "nlm"].index(DEFAULT_CONFIG["nonLinearFilter"]),
-            key="nonLinearFilter",
-        )
+    # ── Preprocessing ────────────────────────────────────────────────────
+    with st.sidebar.expander("Preprocessing"):
+        darkCalibration = st.number_input("Dark calibration",
+                                          value=int(cfg["kymographPreprocessing"]["darkCalibration"]),
+                                          step=1, key="darkCalibration")
+        Wx_sweep_enabled = st.session_state.get("sweep_enabled", False)
+        if Wx_sweep_enabled:
+            Wx_str = st.text_input("Wx values (comma-separated, px)",
+                                   value=str(cfg["kymographPreprocessing"]["Wx"]),
+                                   key="Wx_sweep")
+            Wt_str = st.text_input("Wt values (comma-separated, frames)",
+                                   value=str(cfg["kymographPreprocessing"]["Wt"]),
+                                   key="Wt_sweep")
+            Wx = _parse_sweep_values(Wx_str)
+            Wt = _parse_sweep_values(Wt_str)
+            if len(Wx) > 1 or len(Wt) > 1:
+                n_sweeps = len(Wx) * len(Wt)
+                st.caption(f"{len(Wx)} × {len(Wt)} = {n_sweeps} sweep(s) will run.")
+        else:
+            Wx = st.number_input("Wx (spatial window, px)",
+                                 value=float(cfg["kymographPreprocessing"]["Wx"]),
+                                 step=1.0, key="Wx_single")
+            Wt = st.number_input("Wt (temporal window, frames)",
+                                 value=float(cfg["kymographPreprocessing"]["Wt"]),
+                                 step=1.0, key="Wt_single")
+        ws = st.number_input("ws (PSF width, px)",
+                             value=cfg["kymographPreprocessing"]["ws"],
+                             format="%.2f", step=0.01, key="ws")
 
+    # ── Detection ────────────────────────────────────────────────────────
     with st.sidebar.expander("Detection"):
-        config["pfa"] = st.number_input(
-            "pfa", value=DEFAULT_CONFIG["pfa"], format="%.e", key="pfa"
-        )
-        config["localMinRange"] = st.number_input(
-            "Local min range",
-            value=DEFAULT_CONFIG["localMinRange"],
-            step=1,
-            key="localMinRange",
-        )
+        peakSign = st.selectbox("Peak sign",
+                                ["negative", "positive", "negative-positive"],
+                                index=0, key="peakSign")
+        pfa = st.number_input("pfa", value=cfg["Detection"]["pfa"],
+                              format="%.e", key="pfa")
+        localOptimumRange = st.number_input("Local optimum range",
+                                            value=int(cfg["Detection"]["localOptimumRange"]),
+                                            step=1, key="localOptimumRange")
 
-    with st.sidebar.expander("Feature extraction"):
-        config["positionRefinementMethod"] = st.selectbox(
-            "Refinement method",
-            ["centroid", "parabolic", "gaussian"],
-            index=["centroid", "parabolic", "gaussian"].index(
-                DEFAULT_CONFIG["positionRefinementMethod"]
-            ),
-            key="positionRefinementMethod",
-        )
-        config["fittingRadius"] = st.number_input(
-            "Fitting radius",
-            value=DEFAULT_CONFIG["fittingRadius"],
-            step=1,
-            key="fittingRadius",
-        )
+    # ── Tracking ─────────────────────────────────────────────────────────
+    with st.sidebar.expander("Tracking"):
+        minTrackLength = st.number_input("Min track length",
+                                         value=int(cfg["Linking"]["minTrackLength"]),
+                                         step=1, key="minTrackLength")
+        cut_off_distance = st.number_input("Cut-off distance",
+                                           value=float(cfg["Linking"]["cut_off_distance"]),
+                                           step=1.0, key="cut_off_distance")
+        unmatched_penalty_distance = st.number_input("Unmatched penalty distance",
+                                                     value=float(cfg["Linking"]["unmatched_penalty_distance"]),
+                                                     step=1.0, key="unmatched_penalty_distance")
+        maxNegativeGab = st.number_input("Max negative gap",
+                                         value=int(cfg["Linking"]["maxNegativeGab"]),
+                                         step=1, key="maxNegativeGab")
+        maxPositiveGab = st.number_input("Max positive gap",
+                                         value=int(cfg["Linking"]["maxPositiveGab"]),
+                                         step=1, key="maxPositiveGab")
+        gab_closing_cut_off_distance = st.number_input("Gap closing cut-off distance",
+                                                       value=float(cfg["Linking"]["gab_closing_cut_off_distance"]),
+                                                       step=1.0, key="gab_closing_cut_off_distance")
+        gab_closing_penalty_distance = st.number_input("Gap closing penalty distance",
+                                                       value=float(cfg["Linking"]["gab_closing_penalty_distance"]),
+                                                       step=1.0, key="gab_closing_penalty_distance")
 
-    with st.sidebar.expander("Linking / Tracking"):
-        config["cut_off_distance"] = st.number_input(
-            "Cut-off distance",
-            value=DEFAULT_CONFIG["cut_off_distance"],
-            step=1.0,
-            key="cut_off_distance",
-        )
-        config["unmatched_penalty_distance"] = st.number_input(
-            "Unmatched penalty",
-            value=DEFAULT_CONFIG["unmatched_penalty_distance"],
-            step=1.0,
-            key="unmatched_penalty_distance",
-        )
-        config["flowEstimate"] = st.number_input(
-            "Flow estimate",
-            value=DEFAULT_CONFIG["flowEstimate"],
-            step=0.1,
-            key="flowEstimate",
-        )
-        config["minTrackLength"] = st.number_input(
-            "Min track length",
-            value=DEFAULT_CONFIG["minTrackLength"],
-            step=1.0,
-            key="minTrackLength",
-        )
-        st.caption("Gap closing")
-        config["maxPositiveGab"] = st.number_input(
-            "Max positive gap",
-            value=DEFAULT_CONFIG["maxPositiveGab"],
-            step=1.0,
-            key="maxPositiveGab",
-        )
-        config["maxNegativeGab"] = st.number_input(
-            "Max negative gap",
-            value=DEFAULT_CONFIG["maxNegativeGab"],
-            step=1.0,
-            key="maxNegativeGab",
-        )
-        config["gab_closing_cut_off_distance"] = st.number_input(
-            "Gap closing dist",
-            value=DEFAULT_CONFIG["gab_closing_cut_off_distance"],
-            step=1.0,
-            key="gab_closing_cut_off_distance",
-        )
-        config["gab_closing_penalty_distance"] = st.number_input(
-            "Gap closing penalty",
-            value=DEFAULT_CONFIG["gab_closing_penalty_distance"],
-            step=1.0,
-            key="gab_closing_penalty_distance",
-        )
+    # ── Post-processing ──────────────────────────────────────────────────
+    with st.sidebar.expander("Post-processing"):
+        ioc_cal_on = st.toggle("iOC calibration", value=(cfg["iOCcalibration"] == "on"),
+                               key="iOCcalibration_toggle")
+        iOCcalibration = "on" if ioc_cal_on else "off"
+        st.caption("Outlier filtering properties and thresholds use defaults (upload config JSON for full control).")
+
+    # ── Population analysis ──────────────────────────────────────────────
+    with st.sidebar.expander("Population analysis"):
+        pop_method = st.selectbox("Method", ["robustMean", "GMM"],
+                                  index=0, key="pop_method")
+
+    # ── Parameter sweep ──────────────────────────────────────────────────
+    with st.sidebar.expander("Parameter sweep", expanded=False):
+        sweep_enabled = st.checkbox("Enable sweep (Wx × Wt)", value=False,
+                                    key="sweep_enabled")
 
     st.sidebar.download_button(
         "Export current config",
-        data=json.dumps(config, indent=2),
+        data=json.dumps(_build_config(
+            Dt, Dx, flipIntensity, flowEstimate,
+            darkCalibration, Wx, Wt, ws,
+            peakSign, pfa, localOptimumRange,
+            minTrackLength, cut_off_distance, unmatched_penalty_distance,
+            maxNegativeGab, maxPositiveGab,
+            gab_closing_cut_off_distance, gab_closing_penalty_distance,
+            iOCcalibration, pop_method,
+        ), indent=2),
         file_name="config.json",
         mime="application/json",
         use_container_width=True,
     )
 
-    return config
+    return _build_config(
+        Dt, Dx, flipIntensity, flowEstimate,
+        darkCalibration, Wx, Wt, ws,
+        peakSign, pfa, localOptimumRange,
+        minTrackLength, cut_off_distance, unmatched_penalty_distance,
+        maxNegativeGab, maxPositiveGab,
+        gab_closing_cut_off_distance, gab_closing_penalty_distance,
+        iOCcalibration, pop_method,
+    )
+
+
+def _parse_sweep_values(s: str) -> list[float]:
+    try:
+        return [float(v.strip()) for v in s.split(",") if v.strip()]
+    except ValueError:
+        return [15.0]
+
+
+def _build_config(
+    Dt, Dx, flipIntensity, flowEstimate,
+    darkCalibration, Wx, Wt, ws,
+    peakSign, pfa, localOptimumRange,
+    minTrackLength, cut_off_distance, unmatched_penalty_distance,
+    maxNegativeGab, maxPositiveGab,
+    gab_closing_cut_off_distance, gab_closing_penalty_distance,
+    iOCcalibration, pop_method,
+) -> dict:
+    cfg = DEFAULT_CONFIG.copy()
+    cfg["Dt"] = Dt
+    cfg["Dx"] = Dx
+    cfg["flipIntensity"] = flipIntensity
+    cfg["flowEstimate"] = flowEstimate
+    cfg["kymographPreprocessing"] = {
+        "darkCalibration": int(darkCalibration),
+        "Wx": Wx if isinstance(Wx, list) else float(Wx),
+        "Wt": Wt if isinstance(Wt, list) else float(Wt),
+        "ws": float(ws),
+    }
+    cfg["Detection"] = {
+        "peakSign": peakSign,
+        "pfa": float(pfa),
+        "localOptimumRange": int(localOptimumRange),
+    }
+    cfg["Linking"] = {
+        "minTrackLength": int(minTrackLength),
+        "cut_off_distance": float(cut_off_distance),
+        "unmatched_penalty_distance": float(unmatched_penalty_distance),
+        "maxNegativeGab": int(maxNegativeGab),
+        "maxPositiveGab": int(maxPositiveGab),
+        "gab_closing_cut_off_distance": float(gab_closing_cut_off_distance),
+        "gab_closing_penalty_distance": float(gab_closing_penalty_distance),
+    }
+    cfg["iOCcalibration"] = iOCcalibration
+    cfg["populationAnalysis"]["Title"] = pop_method
+    return cfg
 
 
 # ─────────────────────────────────────────────
@@ -534,8 +444,8 @@ def page_submit(config: dict) -> None:
     st.header("Submit Analysis")
 
     uploaded_files = st.file_uploader(
-        "Upload .tiff files",
-        type=["tif", "tiff"],
+        "Upload .tiff files and their paired .txt metadata files",
+        type=["tif", "tiff", "txt"],
         accept_multiple_files=True,
         key="uploader",
     )
@@ -548,7 +458,7 @@ def page_submit(config: dict) -> None:
     )
 
     if not uploaded_files:
-        st.info("Upload one or more .tiff files to begin.")
+        st.info("Upload one or more .tiff files and their paired .txt metadata files to begin.")
         return
 
     col_submit, col_wait = st.columns(2)
@@ -580,7 +490,6 @@ def page_submit(config: dict) -> None:
         st.session_state["last_job_id"] = job_id
         st.session_state["waiting"] = wait_for_result
 
-    # ── Active wait ──────────────────────────────
     active_job_id = st.session_state.get("last_job_id")
     if active_job_id and st.session_state.get("waiting"):
         status_placeholder = st.empty()
@@ -589,7 +498,7 @@ def page_submit(config: dict) -> None:
         status = read_status(active_job_id)
         if status["status"] == "processing":
             status_placeholder.info(
-                f"⏳ Running… (job `{active_job_id}`). Checking every {POLL_INTERVAL_S}s."
+                f"Running... (job `{active_job_id}`). Checking every {POLL_INTERVAL_S}s."
             )
             time.sleep(POLL_INTERVAL_S)
             st.rerun()
@@ -597,11 +506,11 @@ def page_submit(config: dict) -> None:
             st.session_state["waiting"] = False
             status_placeholder.empty()
             if status["status"] == "completed":
-                result_placeholder.success("✅ Analysis complete!")
+                result_placeholder.success("Analysis complete!")
                 _show_job_results(active_job_id)
             else:
                 result_placeholder.error(
-                    f"❌ Job failed: {status.get('error', 'unknown error')}"
+                    f"Job failed: {status.get('error', 'unknown error')}"
                 )
 
 
@@ -664,7 +573,6 @@ def page_history() -> None:
     else:
         st.caption("No completed jobs to display yet.")
 
-    # ── Admin: force-free stuck jobs ─────────────
     stuck_jobs = [j for j in jobs if j["status"] == "processing"]
     if stuck_jobs:
         with st.expander("Admin"):
@@ -692,61 +600,167 @@ def page_history() -> None:
 
 
 def _show_job_results(job_id: str) -> None:
-    """Render all .mat results for a given job."""
     _, _, out = job_dirs(job_id)
-    mat_files = sorted(out.glob("*.mat"))
 
-    if not mat_files:
+    summary = load_summary(out)
+    traj = load_trajectories(out)
+    kymographs = list_kymographs(out)
+
+    if summary is None and traj is None and not kymographs:
         st.warning("No result files found yet.")
         return
 
-    if len(mat_files) == 1:
-        _render_single_mat(mat_files[0], job_id)
-    else:
-        file_names = [f.name for f in mat_files]
-        session_key = f"mat_sel_{job_id}"
-        # Initialise to first file if not already set or stale
-        if (
-            session_key not in st.session_state
-            or st.session_state[session_key] not in file_names
-        ):
-            st.session_state[session_key] = file_names[0]
-        selected_name = st.selectbox(
-            "Select file",
-            file_names,
-            index=file_names.index(st.session_state[session_key]),
-            key=session_key,
-        )
-        _render_single_mat(out / selected_name, job_id)
+    tab_kymo, tab_traj, tab_pop, tab_table = st.tabs(
+        ["Kymographs", "Trajectories", "Population", "Summary"]
+    )
+
+    with tab_kymo:
+        _render_kymographs(kymographs, job_id)
+
+    with tab_traj:
+        _render_trajectories(traj, job_id)
+
+    with tab_pop:
+        _render_population(summary)
+
+    with tab_table:
+        _render_summary_table(summary)
 
 
-def _render_single_mat(mat_path: Path, job_id: str) -> None:
-    st.subheader(mat_path.stem)
-    results = load_mat_results(mat_path)
-    if results is None:
+# ─────────────────────────────────────────────
+# Result tabs
+# ─────────────────────────────────────────────
+
+
+def _render_kymographs(kymographs: list[Path], job_id: str) -> None:
+    if not kymographs:
+        st.info("No kymograph images found.")
         return
 
-    _, inp, _ = job_dirs(job_id)
-    tiff_path = inp / (mat_path.stem + ".tiff")
-    if not tiff_path.exists():
-        tiff_path = inp / (mat_path.stem + ".tif")
+    names = [p.name for p in kymographs]
+    sel = st.selectbox("Select kymograph", names, key=f"kymo_sel_{job_id}")
+    kymo_path = next(p for p in kymographs if p.name == sel)
+    st.image(str(kymo_path), use_container_width=True)
 
-    raw_data = None
-    if tiff_path.exists():
-        try:
-            raw_data = tifffile.imread(str(tiff_path))
-        except Exception:
-            pass  # raw tab simply won't appear
 
-    render_results(results, raw_data)
+def _render_trajectories(traj: dict | None, job_id: str) -> None:
+    if traj is None:
+        st.info("trajectories.mat not found.")
+        return
 
-    st.download_button(
-        f"Download {mat_path.name}",
-        data=mat_path.read_bytes(),
-        file_name=mat_path.name,
-        mime="application/octet-stream",
-        key=f"dl_{mat_path.name}_{job_id}",
-    )
+    sweep_legends = traj["sweepLegends"]
+    sweep_idx = traj["sweepIdx"]
+
+    sweep_options = list(dict.fromkeys(sweep_legends))  # preserve order, deduplicate
+    if len(sweep_options) > 1:
+        sel_sweep = st.selectbox("Select sweep", sweep_options, key=f"traj_sweep_sel_{job_id}")
+        mask = sweep_idx == (sweep_options.index(sel_sweep) + 1)
+    else:
+        mask = np.ones(len(sweep_idx), dtype=bool)
+
+    ioc = traj["iOC"][mask]
+    D   = traj["D"][mask]
+    vel = traj["velocity"][mask]
+    N   = traj["N"][mask]
+
+    if len(ioc) == 0:
+        st.info("No trajectories in this sweep.")
+        return
+
+    st.metric("Trajectories", int(mask.sum()))
+
+    # Scatter: iOC vs trajectory index, coloured by D
+    fig, ax = plt.subplots(figsize=(10, 4))
+    sc = ax.scatter(np.arange(len(ioc)), ioc, c=D, cmap="viridis", s=10)
+    plt.colorbar(sc, ax=ax, label="D")
+    ax.set_xlabel("Trajectory index")
+    ax.set_ylabel("iOC")
+    ax.set_title("iOC per trajectory (coloured by D)")
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+    # Histograms 2×2
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6))
+    for ax, data, label in zip(
+        axes.flat,
+        [ioc, D, vel, N],
+        ["iOC", "D", "velocity", "N"],
+    ):
+        ax.hist(data[np.isfinite(data)], bins=30)
+        ax.set_xlabel(label)
+        ax.set_ylabel("Count")
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+
+def _render_population(summary: dict | None) -> None:
+    if summary is None:
+        st.info("summary.json not found.")
+        return
+
+    sweeps = summary.get("sweeps", [])
+    if not sweeps:
+        st.info("No sweep data in summary.")
+        return
+
+    props = list(sweeps[0].get("MEAN", {}).keys())
+
+    for prop in props:
+        st.subheader(prop)
+        cols = st.columns(len(sweeps))
+        for col, sweep in zip(cols, sweeps):
+            with col:
+                mean_val = sweep.get("MEAN", {}).get(prop, float("nan"))
+                fwhm_val = sweep.get("FWHM", {}).get(prop, float("nan"))
+                res_val  = sweep.get("RESOLUTION", {}).get(prop, float("nan"))
+                legend   = sweep.get("legend", "")
+                st.metric(f"{legend} MEAN", f"{mean_val:.4g}")
+                st.metric("FWHM", f"{fwhm_val:.4g}")
+                st.metric("RESOLUTION", f"{res_val:.4g}")
+
+    # Bar chart of MEAN values across sweeps for each property
+    if len(sweeps) > 1:
+        st.subheader("Sweep comparison")
+        for prop in props:
+            means = [s.get("MEAN", {}).get(prop, float("nan")) for s in sweeps]
+            fwhms = [s.get("FWHM", {}).get(prop, float("nan")) for s in sweeps]
+            legends = [s.get("legend", f"Sweep {i+1}") for i, s in enumerate(sweeps)]
+
+            fig, ax = plt.subplots(figsize=(max(6, len(sweeps) * 1.5), 4))
+            x = np.arange(len(sweeps))
+            ax.bar(x, means, yerr=fwhms, capsize=4, width=0.6)
+            ax.set_xticks(x)
+            ax.set_xticklabels(legends, rotation=20, ha="right")
+            ax.set_ylabel(prop)
+            ax.set_title(f"{prop} MEAN ± FWHM")
+            fig.tight_layout()
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
+
+
+def _render_summary_table(summary: dict | None) -> None:
+    if summary is None:
+        st.info("summary.json not found.")
+        return
+
+    sweeps = summary.get("sweeps", [])
+    if not sweeps:
+        st.info("No sweep data in summary.")
+        return
+
+    props = list(sweeps[0].get("MEAN", {}).keys())
+
+    rows = []
+    for s in sweeps:
+        row = {"Sweep": s.get("legend", ""), "N trajectories": s.get("nTrajectories", 0)}
+        for prop in props:
+            row[f"{prop} MEAN"] = s.get("MEAN", {}).get(prop, float("nan"))
+            row[f"{prop} FWHM"] = s.get("FWHM", {}).get(prop, float("nan"))
+            row[f"{prop} RESOLUTION"] = s.get("RESOLUTION", {}).get(prop, float("nan"))
+        rows.append(row)
+
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
 # ─────────────────────────────────────────────
@@ -788,6 +802,20 @@ def main() -> None:
         4. Enable **Wait for result** if you prefer to watch progress on this page.
         5. Once complete, results appear in the **History** tab. All users share
            the same history.
+
+        ### Output files
+
+        | File | Contents |
+        |------|----------|
+        | `kymographs/*.png` | Kymograph images with track overlays |
+        | `trajectories.mat` | Per-trajectory: iOC, D, velocity, N, positionStart, positionEnd |
+        | `summary.json` | Population statistics per sweep (MEAN, FWHM, RESOLUTION) |
+        | `results.mat` | Full archive for MATLAB post-processing |
+
+        ### Parameter sweep
+
+        Enable **Parameter sweep** in the sidebar to run multiple Wx × Wt combinations
+        in a single job. Enter comma-separated values, e.g. `10, 15, 20`.
 
         ### Worker slots
 
