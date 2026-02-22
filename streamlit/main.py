@@ -795,7 +795,8 @@ def main() -> None:
         ### How to use
 
         1. Configure algorithm parameters in the sidebar.
-        2. Upload one or more `.tiff` files in the **Submit** tab.
+        2. Upload your `.tiff` files **and their paired `.txt` metadata files** in the **Submit** tab.
+           Each TIFF must have a matching TXT with the same base name (e.g. `data_001.tiff` + `data_001.txt`).
         3. Click **Submit job**. Files are written to disk immediately and the
            MATLAB container starts in the background — your browser does not need
            to stay open.
