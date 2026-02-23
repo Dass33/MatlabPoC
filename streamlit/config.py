@@ -43,6 +43,56 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
+def _apply_config_to_session_state(cfg: dict) -> None:
+    flat: dict = {}
+
+    for k in ("Dt", "Dx", "flipIntensity", "flowEstimate"):
+        if k in cfg:
+            flat[k] = cfg[k]
+
+    pp = cfg.get("kymographPreprocessing", {})
+    if "darkCalibration" in pp:
+        flat["darkCalibration"] = pp["darkCalibration"]
+    if "ws" in pp:
+        flat["ws"] = pp["ws"]
+    if "Wx" in pp:
+        wx = pp["Wx"]
+        if isinstance(wx, list):
+            flat["sweep_enabled"] = True
+            flat["Wx_sweep"] = ", ".join(str(v) for v in wx)
+        else:
+            flat["Wx_single"] = float(wx)
+    if "Wt" in pp:
+        wt = pp["Wt"]
+        if isinstance(wt, list):
+            flat["sweep_enabled"] = True
+            flat["Wt_sweep"] = ", ".join(str(v) for v in wt)
+        else:
+            flat["Wt_single"] = float(wt)
+
+    det = cfg.get("Detection", {})
+    for k in ("peakSign", "pfa", "localOptimumRange"):
+        if k in det:
+            flat[k] = det[k]
+
+    link = cfg.get("Linking", {})
+    for k in ("minTrackLength", "cut_off_distance", "unmatched_penalty_distance",
+              "maxNegativeGab", "maxPositiveGab",
+              "gab_closing_cut_off_distance", "gab_closing_penalty_distance"):
+        if k in link:
+            flat[k] = link[k]
+
+    if "iOCcalibration" in cfg:
+        flat["iOCcalibration_toggle"] = cfg["iOCcalibration"] == "on"
+
+    pop = cfg.get("populationAnalysis", {})
+    if "Title" in pop:
+        flat["pop_method"] = pop["Title"]
+
+    for k, v in flat.items():
+        st.session_state[k] = v
+
+
 def _parse_sweep_values(s: str) -> list[float]:
     try:
         return [float(v.strip()) for v in s.split(",") if v.strip()]
@@ -100,9 +150,7 @@ def render_config_sidebar() -> dict:
         if uploaded_cfg:
             try:
                 loaded = json.load(uploaded_cfg)
-                for k, v in loaded.items():
-                    if k in st.session_state:
-                        st.session_state[k] = v
+                _apply_config_to_session_state(loaded)
                 st.success("Config loaded.")
             except Exception as e:
                 st.error(f"Could not load config: {e}")
@@ -126,7 +174,7 @@ def render_config_sidebar() -> dict:
         darkCalibration = st.number_input("Dark calibration",
                                           value=int(cfg["kymographPreprocessing"]["darkCalibration"]),
                                           step=1, key="darkCalibration")
-        Wx_sweep_enabled = st.session_state.get("sweep_enabled", False)
+        Wx_sweep_enabled = st.checkbox("Parameter sweep (Wx × Wt)", value=False, key="sweep_enabled")
         if Wx_sweep_enabled:
             Wx_str = st.text_input("Wx values (comma-separated, px)",
                                    value=str(cfg["kymographPreprocessing"]["Wx"]),
@@ -197,11 +245,6 @@ def render_config_sidebar() -> dict:
         pop_method = st.selectbox("Method", ["robustMean", "GMM"],
                                   index=0, key="pop_method")
 
-    # ── Parameter sweep ──────────────────────────────────────────────────
-    with st.sidebar.expander("Parameter sweep", expanded=False):
-        sweep_enabled = st.checkbox("Enable sweep (Wx × Wt)", value=False,
-                                    key="sweep_enabled")
-
     built_config = _build_config(
         Dt, Dx, flipIntensity, flowEstimate,
         darkCalibration, Wx, Wt, ws,
@@ -217,7 +260,7 @@ def render_config_sidebar() -> dict:
         data=json.dumps(built_config, indent=2),
         file_name="config.json",
         mime="application/json",
-        use_container_width=True,
+        width="stretch",
     )
 
     return built_config

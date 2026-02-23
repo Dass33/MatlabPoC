@@ -87,7 +87,7 @@ def _render_kymographs(kymographs: list[Path], job_id: str, key_suffix: str = ""
     names = [p.name for p in kymographs]
     sel = st.selectbox("Select kymograph", names, key=f"kymo_sel_{job_id}_{key_suffix}")
     kymo_path = next(p for p in kymographs if p.name == sel)
-    st.image(str(kymo_path), use_container_width=True)
+    st.image(str(kymo_path), width="stretch")
 
 
 def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -> None:
@@ -123,7 +123,7 @@ def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -
     ax.set_xlabel("Trajectory index")
     ax.set_ylabel("iOC")
     ax.set_title("iOC per trajectory (coloured by D)")
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, width="stretch")
     plt.close(fig)
 
     # Histograms 2×2
@@ -137,7 +137,7 @@ def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -
         ax.set_xlabel(label)
         ax.set_ylabel("Count")
     fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, width="stretch")
     plt.close(fig)
 
 
@@ -182,7 +182,7 @@ def _render_population(summary: dict | None) -> None:
             ax.set_ylabel(prop)
             ax.set_title(f"{prop} MEAN ± FWHM")
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig, width="stretch")
             plt.close(fig)
 
 
@@ -207,4 +207,4 @@ def _render_summary_table(summary: dict | None) -> None:
             row[f"{prop} RESOLUTION"] = s.get("RESOLUTION", {}).get(prop, float("nan"))
         rows.append(row)
 
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)

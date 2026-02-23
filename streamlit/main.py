@@ -85,11 +85,19 @@ def page_submit(config: dict) -> None:
     )
 
     if not uploaded_files:
-        st.info("Upload one or more .tiff files and their paired .txt metadata files to begin.")
+        st.info(
+            "Upload one or more .tiff files and their paired .txt metadata files to begin."
+        )
         return
 
-    tiff_stems = {Path(f.name).stem for f in uploaded_files if f.name.lower().endswith((".tif", ".tiff"))}
-    txt_stems = {Path(f.name).stem for f in uploaded_files if f.name.lower().endswith(".txt")}
+    tiff_stems = {
+        Path(f.name).stem
+        for f in uploaded_files
+        if f.name.lower().endswith((".tif", ".tiff"))
+    }
+    txt_stems = {
+        Path(f.name).stem for f in uploaded_files if f.name.lower().endswith(".txt")
+    }
     missing_txt = tiff_stems - txt_stems
     if missing_txt:
         st.error(
@@ -104,7 +112,7 @@ def page_submit(config: dict) -> None:
             "Submit job",
             type="primary",
             disabled=(slots_free == 0),
-            use_container_width=True,
+            width="stretch",
         )
     with col_wait:
         wait_for_result = st.toggle("Wait for result", value=False)
@@ -161,7 +169,7 @@ def page_history() -> None:
 
     col_refresh, col_auto = st.columns([1, 3])
     with col_refresh:
-        if st.button("Refresh", use_container_width=True):
+        if st.button("Refresh", width="stretch"):
             st.rerun()
     with col_auto:
         auto_refresh = st.toggle("Auto-refresh every 10 s", value=False)
@@ -183,7 +191,7 @@ def page_history() -> None:
             }
             for j in jobs
         ]),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -311,12 +319,11 @@ def main() -> None:
         ### Worker slots
 
         There are **{MAX_WORKERS}** concurrent MATLAB worker slots. If both are busy,
-        wait for one to finish or arrange submission order with colleagues.
+        wait for one to finish.
 
         ### File retention
 
-        Input and output files are stored under `{DATA_DIR}`. Ask your system
-        administrator about the retention policy.
+        Input and output files are stored under `{DATA_DIR}`.
         """)
 
 
