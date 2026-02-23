@@ -57,6 +57,9 @@ try
 
     % ── Collection postprocessing ─────────────────────────────────────────
     for iSweep = 1:length(collection)
+        if isfield(collection(iSweep), 'iOC') && isempty(collection(iSweep).iOC)
+            error('No trajectories detected (sweep %d/%d). Check your data and detection parameters (pfa, flowEstimate).', iSweep, length(collection));
+        end
         [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = ...
             collectionPostprocessing(collection(iSweep), Setting);
     end
@@ -92,6 +95,8 @@ end % AnalyzeExperimentApp
 % ─────────────────────────────────────────────────────────────────────────────
 
 function Setting = build_setting(config, outputDir)
+
+validate_config(config);
 
 % Paths
 Setting.Path.exportFolder = outputDir;
@@ -224,15 +229,49 @@ end % save_summary
 
 % ─────────────────────────────────────────────────────────────────────────────
 
+function validate_config(config)
+
+required_top = {'Dt','Dx','flipIntensity','flowEstimate', ...
+    'kymographPreprocessing','Detection','Linking', ...
+    'trajectoryProperties','iOCcalibration','outlierFiltering','populationAnalysis'};
+for i = 1:length(required_top)
+    if ~isfield(config, required_top{i})
+        error('config.json missing required field: %s', required_top{i});
+    end
+end
+
+numeric_fields = {'Dt','Dx','flowEstimate'};
+for i = 1:length(numeric_fields)
+    f = numeric_fields{i};
+    if ~isnumeric(config.(f))
+        error('config.json field "%s" must be numeric, got %s', f, class(config.(f)));
+    end
+end
+
+det_required = {'peakSign','pfa','localOptimumRange'};
+for i = 1:length(det_required)
+    if ~isfield(config.Detection, det_required{i})
+        error('config.json missing required field: Detection.%s', det_required{i});
+    end
+end
+if ~isnumeric(config.Detection.pfa)
+    error('config.json field "Detection.pfa" must be numeric, got %s', class(config.Detection.pfa));
+end
+
+end % validate_config
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
 function write_status(statusFile, status, errorMsg)
 
+s.status = status;
 if isempty(errorMsg)
-    jsonStr = sprintf('{"status": "%s", "error": null}\n', status);
+    s.error = [];
 else
-    safe    = strrep(errorMsg, '\', '\\');
-    safe    = strrep(safe,     '"', '\"');
-    jsonStr = sprintf('{"status": "%s", "error": "%s"}\n', status, safe);
+    s.error = errorMsg;
 end
+jsonStr = [jsonencode(s) newline];
 
 tmpFile = [statusFile '.tmp'];
 fid = fopen(tmpFile, 'w');
