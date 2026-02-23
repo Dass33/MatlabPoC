@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sys
 import time
 import uuid
 from datetime import datetime
@@ -50,7 +51,7 @@ import streamlit as st
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/jobs"))
 HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
-MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "nsm-matlab:latest")
+MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "matlab-algorithm:latest")
 MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "2"))
 POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "5"))
 
@@ -110,7 +111,8 @@ def read_status(job_id: str) -> dict:
         return {"status": "processing", "error": None}
     try:
         return json.loads(status_file.read_text())
-    except Exception:
+    except Exception as e:
+        print(f"[read_status] {job_id}: {e}", file=sys.stderr)
         return {"status": "unknown", "error": "Could not read status.json"}
 
 
@@ -140,7 +142,8 @@ def list_all_jobs() -> list[dict]:
             meta["status"] = status["status"]
             meta["error"] = status.get("error")
             jobs.append(meta)
-        except Exception:
+        except Exception as e:
+            print(f"[list_all_jobs] skipping {job_dir.name}: {e}", file=sys.stderr)
             continue
     return sorted(jobs, key=lambda j: j.get("submitted_at", ""), reverse=True)
 
@@ -393,6 +396,7 @@ def _parse_sweep_values(s: str) -> list[float]:
     try:
         return [float(v.strip()) for v in s.split(",") if v.strip()]
     except ValueError:
+        st.warning(f"Could not parse sweep values from {s!r} — using default [15.0].")
         return [15.0]
 
 
@@ -507,7 +511,7 @@ def page_submit(config: dict) -> None:
             status_placeholder.empty()
             if status["status"] == "completed":
                 result_placeholder.success("Analysis complete!")
-                _show_job_results(active_job_id)
+                _show_job_results(active_job_id, key_suffix="submit")
             else:
                 result_placeholder.error(
                     f"Job failed: {status.get('error', 'unknown error')}"
@@ -549,6 +553,7 @@ def page_history() -> None:
                 "Files": ", ".join(j.get("filenames", [])),
                 "Submitted": j.get("submitted_at", "—"),
                 "Status": f"{STATUS_ICON.get(j['status'], '❓')} {j['status']}",
+                "Error": j.get("error") or "" if j["status"] == "failed" else "",
             }
             for j in jobs
         ]),
@@ -569,9 +574,32 @@ def page_history() -> None:
             format_func=lambda k: options[k],
         )
         if selected_id:
-            _show_job_results(selected_id)
+            _show_job_results(selected_id, key_suffix="history")
     else:
         st.caption("No completed jobs to display yet.")
+
+    failed_jobs = [j for j in jobs if j["status"] == "failed"]
+    if failed_jobs:
+        st.divider()
+        st.subheader("Failed jobs")
+        options = {
+            j["job_id"]: f"{j['job_id']} — {', '.join(j['filenames'])}"
+            for j in failed_jobs
+        }
+        selected_failed = st.selectbox(
+            "Select failed job",
+            options=list(options.keys()),
+            format_func=lambda k: options[k],
+            key="failed_select",
+        )
+        if selected_failed:
+            failed_job = next(j for j in failed_jobs if j["job_id"] == selected_failed)
+            st.error(failed_job.get("error") or "Unknown error")
+            _, _, out = job_dirs(selected_failed)
+            kymographs = list_kymographs(out)
+            if kymographs:
+                st.caption("Kymographs generated before failure:")
+                _render_kymographs(kymographs, selected_failed, key_suffix="failed")
 
     stuck_jobs = [j for j in jobs if j["status"] == "processing"]
     if stuck_jobs:
@@ -599,7 +627,7 @@ def page_history() -> None:
         st.rerun()
 
 
-def _show_job_results(job_id: str) -> None:
+def _show_job_results(job_id: str, key_suffix: str = "") -> None:
     _, _, out = job_dirs(job_id)
 
     summary = load_summary(out)
@@ -615,10 +643,10 @@ def _show_job_results(job_id: str) -> None:
     )
 
     with tab_kymo:
-        _render_kymographs(kymographs, job_id)
+        _render_kymographs(kymographs, job_id, key_suffix)
 
     with tab_traj:
-        _render_trajectories(traj, job_id)
+        _render_trajectories(traj, job_id, key_suffix)
 
     with tab_pop:
         _render_population(summary)
@@ -632,18 +660,18 @@ def _show_job_results(job_id: str) -> None:
 # ─────────────────────────────────────────────
 
 
-def _render_kymographs(kymographs: list[Path], job_id: str) -> None:
+def _render_kymographs(kymographs: list[Path], job_id: str, key_suffix: str = "") -> None:
     if not kymographs:
         st.info("No kymograph images found.")
         return
 
     names = [p.name for p in kymographs]
-    sel = st.selectbox("Select kymograph", names, key=f"kymo_sel_{job_id}")
+    sel = st.selectbox("Select kymograph", names, key=f"kymo_sel_{job_id}_{key_suffix}")
     kymo_path = next(p for p in kymographs if p.name == sel)
     st.image(str(kymo_path), use_container_width=True)
 
 
-def _render_trajectories(traj: dict | None, job_id: str) -> None:
+def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -> None:
     if traj is None:
         st.info("trajectories.mat not found.")
         return
@@ -653,7 +681,7 @@ def _render_trajectories(traj: dict | None, job_id: str) -> None:
 
     sweep_options = list(dict.fromkeys(sweep_legends))  # preserve order, deduplicate
     if len(sweep_options) > 1:
-        sel_sweep = st.selectbox("Select sweep", sweep_options, key=f"traj_sweep_sel_{job_id}")
+        sel_sweep = st.selectbox("Select sweep", sweep_options, key=f"traj_sweep_sel_{job_id}_{key_suffix}")
         mask = sweep_idx == (sweep_options.index(sel_sweep) + 1)
     else:
         mask = np.ones(len(sweep_idx), dtype=bool)
