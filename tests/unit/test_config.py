@@ -1,9 +1,10 @@
 """Unit tests for streamlit/config.py."""
 from __future__ import annotations
 
+import pytest
 import streamlit as st
 
-from config import DEFAULT_CONFIG, _build_config, _parse_sweep_values
+from config import DEFAULT_CONFIG, _apply_config_to_session_state, _build_config, _parse_sweep_values
 
 _REQUIRED_TOP_LEVEL = [
     "Dt", "Dx", "flipIntensity", "flowEstimate",
@@ -85,6 +86,84 @@ class TestBuildConfig:
     def test_pop_method_stored_in_population_analysis(self):
         cfg = _build(pop_method="GMM")
         assert cfg["populationAnalysis"]["Title"] == "GMM"
+
+
+class TestApplyConfigToSessionState:
+    @pytest.fixture(autouse=True)
+    def session_state(self, monkeypatch):
+        state = {}
+        monkeypatch.setattr(st, "session_state", state)
+        self._state = state
+        return state
+
+    def test_flat_acquisition_fields(self):
+        _apply_config_to_session_state({"Dt": 0.01, "Dx": 0.05, "flipIntensity": False, "flowEstimate": 1.0})
+        assert self._state["Dt"] == 0.01
+        assert self._state["Dx"] == 0.05
+        assert self._state["flipIntensity"] is False
+        assert self._state["flowEstimate"] == 1.0
+
+    def test_preprocessing_scalar(self):
+        _apply_config_to_session_state({"kymographPreprocessing": {"darkCalibration": 10, "Wx": 20.0, "Wt": 60.0, "ws": 3.0}})
+        assert self._state["darkCalibration"] == 10
+        assert self._state["ws"] == 3.0
+        assert self._state["Wx_single"] == 20.0
+        assert self._state["Wt_single"] == 60.0
+        assert "sweep_enabled" not in self._state
+
+    def test_preprocessing_sweep_wx(self):
+        _apply_config_to_session_state({"kymographPreprocessing": {"Wx": [10.0, 20.0], "Wt": 50.0}})
+        assert self._state["sweep_enabled"] is True
+        assert self._state["Wx_sweep"] == "10.0, 20.0"
+        assert self._state["Wt_single"] == 50.0
+
+    def test_preprocessing_sweep_wt(self):
+        _apply_config_to_session_state({"kymographPreprocessing": {"Wx": 15.0, "Wt": [30.0, 50.0, 70.0]}})
+        assert self._state["sweep_enabled"] is True
+        assert self._state["Wt_sweep"] == "30.0, 50.0, 70.0"
+        assert self._state["Wx_single"] == 15.0
+
+    def test_detection_fields(self):
+        _apply_config_to_session_state({"Detection": {"peakSign": "positive", "pfa": 1e-4, "localOptimumRange": 8}})
+        assert self._state["peakSign"] == "positive"
+        assert self._state["pfa"] == 1e-4
+        assert self._state["localOptimumRange"] == 8
+
+    def test_linking_fields(self):
+        link = {"minTrackLength": 5, "cut_off_distance": 25.0, "unmatched_penalty_distance": 10.0,
+                "maxNegativeGab": 1, "maxPositiveGab": 4,
+                "gab_closing_cut_off_distance": 35.0, "gab_closing_penalty_distance": 25.0}
+        _apply_config_to_session_state({"Linking": link})
+        for k, v in link.items():
+            assert self._state[k] == v
+
+    def test_ioc_calibration_on(self):
+        _apply_config_to_session_state({"iOCcalibration": "on"})
+        assert self._state["iOCcalibration_toggle"] is True
+
+    def test_ioc_calibration_off(self):
+        _apply_config_to_session_state({"iOCcalibration": "off"})
+        assert self._state["iOCcalibration_toggle"] is False
+
+    def test_population_analysis_title(self):
+        _apply_config_to_session_state({"populationAnalysis": {"Title": "GMM"}})
+        assert self._state["pop_method"] == "GMM"
+
+    def test_missing_fields_skipped(self):
+        _apply_config_to_session_state({"Dt": 0.007})
+        assert list(self._state.keys()) == ["Dt"]
+
+    def test_roundtrip_from_build_config(self):
+        exported = _build(**_BUILD_DEFAULTS)
+        _apply_config_to_session_state(exported)
+        assert self._state["Dt"] == _BUILD_DEFAULTS["Dt"]
+        assert self._state["Dx"] == _BUILD_DEFAULTS["Dx"]
+        assert self._state["Wx_single"] == float(_BUILD_DEFAULTS["Wx"])
+        assert self._state["Wt_single"] == float(_BUILD_DEFAULTS["Wt"])
+        assert self._state["pfa"] == _BUILD_DEFAULTS["pfa"]
+        assert self._state["minTrackLength"] == _BUILD_DEFAULTS["minTrackLength"]
+        assert self._state["iOCcalibration_toggle"] is True
+        assert self._state["pop_method"] == _BUILD_DEFAULTS["pop_method"]
 
 
 class TestDefaultConfig:
