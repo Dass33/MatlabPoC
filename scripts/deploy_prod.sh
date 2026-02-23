@@ -14,7 +14,8 @@
 
 set -euo pipefail
 
-PROD_HOST="49.12.232.89"
+PROD_HOST_IPV6="2a01:4f8:1c19:6ed8::1"
+PROD_HOST_IPV4="49.12.232.89"  # kept for reference / app URL display
 PROD_USER="root"
 PROD_DIR="/opt/nsm-poc"
 
@@ -26,8 +27,9 @@ if [[ "${1:-}" == "--matlab" ]]; then
     REBUILD_MATLAB=true
 fi
 
-echo "==> Syncing project to ${PROD_USER}@${PROD_HOST}:${PROD_DIR} ..."
+echo "==> Syncing project to ${PROD_USER}@${PROD_HOST_IPV4}:${PROD_DIR} ..."
 rsync -az --delete \
+    -e "ssh -6" \
     --exclude='.git/' \
     --exclude='.claude/' \
     --exclude='.env' \
@@ -38,11 +40,11 @@ rsync -az --delete \
     --exclude='*.egg-info/' \
     --exclude='MATLAB_Runtime*/' \
     "$PROJECT_ROOT/" \
-    "${PROD_USER}@${PROD_HOST}:${PROD_DIR}/"
+    "${PROD_USER}@[${PROD_HOST_IPV6}]:${PROD_DIR}/"
 
 if $REBUILD_MATLAB; then
     echo "==> Rebuilding matlab-algorithm image on server..."
-    ssh "${PROD_USER}@${PROD_HOST}" "
+    ssh -6 "${PROD_USER}@${PROD_HOST_IPV6}" "
         set -e
         cd \"${PROD_DIR}\"
         docker build -t matlab-algorithm:latest ./matlab
@@ -50,11 +52,11 @@ if $REBUILD_MATLAB; then
 fi
 
 echo "==> Rebuilding Streamlit image and restarting stack..."
-ssh "${PROD_USER}@${PROD_HOST}" "
+ssh -6 "${PROD_USER}@${PROD_HOST_IPV6}" "
     set -e
     cd \"${PROD_DIR}\"
     docker compose up -d --build
 " || { echo "ERROR: remote stack restart failed"; exit 1; }
 
 echo ""
-echo "Done. App available at http://${PROD_HOST}:8501"
+echo "Done. App available at http://${PROD_HOST_IPV4}:8501"
