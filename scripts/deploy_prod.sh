@@ -44,17 +44,17 @@ if $REBUILD_MATLAB; then
     echo "==> Rebuilding matlab-algorithm image on server..."
     ssh "${PROD_USER}@${PROD_HOST}" "
         set -e
-        cd ${PROD_DIR}
+        cd \"${PROD_DIR}\"
         docker build -t matlab-algorithm:latest ./matlab
-    "
+    " || { echo "ERROR: remote matlab image build failed"; exit 1; }
 fi
 
 echo "==> Rebuilding Streamlit image and restarting stack..."
 ssh "${PROD_USER}@${PROD_HOST}" "
     set -e
-    cd ${PROD_DIR}
+    cd \"${PROD_DIR}\"
     docker compose up -d --build
-"
+" || { echo "ERROR: remote stack restart failed"; exit 1; }
 
 echo ""
 echo "Done. App available at http://${PROD_HOST}:8501"

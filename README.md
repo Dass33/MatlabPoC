@@ -166,6 +166,14 @@ docker compose up --build -d
 docker compose up -d
 ```
 
+## Known Limitations
+
+These are issues in researcher-owned sub-tool files that cannot be changed without researcher sign-off:
+
+- **`struct([])` pre-initialization** — `TwoPassKymographProcessing.m`, `trackFiltering.m`, and `showKymograph.m` still use `PARTICLES = struct([])` / `FinalTracks = struct([])` before loop assignments. Per MATLAB semantics, this causes a *"Subscripted assignment between dissimilar structures"* error if the struct gains new fields mid-loop. Workaround: remove the pre-init line (let MATLAB create the variable on first assignment). Do not re-introduce this pattern in any new code.
+
+- **Empty input directory is not caught by `kymographAnalysis`** — if no `.tiff` / `.mat` files are found in `inputDir`, the analysis loop never runs and the pipeline exits cleanly with no output files. The Streamlit UI validates for missing `.txt` pairs before submission, but it does not validate that at least one `.tiff` was uploaded. A submitted job with only `.txt` files would succeed silently with empty results.
+
 ## Future: Cluster Migration (Golias / HTCondor)
 
 The Golias farm at FZU uses HTCondor with native Docker universe support.
