@@ -28,5 +28,8 @@ ENV/
 # OS
 .DS_Store
 
+# Environment (use .env.example as template)
+.env
+
 # Claude Code
 .claude
