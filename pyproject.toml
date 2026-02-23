@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+markers = [
+    "integration: requires Docker + matlab-algorithm:latest image (use --run-integration to enable)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:streamlit",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pytest-mock>=3.14"]

@@ -1,0 +1,22 @@
+## Stream Statistics
+Frame count: 500
+Lost frames: 0
+Error frames: 0
+Missing packets: 0
+FPS: 142.27
+Network: 0.0 Mbits
+
+## Configuration
+nr_of_videos: 1
+nr_of_images: 500
+exposure_time: 20.0
+width: 200
+height: 32
+offset_x: 0
+offset_y: 0
+combine_number_of_frames: 1
+combine_frame_height: 32
+
+## SensorPCB Temperature
+SensorPCB Temperature before grab: 42.125 C
+SensorPCB Temperature after grab: 42.125 C

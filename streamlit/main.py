@@ -28,11 +28,18 @@ Environment variables (set in docker-compose / .env)
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
 
 from config import render_config_sidebar
 from job_manager import (

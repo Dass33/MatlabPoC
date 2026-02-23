@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
-import sys
+import threading
 import uuid
 from datetime import datetime
 from pathlib import Path
 
 import docker
+
+log = logging.getLogger(__name__)
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/jobs"))
 HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
@@ -32,7 +35,7 @@ def read_status(job_id: str) -> dict:
     try:
         return json.loads(status_file.read_text())
     except (json.JSONDecodeError, OSError) as e:
-        print(f"[read_status] {job_id}: {e}", file=sys.stderr)
+        log.error("[read_status] %s: %s", job_id, e)
         return {"status": "unknown", "error": "Could not read status.json"}
 
 
@@ -63,7 +66,7 @@ def list_all_jobs() -> list[dict]:
             meta["error"] = status.get("error")
             jobs.append(meta)
         except (json.JSONDecodeError, OSError, KeyError) as e:
-            print(f"[list_all_jobs] skipping {job_dir.name}: {e}", file=sys.stderr)
+            log.warning("[list_all_jobs] skipping %s: %s", job_dir.name, e)
             continue
     return sorted(jobs, key=lambda j: j.get("submitted_at", ""), reverse=True)
 
@@ -74,13 +77,21 @@ def stream_upload_to_disk(uploaded_file, dest_path: Path) -> None:
         shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)
 
 
+def _container_reaper(container, log_dest: Path) -> None:
+    try:
+        container.wait()
+        log_dest.write_bytes(container.logs(stdout=True, stderr=True))
+    finally:
+        container.remove(force=True)
+
+
 def launch_matlab_container(job_id: str) -> None:
     _, _, out = job_dirs(job_id)
     out.mkdir(parents=True, exist_ok=True)
 
     host_job_base = HOST_DATA_DIR / job_id
 
-    print(f"[launch] image={MATLAB_IMAGE} host_job={host_job_base}", flush=True)
+    log.info("[launch] image=%s host_job=%s", MATLAB_IMAGE, host_job_base)
 
     client = docker.from_env()
     try:
@@ -89,12 +100,18 @@ def launch_matlab_container(job_id: str) -> None:
             command=["/opt/matlabruntime/R2025b", "/job/input", "/job/output"],
             volumes={str(host_job_base): {"bind": "/job", "mode": "rw"}},
             detach=True,
-            remove=True,
+            remove=False,
         )
-        print(f"[launch] container started: {container.short_id}", flush=True)
+        log.info("[launch] container started: %s", container.short_id)
     except Exception as e:
-        print(f"[launch] ERROR: {e}", flush=True)
+        log.error("[launch] ERROR: %s", e)
         raise
+
+    threading.Thread(
+        target=_container_reaper,
+        args=(container, out / "matlab.log"),
+        daemon=True,
+    ).start()
 
 
 def submit_job(uploaded_files: list, config: dict) -> str:
@@ -109,12 +126,14 @@ def submit_job(uploaded_files: list, config: dict) -> str:
         filenames.append(uf.name)
 
     (base / "config.json").write_text(json.dumps(config, indent=2))
+    now = datetime.now().isoformat(timespec="seconds")
     (base / "meta.json").write_text(
         json.dumps(
             {
                 "job_id": job_id,
                 "filenames": filenames,
-                "submitted_at": datetime.now().isoformat(timespec="seconds"),
+                "submitted_at": now,
+                "started_at": now,
             },
             indent=2,
         )
