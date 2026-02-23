@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import sys
+import uuid
+from datetime import datetime
+from pathlib import Path
+
+import docker
+
+DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/jobs"))
+HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
+MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "matlab-algorithm:latest")
+MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "2"))
+POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "5"))
+
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def job_dirs(job_id: str) -> tuple[Path, Path, Path]:
+    base = DATA_DIR / job_id
+    return base, base / "input", base / "output"
+
+
+def read_status(job_id: str) -> dict:
+    _, _, out = job_dirs(job_id)
+    status_file = out / "status.json"
+    if not status_file.exists():
+        return {"status": "processing", "error": None}
+    try:
+        return json.loads(status_file.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"[read_status] {job_id}: {e}", file=sys.stderr)
+        return {"status": "unknown", "error": "Could not read status.json"}
+
+
+def count_running_jobs() -> int:
+    if not DATA_DIR.exists():
+        return 0
+    return sum(
+        1
+        for d in DATA_DIR.iterdir()
+        if d.is_dir() and read_status(d.name)["status"] == "processing"
+    )
+
+
+def list_all_jobs() -> list[dict]:
+    jobs = []
+    if not DATA_DIR.exists():
+        return jobs
+    for job_dir in DATA_DIR.iterdir():
+        if not job_dir.is_dir():
+            continue
+        meta_file = job_dir / "meta.json"
+        if not meta_file.exists():
+            continue
+        try:
+            meta = json.loads(meta_file.read_text())
+            status = read_status(job_dir.name)
+            meta["status"] = status["status"]
+            meta["error"] = status.get("error")
+            jobs.append(meta)
+        except (json.JSONDecodeError, OSError, KeyError) as e:
+            print(f"[list_all_jobs] skipping {job_dir.name}: {e}", file=sys.stderr)
+            continue
+    return sorted(jobs, key=lambda j: j.get("submitted_at", ""), reverse=True)
+
+
+def stream_upload_to_disk(uploaded_file, dest_path: Path) -> None:
+    uploaded_file.seek(0)
+    with open(dest_path, "wb") as f:
+        shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)
+
+
+def launch_matlab_container(job_id: str) -> None:
+    _, _, out = job_dirs(job_id)
+    out.mkdir(parents=True, exist_ok=True)
+
+    host_job_base = HOST_DATA_DIR / job_id
+
+    print(f"[launch] image={MATLAB_IMAGE} host_job={host_job_base}", flush=True)
+
+    client = docker.from_env()
+    try:
+        container = client.containers.run(
+            MATLAB_IMAGE,
+            command=["/opt/matlabruntime/R2025b", "/job/input", "/job/output"],
+            volumes={str(host_job_base): {"bind": "/job", "mode": "rw"}},
+            detach=True,
+            remove=True,
+        )
+        print(f"[launch] container started: {container.short_id}", flush=True)
+    except Exception as e:
+        print(f"[launch] ERROR: {e}", flush=True)
+        raise
+
+
+def submit_job(uploaded_files: list, config: dict) -> str:
+    job_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+    base, inp, out = job_dirs(job_id)
+    inp.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
+
+    filenames = []
+    for uf in uploaded_files:
+        stream_upload_to_disk(uf, inp / uf.name)
+        filenames.append(uf.name)
+
+    (base / "config.json").write_text(json.dumps(config, indent=2))
+    (base / "meta.json").write_text(
+        json.dumps(
+            {
+                "job_id": job_id,
+                "filenames": filenames,
+                "submitted_at": datetime.now().isoformat(timespec="seconds"),
+            },
+            indent=2,
+        )
+    )
+
+    launch_matlab_container(job_id)
+    return job_id
