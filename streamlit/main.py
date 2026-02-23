@@ -111,7 +111,7 @@ def read_status(job_id: str) -> dict:
         return {"status": "processing", "error": None}
     try:
         return json.loads(status_file.read_text())
-    except Exception as e:
+    except (json.JSONDecodeError, OSError) as e:
         print(f"[read_status] {job_id}: {e}", file=sys.stderr)
         return {"status": "unknown", "error": "Could not read status.json"}
 
@@ -142,7 +142,7 @@ def list_all_jobs() -> list[dict]:
             meta["status"] = status["status"]
             meta["error"] = status.get("error")
             jobs.append(meta)
-        except Exception as e:
+        except (json.JSONDecodeError, OSError, KeyError) as e:
             print(f"[list_all_jobs] skipping {job_dir.name}: {e}", file=sys.stderr)
             continue
     return sorted(jobs, key=lambda j: j.get("submitted_at", ""), reverse=True)
@@ -215,7 +215,7 @@ def load_summary(output_dir: Path) -> dict | None:
         return None
     try:
         return json.loads(p.read_text())
-    except Exception as e:
+    except (json.JSONDecodeError, OSError) as e:
         st.error(f"Could not read summary.json: {e}")
         return None
 
@@ -365,23 +365,7 @@ def render_config_sidebar() -> dict:
         sweep_enabled = st.checkbox("Enable sweep (Wx × Wt)", value=False,
                                     key="sweep_enabled")
 
-    st.sidebar.download_button(
-        "Export current config",
-        data=json.dumps(_build_config(
-            Dt, Dx, flipIntensity, flowEstimate,
-            darkCalibration, Wx, Wt, ws,
-            peakSign, pfa, localOptimumRange,
-            minTrackLength, cut_off_distance, unmatched_penalty_distance,
-            maxNegativeGab, maxPositiveGab,
-            gab_closing_cut_off_distance, gab_closing_penalty_distance,
-            iOCcalibration, pop_method,
-        ), indent=2),
-        file_name="config.json",
-        mime="application/json",
-        use_container_width=True,
-    )
-
-    return _build_config(
+    built_config = _build_config(
         Dt, Dx, flipIntensity, flowEstimate,
         darkCalibration, Wx, Wt, ws,
         peakSign, pfa, localOptimumRange,
@@ -390,6 +374,16 @@ def render_config_sidebar() -> dict:
         gab_closing_cut_off_distance, gab_closing_penalty_distance,
         iOCcalibration, pop_method,
     )
+
+    st.sidebar.download_button(
+        "Export current config",
+        data=json.dumps(built_config, indent=2),
+        file_name="config.json",
+        mime="application/json",
+        use_container_width=True,
+    )
+
+    return built_config
 
 
 def _parse_sweep_values(s: str) -> list[float]:
@@ -463,6 +457,16 @@ def page_submit(config: dict) -> None:
 
     if not uploaded_files:
         st.info("Upload one or more .tiff files and their paired .txt metadata files to begin.")
+        return
+
+    tiff_stems = {Path(f.name).stem for f in uploaded_files if f.name.lower().endswith((".tif", ".tiff"))}
+    txt_stems = {Path(f.name).stem for f in uploaded_files if f.name.lower().endswith(".txt")}
+    missing_txt = tiff_stems - txt_stems
+    if missing_txt:
+        st.error(
+            f"Missing paired .txt metadata file(s) for: {', '.join(sorted(missing_txt))}. "
+            "Each .tiff must have a matching .txt with the same base name."
+        )
         return
 
     col_submit, col_wait = st.columns(2)
