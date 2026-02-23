@@ -219,10 +219,11 @@ summary.sweeps = sweeps;
 jsonStr = jsonencode(summary);
 
 fid = fopen(fullfile(outputDir, 'summary.json'), 'w');
-if fid ~= -1
-    fprintf(fid, '%s', jsonStr);
-    fclose(fid);
+if fid == -1
+    error('save_summary: could not open summary.json for writing in %s', outputDir);
 end
+fprintf(fid, '%s', jsonStr);
+fclose(fid);
 
 end % save_summary
 
@@ -258,6 +259,52 @@ if ~isnumeric(config.Detection.pfa)
     error('config.json field "Detection.pfa" must be numeric, got %s', class(config.Detection.pfa));
 end
 
+link_required = {'minTrackLength','cut_off_distance','unmatched_penalty_distance', ...
+    'maxNegativeGab','maxPositiveGab','gab_closing_cut_off_distance','gab_closing_penalty_distance'};
+for i = 1:length(link_required)
+    if ~isfield(config.Linking, link_required{i})
+        error('config.json missing required field: Linking.%s', link_required{i});
+    end
+end
+
+preproc_required = {'Wx','Wt','ws','darkCalibration'};
+for i = 1:length(preproc_required)
+    if ~isfield(config.kymographPreprocessing, preproc_required{i})
+        error('config.json missing required field: kymographPreprocessing.%s', preproc_required{i});
+    end
+end
+if ~isnumeric(config.kymographPreprocessing.Wx)
+    error('config.json field "kymographPreprocessing.Wx" must be numeric, got %s', class(config.kymographPreprocessing.Wx));
+end
+if ~isnumeric(config.kymographPreprocessing.Wt)
+    error('config.json field "kymographPreprocessing.Wt" must be numeric, got %s', class(config.kymographPreprocessing.Wt));
+end
+
+if isempty(config.trajectoryProperties)
+    error('config.json field "trajectoryProperties" must be non-empty');
+end
+
+if ~ischar(config.iOCcalibration) || ~ismember(config.iOCcalibration, {'on','off'})
+    error('config.json field "iOCcalibration" must be "on" or "off", got: %s', mat2str(config.iOCcalibration));
+end
+
+outfilt_required = {'referenceProperty','filterProperties','thresholdDirection','thresholdValue'};
+for i = 1:length(outfilt_required)
+    if ~isfield(config.outlierFiltering, outfilt_required{i})
+        error('config.json missing required field: outlierFiltering.%s', outfilt_required{i});
+    end
+end
+
+if ~isfield(config.populationAnalysis, 'Title')
+    error('config.json missing required field: populationAnalysis.Title');
+end
+if ~isfield(config.populationAnalysis, 'properties')
+    error('config.json missing required field: populationAnalysis.properties');
+end
+if isempty(config.populationAnalysis.properties)
+    error('config.json field "populationAnalysis.properties" must be non-empty');
+end
+
 end % validate_config
 
 
@@ -276,8 +323,7 @@ jsonStr = [jsonencode(s) newline];
 tmpFile = [statusFile '.tmp'];
 fid = fopen(tmpFile, 'w');
 if fid == -1
-    warning('write_status: could not open %s for writing', tmpFile);
-    return
+    error('write_status: could not open %s for writing', tmpFile);
 end
 fprintf(fid, '%s', jsonStr);
 fclose(fid);
