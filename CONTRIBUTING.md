@@ -97,11 +97,3 @@ Use the `/deploy` skill in Claude Code, or run the script directly:
 ```
 
 The script rsyncs the project (excluding `.git/`, `.env`, `data/`) to `root@49.12.232.89:/opt/nsm-poc` and restarts the Docker stack. The server `.env` must have `HOST_DATA_DIR=/opt/nsm-poc/data`.
-
-## Repository Conventions
-
-- **No commented-out code** — delete it or leave a `# TODO:` with context.
-- **Comments only where logic is non-obvious** — don't comment what the code clearly does.
-- **No bare `except:`** — catch the narrowest exception type and log it with `print(..., file=sys.stderr)`.
-- **Config round-trips through JSON** — Streamlit writes the full `config.json`; MATLAB has no defaults. If you add a field, it must be present in every config written.
-- **`AnalyzeExperiment.m` is off-limits** — it belongs to the researcher. Treat it as a read-only reference.
