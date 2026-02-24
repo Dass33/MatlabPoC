@@ -17,6 +17,7 @@ _BUILD_DEFAULTS = dict(
     Dt=0.007, Dx=0.066, flipIntensity=True, flowEstimate=-3.4,
     darkCalibration=8, Wx=15.0, Wt=50.0, ws=2.36,
     peakSign="negative", pfa=1e-5, localOptimumRange=6,
+    tracker="gabClosingTracker",
     minTrackLength=10, cut_off_distance=20.0, unmatched_penalty_distance=15.0,
     maxNegativeGab=2, maxPositiveGab=3,
     gab_closing_cut_off_distance=40.0, gab_closing_penalty_distance=30.0,
@@ -87,6 +88,14 @@ class TestBuildConfig:
         cfg = _build(pop_method="GMM")
         assert cfg["populationAnalysis"]["Title"] == "GMM"
 
+    def test_tracker_defaults_to_gab_closing(self):
+        cfg = _build()
+        assert cfg["tracker"] == "gabClosingTracker"
+
+    def test_tracker_track_before_detect(self):
+        cfg = _build(tracker="trackBeforeDetect")
+        assert cfg["tracker"] == "trackBeforeDetect"
+
 
 class TestApplyConfigToSessionState:
     @pytest.fixture(autouse=True)
@@ -149,6 +158,14 @@ class TestApplyConfigToSessionState:
         _apply_config_to_session_state({"populationAnalysis": {"Title": "GMM"}})
         assert self._state["pop_method"] == "GMM"
 
+    def test_tracker_loaded_into_session_state(self):
+        _apply_config_to_session_state({"tracker": "trackBeforeDetect"})
+        assert self._state["tracker"] == "trackBeforeDetect"
+
+    def test_tracker_defaults_absent_when_not_in_config(self):
+        _apply_config_to_session_state({"Dt": 0.007})
+        assert "tracker" not in self._state
+
     def test_missing_fields_skipped(self):
         _apply_config_to_session_state({"Dt": 0.007})
         assert list(self._state.keys()) == ["Dt"]
@@ -164,6 +181,7 @@ class TestApplyConfigToSessionState:
         assert self._state["minTrackLength"] == _BUILD_DEFAULTS["minTrackLength"]
         assert self._state["iOCcalibration_toggle"] is True
         assert self._state["pop_method"] == _BUILD_DEFAULTS["pop_method"]
+        assert self._state["tracker"] == _BUILD_DEFAULTS["tracker"]
 
 
 class TestDefaultConfig:
@@ -186,3 +204,6 @@ class TestDefaultConfig:
     def test_trajectory_properties_is_list(self):
         assert isinstance(DEFAULT_CONFIG["trajectoryProperties"], list)
         assert len(DEFAULT_CONFIG["trajectoryProperties"]) > 0
+
+    def test_default_tracker_is_gab_closing(self):
+        assert DEFAULT_CONFIG["tracker"] == "gabClosingTracker"

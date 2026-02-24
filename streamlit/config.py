@@ -15,6 +15,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "kymographPreprocessing": {"darkCalibration": 8, "Wx": 15, "Wt": 50, "ws": 2.36},
     # Detection
     "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
+    # Tracker algorithm
+    "tracker": "gabClosingTracker",
     # Linking
     "Linking": {
         "minTrackLength": 10,
@@ -75,6 +77,9 @@ def _apply_config_to_session_state(cfg: dict) -> None:
         if k in det:
             flat[k] = det[k]
 
+    if "tracker" in cfg:
+        flat["tracker"] = cfg["tracker"]
+
     link = cfg.get("Linking", {})
     for k in ("minTrackLength", "cut_off_distance", "unmatched_penalty_distance",
               "maxNegativeGab", "maxPositiveGab",
@@ -105,6 +110,7 @@ def _build_config(
     Dt, Dx, flipIntensity, flowEstimate,
     darkCalibration, Wx, Wt, ws,
     peakSign, pfa, localOptimumRange,
+    tracker,
     minTrackLength, cut_off_distance, unmatched_penalty_distance,
     maxNegativeGab, maxPositiveGab,
     gab_closing_cut_off_distance, gab_closing_penalty_distance,
@@ -126,6 +132,7 @@ def _build_config(
         "pfa": float(pfa),
         "localOptimumRange": int(localOptimumRange),
     }
+    cfg["tracker"] = tracker
     cfg["Linking"] = {
         "minTrackLength": int(minTrackLength),
         "cut_off_distance": float(cut_off_distance),
@@ -211,6 +218,14 @@ def render_config_sidebar() -> dict:
 
     # ── Tracking ─────────────────────────────────────────────────────────
     with st.sidebar.expander("Tracking"):
+        _tracker_options = ["gabClosingTracker", "trackBeforeDetect"]
+        _tracker_default = cfg.get("tracker", "gabClosingTracker")
+        tracker = st.selectbox(
+            "Tracker algorithm",
+            _tracker_options,
+            index=_tracker_options.index(_tracker_default),
+            key="tracker",
+        )
         minTrackLength = st.number_input("Min track length",
                                          value=int(cfg["Linking"]["minTrackLength"]),
                                          step=1, key="minTrackLength")
@@ -220,18 +235,24 @@ def render_config_sidebar() -> dict:
         unmatched_penalty_distance = st.number_input("Unmatched penalty distance",
                                                      value=float(cfg["Linking"]["unmatched_penalty_distance"]),
                                                      step=1.0, key="unmatched_penalty_distance")
-        maxNegativeGab = st.number_input("Max negative gap",
-                                         value=int(cfg["Linking"]["maxNegativeGab"]),
-                                         step=1, key="maxNegativeGab")
-        maxPositiveGab = st.number_input("Max positive gap",
-                                         value=int(cfg["Linking"]["maxPositiveGab"]),
-                                         step=1, key="maxPositiveGab")
-        gab_closing_cut_off_distance = st.number_input("Gap closing cut-off distance",
-                                                       value=float(cfg["Linking"]["gab_closing_cut_off_distance"]),
-                                                       step=1.0, key="gab_closing_cut_off_distance")
-        gab_closing_penalty_distance = st.number_input("Gap closing penalty distance",
-                                                       value=float(cfg["Linking"]["gab_closing_penalty_distance"]),
-                                                       step=1.0, key="gab_closing_penalty_distance")
+        if tracker == "gabClosingTracker":
+            maxNegativeGab = st.number_input("Max negative gap",
+                                             value=int(cfg["Linking"]["maxNegativeGab"]),
+                                             step=1, key="maxNegativeGab")
+            maxPositiveGab = st.number_input("Max positive gap",
+                                             value=int(cfg["Linking"]["maxPositiveGab"]),
+                                             step=1, key="maxPositiveGab")
+            gab_closing_cut_off_distance = st.number_input("Gap closing cut-off distance",
+                                                           value=float(cfg["Linking"]["gab_closing_cut_off_distance"]),
+                                                           step=1.0, key="gab_closing_cut_off_distance")
+            gab_closing_penalty_distance = st.number_input("Gap closing penalty distance",
+                                                           value=float(cfg["Linking"]["gab_closing_penalty_distance"]),
+                                                           step=1.0, key="gab_closing_penalty_distance")
+        else:
+            maxNegativeGab = cfg["Linking"]["maxNegativeGab"]
+            maxPositiveGab = cfg["Linking"]["maxPositiveGab"]
+            gab_closing_cut_off_distance = cfg["Linking"]["gab_closing_cut_off_distance"]
+            gab_closing_penalty_distance = cfg["Linking"]["gab_closing_penalty_distance"]
 
     # ── Post-processing ──────────────────────────────────────────────────
     with st.sidebar.expander("Post-processing"):
@@ -249,6 +270,7 @@ def render_config_sidebar() -> dict:
         Dt, Dx, flipIntensity, flowEstimate,
         darkCalibration, Wx, Wt, ws,
         peakSign, pfa, localOptimumRange,
+        tracker,
         minTrackLength, cut_off_distance, unmatched_penalty_distance,
         maxNegativeGab, maxPositiveGab,
         gab_closing_cut_off_distance, gab_closing_penalty_distance,
