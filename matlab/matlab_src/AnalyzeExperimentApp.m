@@ -131,8 +131,13 @@ Setting.Detection.boarderRange = Setting.Detection.localOptimumRange;
 Setting.FeatureExtraction.positionRefinementMethod = 'centroid';
 Setting.FeatureExtraction.fittingRadius = Setting.Detection.localOptimumRange;
 
-% Trajectory detection (hardcoded to gabClosingTracker)
-Setting.trajectoryDetecton.Title = 'gabClosingTracker';
+% Trajectory detection algorithm (configurable; defaults to gabClosingTracker)
+valid_trackers = {'gabClosingTracker', 'trackBeforeDetect'};
+if isfield(config, 'tracker') && ismember(config.tracker, valid_trackers)
+    Setting.trajectoryDetecton.Title = config.tracker;
+else
+    Setting.trajectoryDetecton.Title = 'gabClosingTracker';
+end
 
 % Linking
 Setting.Linking = config.Linking;
