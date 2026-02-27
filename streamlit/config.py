@@ -17,6 +17,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
     # Tracker algorithm
     "tracker": "gabClosingTracker",
+    # trackBeforeDetect-specific params (ignored when using gabClosingTracker)
+    "Tlength": 4,
+    "thresholdLimit": -2.0,
+    "TmaxNo": 8,
     # Linking
     "Linking": {
         "minTrackLength": 10,
@@ -79,6 +83,9 @@ def _apply_config_to_session_state(cfg: dict) -> None:
 
     if "tracker" in cfg:
         flat["tracker"] = cfg["tracker"]
+    for k in ("Tlength", "thresholdLimit", "TmaxNo"):
+        if k in cfg:
+            flat[k] = cfg[k]
 
     link = cfg.get("Linking", {})
     for k in ("minTrackLength", "cut_off_distance", "unmatched_penalty_distance",
@@ -114,6 +121,7 @@ def _build_config(
     minTrackLength, cut_off_distance, unmatched_penalty_distance,
     maxNegativeGab, maxPositiveGab,
     gab_closing_cut_off_distance, gab_closing_penalty_distance,
+    Tlength, thresholdLimit, TmaxNo,
     iOCcalibration, pop_method,
 ) -> dict:
     cfg = DEFAULT_CONFIG.copy()
@@ -142,6 +150,9 @@ def _build_config(
         "gab_closing_cut_off_distance": float(gab_closing_cut_off_distance),
         "gab_closing_penalty_distance": float(gab_closing_penalty_distance),
     }
+    cfg["Tlength"] = int(Tlength)
+    cfg["thresholdLimit"] = float(thresholdLimit)
+    cfg["TmaxNo"] = int(TmaxNo)
     cfg["iOCcalibration"] = iOCcalibration
     cfg["populationAnalysis"]["Title"] = pop_method
     return cfg
@@ -248,11 +259,23 @@ def render_config_sidebar() -> dict:
             gab_closing_penalty_distance = st.number_input("Gap closing penalty distance",
                                                            value=float(cfg["Linking"]["gab_closing_penalty_distance"]),
                                                            step=1.0, key="gab_closing_penalty_distance")
+            Tlength = cfg["Tlength"]
+            thresholdLimit = cfg["thresholdLimit"]
+            TmaxNo = cfg["TmaxNo"]
         else:
             maxNegativeGab = cfg["Linking"]["maxNegativeGab"]
             maxPositiveGab = cfg["Linking"]["maxPositiveGab"]
             gab_closing_cut_off_distance = cfg["Linking"]["gab_closing_cut_off_distance"]
             gab_closing_penalty_distance = cfg["Linking"]["gab_closing_penalty_distance"]
+            Tlength = st.selectbox("Track length (Tlength)", [2, 4, 8, 16, 32, 64],
+                                   index=[2, 4, 8, 16, 32, 64].index(cfg["Tlength"]),
+                                   key="Tlength")
+            thresholdLimit = st.number_input("Intensity threshold limit",
+                                             value=float(cfg["thresholdLimit"]),
+                                             step=0.5, key="thresholdLimit")
+            TmaxNo = st.number_input("Max associations per DIPS (TmaxNo)",
+                                     value=int(cfg["TmaxNo"]),
+                                     step=1, key="TmaxNo")
 
     # ── Post-processing ──────────────────────────────────────────────────
     with st.sidebar.expander("Post-processing"):
@@ -263,7 +286,7 @@ def render_config_sidebar() -> dict:
 
     # ── Population analysis ──────────────────────────────────────────────
     with st.sidebar.expander("Population analysis"):
-        pop_method = st.selectbox("Method", ["robustMean", "GMM"],
+        pop_method = st.selectbox("Method", ["robustMean"],
                                   index=0, key="pop_method")
 
     built_config = _build_config(
@@ -274,6 +297,7 @@ def render_config_sidebar() -> dict:
         minTrackLength, cut_off_distance, unmatched_penalty_distance,
         maxNegativeGab, maxPositiveGab,
         gab_closing_cut_off_distance, gab_closing_penalty_distance,
+        Tlength, thresholdLimit, TmaxNo,
         iOCcalibration, pop_method,
     )
 

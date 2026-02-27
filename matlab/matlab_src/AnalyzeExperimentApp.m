@@ -139,6 +139,12 @@ else
     Setting.trajectoryDetecton.Title = 'gabClosingTracker';
 end
 
+if strcmp(Setting.trajectoryDetecton.Title, 'trackBeforeDetect')
+    Setting.Tlength        = config.Tlength;
+    Setting.thresholdLimit = config.thresholdLimit;
+    Setting.TmaxNo         = config.TmaxNo;
+end
+
 % Linking
 Setting.Linking = config.Linking;
 Setting.Linking.flowEstimate_ums = Setting.flowEstimate_ums;
@@ -297,6 +303,15 @@ outfilt_required = {'referenceProperty','filterProperties','thresholdDirection',
 for i = 1:length(outfilt_required)
     if ~isfield(config.outlierFiltering, outfilt_required{i})
         error('config.json missing required field: outlierFiltering.%s', outfilt_required{i});
+    end
+end
+
+if isfield(config, 'tracker') && strcmp(config.tracker, 'trackBeforeDetect')
+    tbd_required = {'Tlength', 'thresholdLimit', 'TmaxNo'};
+    for i = 1:length(tbd_required)
+        if ~isfield(config, tbd_required{i})
+            error('config.json missing required field for trackBeforeDetect: %s', tbd_required{i});
+        end
     end
 end
 

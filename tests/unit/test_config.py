@@ -21,6 +21,7 @@ _BUILD_DEFAULTS = dict(
     minTrackLength=10, cut_off_distance=20.0, unmatched_penalty_distance=15.0,
     maxNegativeGab=2, maxPositiveGab=3,
     gab_closing_cut_off_distance=40.0, gab_closing_penalty_distance=30.0,
+    Tlength=4, thresholdLimit=-2.0, TmaxNo=8,
     iOCcalibration="on", pop_method="robustMean",
 )
 
@@ -96,6 +97,24 @@ class TestBuildConfig:
         cfg = _build(tracker="trackBeforeDetect")
         assert cfg["tracker"] == "trackBeforeDetect"
 
+    def test_track_before_detect_params_stored(self):
+        cfg = _build(tracker="trackBeforeDetect", Tlength=8, thresholdLimit=-3.0, TmaxNo=16)
+        assert cfg["Tlength"] == 8
+        assert cfg["thresholdLimit"] == -3.0
+        assert cfg["TmaxNo"] == 16
+
+    def test_tlength_coerced_to_int(self):
+        cfg = _build(Tlength=4.0)
+        assert isinstance(cfg["Tlength"], int)
+
+    def test_tmaxno_coerced_to_int(self):
+        cfg = _build(TmaxNo=8.0)
+        assert isinstance(cfg["TmaxNo"], int)
+
+    def test_threshold_limit_coerced_to_float(self):
+        cfg = _build(thresholdLimit=-2)
+        assert isinstance(cfg["thresholdLimit"], float)
+
 
 class TestApplyConfigToSessionState:
     @pytest.fixture(autouse=True)
@@ -161,6 +180,12 @@ class TestApplyConfigToSessionState:
     def test_tracker_loaded_into_session_state(self):
         _apply_config_to_session_state({"tracker": "trackBeforeDetect"})
         assert self._state["tracker"] == "trackBeforeDetect"
+
+    def test_track_before_detect_params_loaded_into_session_state(self):
+        _apply_config_to_session_state({"Tlength": 8, "thresholdLimit": -3.0, "TmaxNo": 16})
+        assert self._state["Tlength"] == 8
+        assert self._state["thresholdLimit"] == -3.0
+        assert self._state["TmaxNo"] == 16
 
     def test_tracker_defaults_absent_when_not_in_config(self):
         _apply_config_to_session_state({"Dt": 0.007})
