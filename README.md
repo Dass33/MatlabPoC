@@ -216,3 +216,7 @@ in `main.py` with a `submit_htcondor_job()` function that writes an HTCondor sub
 and calls `condor_submit` via subprocess. Everything else — job directory layout,
 `config.json`, `status.json`, results display — stays unchanged, provided `data/jobs/`
 lives on NFS visible to both submit node and worker nodes.
+
+## ToDo
+
+- check with bara and mirek if they account for different outputs due to using different libraries for math
