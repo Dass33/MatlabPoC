@@ -6,7 +6,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy.io
 import streamlit as st
 
 from job_manager import job_dirs
@@ -24,23 +23,23 @@ def load_summary(output_dir: Path) -> dict | None:
 
 
 def load_trajectories(output_dir: Path) -> dict | None:
-    p = output_dir / "trajectories.mat"
+    p = output_dir / "trajectories.json"
     if not p.exists():
         return None
     try:
-        mat = scipy.io.loadmat(str(p))
+        data = json.loads(p.read_text())
         return {
-            "iOC":           mat["iOC"].flatten(),
-            "D":             mat["D"].flatten(),
-            "velocity":      mat["velocity"].flatten(),
-            "N":             mat["N"].flatten(),
-            "positionStart": mat["positionStart"].flatten(),
-            "positionEnd":   mat["positionEnd"].flatten(),
-            "sweepIdx":      mat["sweepIdx"].flatten().astype(int),
-            "sweepLegends":  [str(s[0]) for s in mat["sweepLegends"].flatten()],
+            "iOC":           np.array(data["iOC"]),
+            "D":             np.array(data["D"]),
+            "velocity":      np.array(data["velocity"]),
+            "N":             np.array(data["N"]),
+            "positionStart": np.array(data["positionStart"]),
+            "positionEnd":   np.array(data["positionEnd"]),
+            "sweepIdx":      np.array(data["sweepIdx"], dtype=int),
+            "sweepLegends":  data["sweepLegends"],
         }
     except Exception as e:
-        st.error(f"Could not read trajectories.mat: {e}")
+        st.error(f"Could not read trajectories.json: {e}")
         return None
 
 
@@ -92,7 +91,7 @@ def _render_kymographs(kymographs: list[Path], job_id: str, key_suffix: str = ""
 
 def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -> None:
     if traj is None:
-        st.info("trajectories.mat not found.")
+        st.info("trajectories.json not found.")
         return
 
     sweep_legends = traj["sweepLegends"]

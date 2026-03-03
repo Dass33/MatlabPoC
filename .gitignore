@@ -1,6 +1,9 @@
 # MATLAB compiled output
 matlab/Compiled/
 
+# Rust build artifacts
+matlab/rust_src/target/
+
 # MATLAB Runtime installer
 MATLAB_Runtime_*.zip
 

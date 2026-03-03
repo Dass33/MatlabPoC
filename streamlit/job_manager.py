@@ -97,7 +97,7 @@ def launch_matlab_container(job_id: str) -> None:
     try:
         container = client.containers.run(
             MATLAB_IMAGE,
-            command=["/opt/matlabruntime/R2025b", "/job/input", "/job/output"],
+            command=["/job/input", "/job/output"],
             volumes={str(host_job_base): {"bind": "/job", "mode": "rw"}},
             detach=True,
             remove=False,

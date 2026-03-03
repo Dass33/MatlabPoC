@@ -1,19 +1,13 @@
-FROM containers.mathworks.com/matlab-runtime:r2025b
+FROM rust:slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config libfontconfig-dev \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+COPY rust_src/ .
+RUN cargo build --release
 
-ENV AGREE_TO_MATLAB_RUNTIME_LICENSE=yes
-
-RUN mkdir -p /opt/matlab_app
-
-COPY Compiled/AnalyzeExperimentApp /opt/matlab_app/
-COPY Compiled/run_AnalyzeExperimentApp.sh /opt/matlab_app/
-COPY Compiled/*.ctf /opt/matlab_app/
-
-RUN chmod +x /opt/matlab_app/run_AnalyzeExperimentApp.sh
-
-RUN mkdir -p /data/input /data/output
-
-WORKDIR /opt/matlab_app
-
-ENV LD_LIBRARY_PATH=/opt/matlabruntime/R2025b/runtime/glnxa64:/opt/matlabruntime/R2025b/bin/glnxa64:/opt/matlabruntime/R2025b/sys/os/glnxa64:/opt/matlabruntime/R2025b/extern/bin/glnxa64
-
-ENTRYPOINT ["/opt/matlab_app/run_AnalyzeExperimentApp.sh"]
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /build/target/release/nsm-algorithm /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/nsm-algorithm"]

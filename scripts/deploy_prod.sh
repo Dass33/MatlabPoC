@@ -39,6 +39,7 @@ rsync -az --delete \
     --exclude='*.pyc' \
     --exclude='*.egg-info/' \
     --exclude='MATLAB_Runtime*/' \
+    --exclude='matlab/rust_src/target/' \
     "$PROJECT_ROOT/" \
     "${PROD_USER}@[${PROD_HOST_IPV6}]:${PROD_DIR}/"
 
