@@ -55,17 +55,25 @@ pub fn detect(
     detections
 }
 
-/// Single sort to get median and IQR-based sigma simultaneously.
+/// Three O(n) partial sorts to get median and IQR-based sigma without a full sort.
 fn noise_stats(x: &[f64]) -> (f64, f64) {
-    let mut sorted: Vec<f64> = x.iter().cloned().filter(|v| v.is_finite()).collect();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n = sorted.len();
+    let mut v: Vec<f64> = x.iter().cloned().filter(|f| f.is_finite()).collect();
+    let n = v.len();
     if n < 2 {
         return (0.0, 0.0);
     }
-    let q1 = percentile(&sorted, 25.0);
-    let med = percentile(&sorted, 50.0);
-    let q3 = percentile(&sorted, 75.0);
+    let q1_idx = n / 4;
+    let med_idx = n / 2;
+    let q3_idx = 3 * n / 4;
+    // Each call partitions the slice so elements before the chosen index are
+    // guaranteed ≤ the pivot; subsequent calls work on the already-partitioned
+    // prefix, so total work is O(n) average rather than O(n log n).
+    v.select_nth_unstable_by(q3_idx, |a, b| a.partial_cmp(b).unwrap());
+    let q3 = v[q3_idx];
+    v[..q3_idx].select_nth_unstable_by(med_idx, |a, b| a.partial_cmp(b).unwrap());
+    let med = v[med_idx];
+    v[..med_idx].select_nth_unstable_by(q1_idx, |a, b| a.partial_cmp(b).unwrap());
+    let q1 = v[q1_idx];
     (0.7413 * (q3 - q1), med)
 }
 
@@ -212,17 +220,3 @@ pub fn median_f64(x: &[f64]) -> f64 {
     }
 }
 
-fn percentile(sorted: &[f64], p: f64) -> f64 {
-    let n = sorted.len();
-    if n == 0 {
-        return 0.0;
-    }
-    let idx = p / 100.0 * (n - 1) as f64;
-    let lo = idx.floor() as usize;
-    let hi = idx.ceil() as usize;
-    if lo == hi {
-        sorted[lo]
-    } else {
-        sorted[lo] + (idx - lo as f64) * (sorted[hi] - sorted[lo])
-    }
-}

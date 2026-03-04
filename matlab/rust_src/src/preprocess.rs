@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use crate::kymo::KymoMatrix;
 
 pub fn preprocess(
@@ -143,86 +142,73 @@ impl Ord for OrdF64 {
     }
 }
 
+// Two sorted Vecs maintain a split of the current window, replacing the
+// previous BTreeMap implementation.  Vec operations (binary search +
+// memmove) have much smaller constant factors than B-tree node traversal
+// for the window sizes used here (typically w ≤ 200).
+//
+// Invariants:
+//   • lower is sorted ascending; its maximum is lower.last()
+//   • upper is sorted ascending; its minimum is upper.first()
+//   • every element in lower ≤ every element in upper
+//   • lower.len() == upper.len()  OR  lower.len() == upper.len() + 1
 struct SlidingMedian {
-    lower: BTreeMap<OrdF64, usize>, // lower half — query max
-    upper: BTreeMap<OrdF64, usize>, // upper half — query min
-    lower_size: usize,
-    upper_size: usize,
+    lower: Vec<OrdF64>, // lower half — max is last element
+    upper: Vec<OrdF64>, // upper half — min is first element
 }
 
 impl SlidingMedian {
-    fn new() -> Self {
+    fn new(w: usize) -> Self {
+        let half = w / 2 + 1;
         Self {
-            lower: BTreeMap::new(),
-            upper: BTreeMap::new(),
-            lower_size: 0,
-            upper_size: 0,
+            lower: Vec::with_capacity(half + 1),
+            upper: Vec::with_capacity(half),
         }
     }
 
     fn add(&mut self, val: f64) {
         let key = OrdF64::from(val);
-        if self.lower_size == 0 || key <= *self.lower.keys().next_back().unwrap() {
-            *self.lower.entry(key).or_insert(0) += 1;
-            self.lower_size += 1;
+        if self.lower.is_empty() || key <= *self.lower.last().unwrap() {
+            let pos = self.lower.partition_point(|&k| k < key);
+            self.lower.insert(pos, key);
         } else {
-            *self.upper.entry(key).or_insert(0) += 1;
-            self.upper_size += 1;
+            let pos = self.upper.partition_point(|&k| k < key);
+            self.upper.insert(pos, key);
         }
         self.rebalance();
     }
 
     fn remove(&mut self, val: f64) {
         let key = OrdF64::from(val);
-        // Remove from whichever half holds this key; prefer lower when
-        // the key sits on the boundary of both (correct with duplicates).
-        if self.lower.contains_key(&key) {
-            let cnt = self.lower.get_mut(&key).unwrap();
-            *cnt -= 1;
-            if *cnt == 0 {
-                self.lower.remove(&key);
-            }
-            self.lower_size -= 1;
+        // Prefer removing from lower when the value sits on the boundary
+        // (lower.last() == key); this matches the add() routing above.
+        if !self.lower.is_empty() && key <= *self.lower.last().unwrap() {
+            let pos = self.lower.binary_search(&key).unwrap();
+            self.lower.remove(pos);
         } else {
-            let cnt = self.upper.get_mut(&key).unwrap();
-            *cnt -= 1;
-            if *cnt == 0 {
-                self.upper.remove(&key);
-            }
-            self.upper_size -= 1;
+            let pos = self.upper.binary_search(&key).unwrap();
+            self.upper.remove(pos);
         }
         self.rebalance();
     }
 
     fn rebalance(&mut self) {
-        while self.lower_size > self.upper_size + 1 {
-            let (&key, _) = self.lower.iter().next_back().unwrap();
-            let cnt = self.lower.get_mut(&key).unwrap();
-            *cnt -= 1;
-            if *cnt == 0 {
-                self.lower.remove(&key);
-            }
-            self.lower_size -= 1;
-            *self.upper.entry(key).or_insert(0) += 1;
-            self.upper_size += 1;
+        // lower is too big: move its max to the front of upper
+        while self.lower.len() > self.upper.len() + 1 {
+            let elem = self.lower.pop().unwrap();
+            self.upper.insert(0, elem);
         }
-        while self.upper_size > self.lower_size {
-            let (&key, _) = self.upper.iter().next().unwrap();
-            let cnt = self.upper.get_mut(&key).unwrap();
-            *cnt -= 1;
-            if *cnt == 0 {
-                self.upper.remove(&key);
-            }
-            self.upper_size -= 1;
-            *self.lower.entry(key).or_insert(0) += 1;
-            self.lower_size += 1;
+        // upper is too big: move its min to the back of lower
+        while self.upper.len() > self.lower.len() {
+            let elem = self.upper.remove(0);
+            self.lower.push(elem);
         }
     }
 
     fn median(&self) -> f64 {
-        let lower_max = self.lower.keys().next_back().unwrap().val();
-        if self.lower_size == self.upper_size {
-            let upper_min = self.upper.keys().next().unwrap().val();
+        let lower_max = self.lower.last().unwrap().val();
+        if self.lower.len() == self.upper.len() {
+            let upper_min = self.upper.first().unwrap().val();
             (lower_max + upper_min) / 2.0
         } else {
             lower_max
@@ -238,7 +224,7 @@ pub fn movmedian_shrink(x: &[f64], w: usize) -> Vec<f64> {
     }
     let half = w / 2;
     let mut out = vec![0.0f64; n];
-    let mut sm = SlidingMedian::new();
+    let mut sm = SlidingMedian::new(w);
     let mut right = 0usize;
 
     for i in 0..n {
