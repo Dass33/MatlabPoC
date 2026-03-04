@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 use statrs::distribution::{ContinuousCDF, Normal};
+use crate::kymo::KymoMatrix;
 
 #[derive(Debug, Clone)]
 pub struct Detection {
@@ -9,18 +10,14 @@ pub struct Detection {
 }
 
 pub fn detect(
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     peak_sign: &str,
     pfa: f64,
     local_optimum_range: usize,
     border_range: usize,
 ) -> Vec<Detection> {
-    let nt = c.len();
-    let nx = if nt > 0 { c[0].len() } else { 0 };
-
-    let flat: Vec<f64> = c.iter().flat_map(|row| row.iter().copied()).collect();
-    // Single sort — derive median and IQR in one pass
-    let (sigma, med) = noise_stats(&flat);
+    // c.data is already a contiguous flat slice — no copy needed
+    let (sigma, med) = noise_stats(&c.data);
     let normal = Normal::new(0.0, 1.0).unwrap();
 
     let mut detections = Vec::new();
@@ -28,27 +25,29 @@ pub fn detect(
     match peak_sign {
         "negative" => {
             let tau = med + sigma * normal.inverse_cdf(pfa);
-            let thresholded = compute_threshold_mask(c, nt, nx, |v| v < tau);
-            let local_min = find_local_minima(c, nt, nx, local_optimum_range);
-            collect_detections(c, &thresholded, &local_min, nt, nx, border_range, &mut detections);
+            let thresholded = compute_threshold_mask(c, |v| v < tau);
+            let local_min = find_local_minima(c, local_optimum_range);
+            collect_detections(c, &thresholded, &local_min, border_range, &mut detections);
         }
         "positive" => {
             let tau = med + sigma * normal.inverse_cdf(1.0 - pfa);
-            let thresholded = compute_threshold_mask(c, nt, nx, |v| v > tau);
-            let local_max = find_local_maxima(c, nt, nx, local_optimum_range);
-            collect_detections(c, &thresholded, &local_max, nt, nx, border_range, &mut detections);
+            let thresholded = compute_threshold_mask(c, |v| v > tau);
+            let local_max = find_local_maxima(c, local_optimum_range);
+            collect_detections(c, &thresholded, &local_max, border_range, &mut detections);
         }
         "negative-positive" => {
             let tau_neg = med + sigma * normal.inverse_cdf(pfa / 2.0);
             let tau_pos = med + sigma * normal.inverse_cdf(1.0 - pfa / 2.0);
             let thresholded =
-                compute_threshold_mask(c, nt, nx, |v| v < tau_neg || v > tau_pos);
-            let local_min = find_local_minima(c, nt, nx, local_optimum_range);
-            let local_max = find_local_maxima(c, nt, nx, local_optimum_range);
-            let local_opt: Vec<Vec<bool>> = (0..nt)
-                .map(|t| (0..nx).map(|x| local_min[t][x] || local_max[t][x]).collect())
+                compute_threshold_mask(c, |v| v < tau_neg || v > tau_pos);
+            let local_min = find_local_minima(c, local_optimum_range);
+            let local_max = find_local_maxima(c, local_optimum_range);
+            let local_opt: Vec<bool> = local_min
+                .iter()
+                .zip(local_max.iter())
+                .map(|(&a, &b)| a || b)
                 .collect();
-            collect_detections(c, &thresholded, &local_opt, nt, nx, border_range, &mut detections);
+            collect_detections(c, &thresholded, &local_opt, border_range, &mut detections);
         }
         _ => {}
     }
@@ -70,15 +69,8 @@ fn noise_stats(x: &[f64]) -> (f64, f64) {
     (0.7413 * (q3 - q1), med)
 }
 
-fn compute_threshold_mask(
-    c: &[Vec<f64>],
-    nt: usize,
-    nx: usize,
-    predicate: impl Fn(f64) -> bool,
-) -> Vec<Vec<bool>> {
-    (0..nt)
-        .map(|t| (0..nx).map(|x| predicate(c[t][x])).collect())
-        .collect()
+fn compute_threshold_mask(c: &KymoMatrix, predicate: impl Fn(f64) -> bool) -> Vec<bool> {
+    c.data.iter().map(|&v| predicate(v)).collect()
 }
 
 /// O(n) sliding window minimum using a monotonic deque.
@@ -145,45 +137,56 @@ fn sliding_window_max(x: &[f64], w: usize) -> Vec<f64> {
     out
 }
 
-fn find_local_minima(c: &[Vec<f64>], nt: usize, nx: usize, half: usize) -> Vec<Vec<bool>> {
+fn find_local_minima(c: &KymoMatrix, half: usize) -> Vec<bool> {
     let win = 2 * half + 1;
-    (0..nt)
-        .map(|t| {
-            let eroded = sliding_window_min(&c[t], win);
-            (0..nx).map(|x| (c[t][x] - eroded[x]).abs() < 1e-8).collect()
-        })
-        .collect()
+    let nt = c.nt;
+    let nx = c.nx;
+    let mut out = vec![false; nt * nx];
+    for t in 0..nt {
+        let row = c.row(t);
+        let eroded = sliding_window_min(row, win);
+        for x in 0..nx {
+            out[t * nx + x] = (row[x] - eroded[x]).abs() < 1e-8;
+        }
+    }
+    out
 }
 
-fn find_local_maxima(c: &[Vec<f64>], nt: usize, nx: usize, half: usize) -> Vec<Vec<bool>> {
+fn find_local_maxima(c: &KymoMatrix, half: usize) -> Vec<bool> {
     let win = 2 * half + 1;
-    (0..nt)
-        .map(|t| {
-            let dilated = sliding_window_max(&c[t], win);
-            (0..nx).map(|x| (c[t][x] - dilated[x]).abs() < 1e-8).collect()
-        })
-        .collect()
+    let nt = c.nt;
+    let nx = c.nx;
+    let mut out = vec![false; nt * nx];
+    for t in 0..nt {
+        let row = c.row(t);
+        let dilated = sliding_window_max(row, win);
+        for x in 0..nx {
+            out[t * nx + x] = (row[x] - dilated[x]).abs() < 1e-8;
+        }
+    }
+    out
 }
 
 fn collect_detections(
-    c: &[Vec<f64>],
-    thresholded: &[Vec<bool>],
-    local_opt: &[Vec<bool>],
-    nt: usize,
-    nx: usize,
+    c: &KymoMatrix,
+    thresholded: &[bool],
+    local_opt: &[bool],
     border_range: usize,
     out: &mut Vec<Detection>,
 ) {
+    let nt = c.nt;
+    let nx = c.nx;
     for t in 0..nt {
         for x in 0..nx {
             if x < border_range || x >= nx.saturating_sub(border_range) {
                 continue;
             }
-            if thresholded[t][x] && local_opt[t][x] {
+            let idx = t * nx + x;
+            if thresholded[idx] && local_opt[idx] {
                 out.push(Detection {
                     frame: t,
                     position: x,
-                    intensity: c[t][x],
+                    intensity: c.get(t, x),
                 });
             }
         }

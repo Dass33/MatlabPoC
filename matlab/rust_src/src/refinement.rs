@@ -1,13 +1,14 @@
 use crate::detection::Detection;
+use crate::kymo::KymoMatrix;
 
 /// Refine detection positions using centroid within fittingRadius.
 /// Returns refined positions (sub-pixel, 0-indexed).
 pub fn refine_centroid(
     detections: &[Detection],
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     fitting_radius: usize,
 ) -> Vec<f64> {
-    let nx = if !c.is_empty() { c[0].len() } else { 0 };
+    let nx = c.nx;
     detections
         .iter()
         .map(|d| {
@@ -16,9 +17,10 @@ pub fn refine_centroid(
             // MATLAB condition: x > fittingRadius && x < (Nx - fittingRadius + 1)  (1-indexed)
             // 0-indexed equivalent: x >= fitting_radius && x < nx - fitting_radius
             if x >= fitting_radius && x + fitting_radius < nx {
+                let row = c.row(t);
                 let lo = x - fitting_radius;
                 let hi = x + fitting_radius;
-                let weights: Vec<f64> = (lo..=hi).map(|xi| c[t][xi].abs()).collect();
+                let weights: Vec<f64> = (lo..=hi).map(|xi| row[xi].abs()).collect();
                 let sum_w: f64 = weights.iter().sum();
                 if sum_w > 1e-15 {
                     let weighted_x: f64 = (lo..=hi)

@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
+use crate::kymo::KymoMatrix;
 
 pub fn preprocess(
-    im: &[Vec<f64>],
+    im: &KymoMatrix,
     dark: f64,
     wx_vec: &[f64],
     wt_vec: &[f64],
-) -> Vec<Vec<Vec<f64>>> {
-    let nt = im.len();
-    let nx = if nt > 0 { im[0].len() } else { 0 };
-
-    let i0: Vec<Vec<f64>> = im
-        .iter()
-        .map(|row| row.iter().map(|&v| v - dark).collect())
-        .collect();
+) -> Vec<KymoMatrix> {
+    // Subtract dark level in a single flat pass — no intermediate 2D allocation
+    let i0 = KymoMatrix {
+        data: im.data.iter().map(|&v| v - dark).collect(),
+        nt: im.nt,
+        nx: im.nx,
+    };
 
     let i_smooth = movmean_2d_axis1(&i0, 16);
 
@@ -22,15 +22,22 @@ pub fn preprocess(
     for s in 0..n_sweeps {
         let wx = wx_vec[s] as usize;
         let wt = wt_vec[s] as usize;
-        let c = remove_background(&i_smooth, wt, wx, nt, nx);
+        let c = remove_background(&i_smooth, wt, wx);
         result.push(c);
     }
 
     result
 }
 
-fn movmean_2d_axis1(im: &[Vec<f64>], w: usize) -> Vec<Vec<f64>> {
-    im.iter().map(|row| movmean_shrink(row, w)).collect()
+fn movmean_2d_axis1(im: &KymoMatrix, w: usize) -> KymoMatrix {
+    let nt = im.nt;
+    let nx = im.nx;
+    let mut data = vec![0.0f64; nt * nx];
+    for t in 0..nt {
+        let smoothed = movmean_shrink(im.row(t), w);
+        data[t * nx..(t + 1) * nx].copy_from_slice(&smoothed);
+    }
+    KymoMatrix { data, nt, nx }
 }
 
 pub fn movmean_shrink(x: &[f64], w: usize) -> Vec<f64> {
@@ -53,47 +60,47 @@ pub fn movmean_shrink(x: &[f64], w: usize) -> Vec<f64> {
     out
 }
 
-fn remove_background(
-    i: &[Vec<f64>],
-    wt: usize,
-    wx: usize,
-    nt: usize,
-    nx: usize,
-) -> Vec<Vec<f64>> {
-    // Step 1: C1[t][x] = I[t][x] / movmean(I[t,:], 2Wx+1, spatial)
+fn remove_background(i: &KymoMatrix, wt: usize, wx: usize) -> KymoMatrix {
+    let nt = i.nt;
+    let nx = i.nx;
+
+    // Step 1: c1[t * nx + x] = I[t][x] / movmean(I[t,:], 2wx+1)
     let win_x = 2 * wx + 1;
-    let mut c1 = vec![vec![0.0f64; nx]; nt];
+    let mut c1 = vec![0.0f64; nt * nx];
     for t in 0..nt {
-        let row_mean = movmean_shrink(&i[t], win_x);
+        let row_mean = movmean_shrink(i.row(t), win_x);
+        let c1_row = &mut c1[t * nx..(t + 1) * nx];
         for x in 0..nx {
             let denom = row_mean[x];
-            c1[t][x] = if denom.abs() > 1e-15 { i[t][x] / denom } else { 1.0 };
+            c1_row[x] = if denom.abs() > 1e-15 { i.get(t, x) / denom } else { 1.0 };
         }
     }
 
-    // Step 2: C[t][x] = C1[t][x] / movmedian(C1[:,x], 2Wt+1, temporal) - 1
-    // Transpose c1 to column-major for sequential memory access during temporal pass
-    let mut c1_col: Vec<Vec<f64>> = vec![vec![0.0f64; nt]; nx];
+    // Step 2: transpose c1 to column-major layout (c1_col[x * nt + t] = c1[t * nx + x])
+    // so that each column is a contiguous slice for the temporal median pass.
+    let mut c1_col = vec![0.0f64; nx * nt];
     for t in 0..nt {
         for x in 0..nx {
-            c1_col[x][t] = c1[t][x];
+            c1_col[x * nt + t] = c1[t * nx + x];
         }
     }
 
+    // Step 3: c[t][x] = c1[t][x] / movmedian(c1[:,x], 2wt+1) - 1
     let win_t = 2 * wt + 1;
-    let mut c = vec![vec![0.0f64; nx]; nt];
+    let mut data = vec![0.0f64; nt * nx];
     for x in 0..nx {
-        let col_med = movmedian_shrink(&c1_col[x], win_t);
+        let col_med = movmedian_shrink(&c1_col[x * nt..(x + 1) * nt], win_t);
         for t in 0..nt {
             let denom = col_med[t];
-            c[t][x] = if denom.abs() > 1e-15 {
-                c1[t][x] / denom - 1.0
+            data[t * nx + x] = if denom.abs() > 1e-15 {
+                c1[t * nx + x] / denom - 1.0
             } else {
-                c1[t][x] - 1.0
+                c1[t * nx + x] - 1.0
             };
         }
     }
-    c
+
+    KymoMatrix { data, nt, nx }
 }
 
 // ── O(n log w) sliding window median ─────────────────────────────────────────

@@ -1,3 +1,4 @@
+use crate::kymo::KymoMatrix;
 use crate::linking::Track;
 
 /// Per-track trajectory analysis results
@@ -17,7 +18,7 @@ pub struct TrajectoryResult {
 /// Analyze all tracks for one sweep.
 pub fn analyze_tracks(
     tracks: &[Track],
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     wx: f64,
     dx: f64,
     dt: f64,
@@ -28,8 +29,7 @@ pub fn analyze_tracks(
         .collect()
 }
 
-fn analyze_single_track(track: &Track, c: &[Vec<f64>], wx: f64, dx: f64, dt: f64) -> TrajectoryResult {
-    let nx = if !c.is_empty() { c[0].len() } else { 0 };
+fn analyze_single_track(track: &Track, c: &KymoMatrix, wx: f64, dx: f64, dt: f64) -> TrajectoryResult {
     let n_spots = track.frames.len();
 
     // iOC profile: one value per frame
@@ -82,13 +82,13 @@ fn analyze_single_track(track: &Track, c: &[Vec<f64>], wx: f64, dx: f64, dt: f64
 ///
 /// Mirrors analyzeMinimas.m with threshold=0.
 pub fn analyze_minima(
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     t: usize,
     x: usize,
     threshold: f64,
 ) -> (f64, f64, f64) {
-    let nx = if !c.is_empty() { c[0].len() } else { 0 };
-    let row = &c[t];
+    let nx = c.nx;
+    let row = c.row(t);
 
     let mut val = row[x];
     let flip = val >= 0.0;

@@ -1,6 +1,7 @@
 use crate::linking::Track;
 use crate::refinement::refine_centroid;
 use crate::detection::Detection;
+use crate::kymo::KymoMatrix;
 
 /// Delete spots that cause frame deltas < 1 (overlapping/reversed).
 /// Keeps the spot with lower intensity value (more negative = stronger for negative peaks).
@@ -55,12 +56,12 @@ pub fn filter_tracks(tracks: Vec<Track>, min_track_length: usize) -> Vec<Track> 
 /// Fill gaps in tracks: linearly interpolate positions, then snap to local optimum.
 pub fn gap_filling(
     mut tracks: Vec<Track>,
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     peak_sign: &str,
     gap_local_optimum_range: usize,
     fitting_radius: usize,
 ) -> Vec<Track> {
-    let nx = if !c.is_empty() { c[0].len() } else { 0 };
+    let nx = c.nx;
 
     for track in &mut tracks {
         let mut i = 0;
@@ -89,7 +90,7 @@ pub fn gap_filling(
                     // Snap to local optimum
                     let lo = p_line.saturating_sub(gap_local_optimum_range);
                     let hi = (p_line + gap_local_optimum_range).min(nx - 1);
-                    let range = &c[t][lo..=hi];
+                    let range = &c.row(t)[lo..=hi];
 
                     let best_local = match peak_sign {
                         "negative" => range
@@ -107,8 +108,8 @@ pub fn gap_filling(
                         _ => p_line,
                     };
 
-                    let intensity = c[t][best_local];
-                    let contrast = c[t][best_local];
+                    let intensity = c.get(t, best_local);
+                    let contrast = c.get(t, best_local);
 
                     // Refine position
                     let dummy_det = Detection {

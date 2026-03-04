@@ -2,6 +2,7 @@ mod config;
 mod detection;
 mod gap;
 mod io;
+mod kymo;
 mod linking;
 mod population;
 mod postprocess;
@@ -14,6 +15,7 @@ use anyhow::{bail, Context, Result};
 use config::{sweep_legend, sweep_pairs, Config};
 use io::output::{atomic_write, save_summary, save_trajectories};
 use io::tiff_loader::load_tiff2;
+use kymo::KymoMatrix;
 use postprocess::{collection_postprocessing, CollectionPostprocessed};
 use population::analyze_population_robust_mean;
 use rayon::prelude::*;
@@ -102,10 +104,13 @@ fn run(input_dir: &Path, output_dir: &Path) -> Result<()> {
             let dx = config.dx;
             let dt = raw.dt;
 
+            // Construct KymoMatrix from the flat pixel buffer — zero-copy move
+            let im = KymoMatrix { data: raw.im, nt: raw.nt, nx: raw.nx };
+
             let wx_vec: Vec<f64> = pairs.iter().map(|&(wx, _)| wx).collect();
             let wt_vec: Vec<f64> = pairs.iter().map(|&(_, wt)| wt).collect();
 
-            let contrasts = preprocess::preprocess(&raw.im, dark, &wx_vec, &wt_vec);
+            let contrasts = preprocess::preprocess(&im, dark, &wx_vec, &wt_vec);
 
             let file_stem = tiff_path.file_stem().unwrap_or_default().to_string_lossy();
 
@@ -174,14 +179,14 @@ fn run(input_dir: &Path, output_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Run the gab-closing tracker on one kymograph slice.
+/// Run the gap-closing tracker on one kymograph slice.
 fn run_tracker(
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     config: &Config,
     dx: f64,
     dt: f64,
 ) -> Vec<linking::Track> {
-    let nt = c.len();
+    let nt = c.nt;
     let border_range = config.detection.local_optimum_range;
     // flowEstimate in config is in px/frame (same units used by tracker)
     let flow_px = config.flow_estimate;
@@ -214,7 +219,7 @@ fn run_tracker(
             position: d.position,
             position_refined: pr,
             intensity: d.intensity,
-            contrast: c[d.frame][d.position],
+            contrast: c.get(d.frame, d.position),
         })
         .collect();
 

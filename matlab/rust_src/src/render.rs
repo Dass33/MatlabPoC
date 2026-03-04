@@ -2,17 +2,18 @@ use anyhow::Result;
 use plotters::prelude::*;
 use std::path::Path;
 
+use crate::kymo::KymoMatrix;
 use crate::linking::Track;
 
 /// Render kymograph C[Nt × Nx] with track overlays to a PNG file.
 pub fn render_kymograph(
-    c: &[Vec<f64>],
+    c: &KymoMatrix,
     tracks: &[Track],
     output_path: &Path,
     dpi: u32,
 ) -> Result<()> {
-    let nt = c.len();
-    let nx = if nt > 0 { c[0].len() } else { 0 };
+    let nt = c.nt;
+    let nx = c.nx;
     if nt == 0 || nx == 0 {
         anyhow::bail!("empty kymograph");
     }
@@ -26,10 +27,9 @@ pub fn render_kymograph(
     let root = BitMapBackend::new(output_path, (px_w, px_h)).into_drawing_area();
     root.fill(&WHITE)?;
 
-    // Color limits
-    let flat: Vec<f64> = c.iter().flat_map(|r| r.iter().copied()).collect();
-    let vmin = flat.iter().cloned().fold(f64::INFINITY, f64::min);
-    let vmax = flat.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    // Color limits — c.data is already flat, no copy needed
+    let vmin = c.data.iter().cloned().fold(f64::INFINITY, f64::min);
+    let vmax = c.data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let range = (vmax - vmin).max(1e-10);
 
     // Heatmap: pixel-by-pixel
@@ -38,7 +38,7 @@ pub fn render_kymograph(
 
     for t in 0..nt {
         for x in 0..nx {
-            let val = (c[t][x] - vmin) / range;
+            let val = (c.get(t, x) - vmin) / range;
             let (r, g, b) = viridis(val);
             let px0 = (x as f64 * cell_w) as i32;
             let py0 = (t as f64 * cell_h) as i32;

@@ -3,8 +3,8 @@ use std::path::Path;
 use tiff::decoder::{Decoder, DecodingResult};
 
 pub struct RawData {
-    /// Image matrix [Nt × Nx] in f64
-    pub im: Vec<Vec<f64>>,
+    /// Image pixels [Nt × Nx] in row-major flat layout: index = t * nx + x
+    pub im: Vec<f64>,
     pub nt: usize,
     pub nx: usize,
     pub dt: f64,
@@ -72,7 +72,7 @@ fn parse_temp(s: &str) -> f64 {
         .unwrap_or(20.0)
 }
 
-fn decode_tiff(path: &Path) -> Result<(Vec<Vec<f64>>, usize, usize)> {
+fn decode_tiff(path: &Path) -> Result<(Vec<f64>, usize, usize)> {
     let file = std::fs::File::open(path)?;
     let mut decoder = Decoder::new(std::io::BufReader::new(file))?;
 
@@ -95,6 +95,5 @@ fn decode_tiff(path: &Path) -> Result<(Vec<Vec<f64>>, usize, usize)> {
         bail!("TIFF pixel count {} != {}×{}", flat.len(), nt, nx);
     }
 
-    let im: Vec<Vec<f64>> = flat.chunks(nx).map(|row| row.to_vec()).collect();
-    Ok((im, nt, nx))
+    Ok((flat, nt, nx))
 }
