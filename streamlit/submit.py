@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 
 import streamlit as st
+from streamlit.runtime.state import session_state
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,6 +17,7 @@ from job_manager import (
     MAX_WORKERS,
     POLL_INTERVAL_S,
     count_running_jobs,
+    launch_matlab_container,
     read_status,
     submit_job,
 )
@@ -28,6 +30,9 @@ STATUS_ICON = {
     "unknown": "❓",
 }
 
+UPLOADER_CLEAR = "uploader_clear"
+UPLOADER = "uploader_"
+
 
 # ─────────────────────────────────────────────
 # Page: Submit
@@ -37,11 +42,19 @@ STATUS_ICON = {
 def page_submit(config: dict) -> None:
     st.header("Submit Analysis")
 
+    # We do this to be able to have clear all files button
+    if UPLOADER_CLEAR not in st.session_state:
+        st.session_state[UPLOADER_CLEAR] = 0
+
     uploaded_files = st.file_uploader(
         "Upload .tiff files and their paired .txt metadata files",
         type=["tif", "tiff", "txt"],
         accept_multiple_files=True,
-        key="uploader",
+        key=get_uploader_key(),
+    )
+
+    st.button(
+        label="Clear uploaded files", key="Clear files button", on_click=clear_uploader
     )
 
     running = count_running_jobs()
@@ -65,13 +78,6 @@ def page_submit(config: dict) -> None:
     txt_stems = {
         Path(f.name).stem for f in uploaded_files if f.name.lower().endswith(".txt")
     }
-    missing_txt = tiff_stems - txt_stems
-    if missing_txt:
-        st.error(
-            f"Missing paired .txt metadata file(s) for: {', '.join(sorted(missing_txt))}. "
-            "Each .tiff must have a matching .txt with the same base name."
-        )
-        return
 
     col_submit, col_wait = st.columns(2)
     with col_submit:
@@ -124,3 +130,28 @@ def page_submit(config: dict) -> None:
                 result_placeholder.error(
                     f"Job failed: {status.get('error', 'unknown error')}"
                 )
+
+    missing_txt = tiff_stems - txt_stems
+    if missing_txt:
+        st.error(
+            f"Missing paired .txt metadata file(s) for: {', '.join(sorted(missing_txt))}. "
+            "Each .tiff must have a matching .txt with the same base name."
+        )
+
+    st.divider()
+    show_all_uploaded()
+
+
+def get_uploader_key():
+    return f"{UPLOADER}{st.session_state[UPLOADER_CLEAR]}"
+
+
+def clear_uploader():
+    st.session_state[UPLOADER_CLEAR] += 1
+
+
+def show_all_uploaded():
+    uploaded_files = st.session_state[get_uploader_key()]
+    with st.expander(label="List of all uploaded files"):
+        for f in uploaded_files:
+            st.write(f.name)

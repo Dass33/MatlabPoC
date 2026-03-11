@@ -38,9 +38,9 @@ logging.basicConfig(
 )
 
 from config import render_config_sidebar
-from submit import page_submit
-from history import page_history
 from help import page_help
+from history import page_history
+from submit import page_submit
 
 STATUS_ICON = {
     "processing": "⏳",
