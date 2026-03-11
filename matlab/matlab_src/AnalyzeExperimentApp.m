@@ -1,17 +1,6 @@
 function AnalyzeExperimentApp(inputDir, outputDir)
 % ANALYZEEXPERIMENTAPP  App entry point for the AnalyzeExperiment pipeline.
 %
-% Reads inputDir/../config.json, builds the Setting struct, runs
-% kymographAnalysis → collectionPostprocessing → analyzePopulation, and
-% writes structured outputs to outputDir.
-%
-% Outputs written to outputDir/
-%   status.json        — {status, error}
-%   kymographs/*.png   — kymograph images with track overlays
-%   trajectories.mat   — flat scalar arrays per trajectory (scipy-readable v7)
-%   summary.json       — population stats per sweep
-%   results.mat        — full archive (v7.3)
-
 statusFile = fullfile(outputDir, 'status.json');
 
 try
@@ -76,13 +65,26 @@ try
   end
 
   % ── Save outputs ──────────────────────────────────────────────────────
+  collectionDir = fullfile(outputDir, 'collection');
+  if ~exist(collectionDir, 'dir')
+    mkdir(collectionDir);
+  end
+
+  save(fullfile(collectionDir, 'collection.mat'),              'collection',              '-v7.3');
+  save(fullfile(collectionDir, 'collection_postprocessed.mat'),'collectionPostprocessed', '-v7.3');
+  save(fullfile(collectionDir, 'collection_population.mat'),   'population',              '-v7.3');
+
+  Analysis = build_analysis_table(collectionPostprocessed);
+  save(fullfile(outputDir, 'Analysis.mat'), 'Analysis', '-v7.3');
+
+  save_setting_json(outputDir, Setting);
   save_trajectories(outputDir, collectionPostprocessed);
   save_summary(outputDir, population, collectionPostprocessed, ...
     Setting.populationAnalysis.properties);
-  save(fullfile(outputDir, 'Analysis.mat'), ...
+
+  save(fullfile(outputDir, 'results.mat'), ...
     'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
     'population', 'inputDataInfo', '-v7.3');
-  save(fullfile(outputDir, 'config.json'), 'config');
 
   write_status(statusFile, 'completed', '');
 
@@ -175,6 +177,64 @@ end % build_setting
 
 % ─────────────────────────────────────────────────────────────────────────────
 
+function Analysis = build_analysis_table(collectionPostprocessed)
+% Build a per-trajectory table matching the original AnalyzeExperiment output.
+
+file_name         = {};
+positions_refined = {};
+frames            = {};
+iOCs              = {};
+mean_D            = [];
+mean_iOC          = [];
+std_iOC           = [];
+velocity_ums      = [];
+traj_length       = [];
+position_start    = [];
+position_end      = [];
+
+for iSweep = 1:length(collectionPostprocessed)
+  c = collectionPostprocessed(iSweep);
+  n = length(c.iOC);
+  for i = 1:n
+    file_name{end+1,1}         = c.ExperimentTimeStamp{i};  %#ok<AGROW>
+    positions_refined{end+1,1} = c.positionRefined{i};      %#ok<AGROW>
+    frames{end+1,1}            = c.timeFrame{i};             %#ok<AGROW>
+    iOCs{end+1,1}              = c.iOCprofile{i};            %#ok<AGROW>
+    mean_D(end+1,1)            = c.D(i);                     %#ok<AGROW>
+    mean_iOC(end+1,1)          = c.iOC(i);                  %#ok<AGROW>
+    std_iOC(end+1,1)           = c.STDiOC(i);               %#ok<AGROW>
+    velocity_ums(end+1,1)      = c.velocity(i);              %#ok<AGROW>
+    traj_length(end+1,1)       = c.N(i);                     %#ok<AGROW>
+    position_start(end+1,1)    = c.positionStart(i);         %#ok<AGROW>
+    position_end(end+1,1)      = c.positionEnd(i);           %#ok<AGROW>
+  end
+end
+
+Analysis = table(file_name, positions_refined, frames, iOCs, ...
+  mean_D, mean_iOC, std_iOC, velocity_ums, traj_length, position_start, position_end, ...
+  'VariableNames', {'file_name','positions_refined','frames','iOCs', ...
+    'mean_D','mean_iOC','std_iOC','velocity_ums','length','position_start','position_end'});
+
+end % build_analysis_table
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+function save_setting_json(outputDir, Setting)
+
+jsonStr = jsonencode(Setting);
+fid = fopen(fullfile(outputDir, 'Setting.json'), 'w');
+if fid == -1
+  error('save_setting_json: could not open Setting.json for writing in %s', outputDir);
+end
+fprintf(fid, '%s', jsonStr);
+fclose(fid);
+
+end % save_setting_json
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+
 function save_trajectories(outputDir, collectionPostprocessed)
 % Concatenate per-sweep trajectory scalars into flat arrays (scipy v7 compatible).
 
@@ -221,6 +281,7 @@ for iSweep = 1:length(population)
   for i = 1:length(properties)
     prop = properties{i};
     s.MEAN.(prop)       = pop.MEAN.(prop);
+    s.STD.(prop)        = pop.STD.(prop);
     s.FWHM.(prop)       = pop.FWHM.(prop);
     s.RESOLUTION.(prop) = pop.RESOLUTION.(prop);
   end
