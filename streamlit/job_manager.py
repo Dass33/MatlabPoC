@@ -13,7 +13,7 @@ import docker
 
 log = logging.getLogger(__name__)
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/jobs"))
+DATA_DIR = Path(os.environ.get("DATA_DIR", "./data/jobs"))
 HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
 MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "matlab-algorithm:latest")
 MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "2"))
