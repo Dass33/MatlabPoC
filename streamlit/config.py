@@ -236,38 +236,18 @@ def render_config_sidebar() -> dict:
             step=1,
             key="darkCalibration",
         )
-        Wx_sweep_enabled = st.checkbox(
-            "Parameter sweep (Wx × Wt)", value=False, key="sweep_enabled"
+        Wx = st.number_input(
+            "Wx (spatial window, px)",
+            value=float(cfg["kymographPreprocessing"]["Wx"]),
+            step=1.0,
+            key="Wx_single",
         )
-        if Wx_sweep_enabled:
-            Wx_str = st.text_input(
-                "Wx values (comma-separated, px)",
-                value=str(cfg["kymographPreprocessing"]["Wx"]),
-                key="Wx_sweep",
-            )
-            Wt_str = st.text_input(
-                "Wt values (comma-separated, frames)",
-                value=str(cfg["kymographPreprocessing"]["Wt"]),
-                key="Wt_sweep",
-            )
-            Wx = _parse_sweep_values(Wx_str)
-            Wt = _parse_sweep_values(Wt_str)
-            if len(Wx) > 1 or len(Wt) > 1:
-                n_sweeps = len(Wx) * len(Wt)
-                st.caption(f"{len(Wx)} × {len(Wt)} = {n_sweeps} sweep(s) will run.")
-        else:
-            Wx = st.number_input(
-                "Wx (spatial window, px)",
-                value=float(cfg["kymographPreprocessing"]["Wx"]),
-                step=1.0,
-                key="Wx_single",
-            )
-            Wt = st.number_input(
-                "Wt (temporal window, frames)",
-                value=float(cfg["kymographPreprocessing"]["Wt"]),
-                step=1.0,
-                key="Wt_single",
-            )
+        Wt = st.number_input(
+            "Wt (temporal window, frames)",
+            value=float(cfg["kymographPreprocessing"]["Wt"]),
+            step=1.0,
+            key="Wt_single",
+        )
         ws = st.number_input(
             "ws (PSF width, px)",
             value=cfg["kymographPreprocessing"]["ws"],

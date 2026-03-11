@@ -1,5 +1,5 @@
 import streamlit as st
-from job_manager import DATA_DIR, MAX_WORKERS
+from job_manager import MAX_WORKERS
 
 
 def page_help():
@@ -25,17 +25,8 @@ def page_help():
         | `summary.json` | Population statistics per sweep (MEAN, FWHM, RESOLUTION) |
         | `results.mat` | Full archive for MATLAB post-processing |
 
-        ### Parameter sweep
-
-        Enable **Parameter sweep** in the sidebar to run multiple Wx × Wt combinations
-        in a single job. Enter comma-separated values, e.g. `10, 15, 20`.
-
         ### Worker slots
 
         There are **{MAX_WORKERS}** concurrent MATLAB worker slots. If both are busy,
         wait for one to finish.
-
-        ### File retention
-
-        Input and output files are stored under `{DATA_DIR}`.
         """)
