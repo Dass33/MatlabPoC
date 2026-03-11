@@ -5,7 +5,6 @@ import time
 from pathlib import Path
 
 import streamlit as st
-from streamlit.runtime.state import session_state
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,11 +16,10 @@ from job_manager import (
     MAX_WORKERS,
     POLL_INTERVAL_S,
     count_running_jobs,
-    launch_matlab_container,
     read_status,
     submit_job,
 )
-from results import _show_job_results
+from results import show_job_results
 
 STATUS_ICON = {
     "processing": "⏳",
@@ -125,7 +123,7 @@ def page_submit(config: dict) -> None:
             status_placeholder.empty()
             if status["status"] == "completed":
                 result_placeholder.success("Analysis complete!")
-                _show_job_results(active_job_id, key_suffix="submit")
+                show_job_results(active_job_id, key_suffix="submit")
             else:
                 result_placeholder.error(
                     f"Job failed: {status.get('error', 'unknown error')}"

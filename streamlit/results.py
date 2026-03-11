@@ -51,7 +51,7 @@ def list_kymographs(output_dir: Path) -> list[Path]:
     return sorted(kymo_dir.glob("*.png"))
 
 
-def _show_job_results(job_id: str, key_suffix: str = "") -> None:
+def show_job_results(job_id: str, key_suffix: str = "") -> None:
     _, _, out = job_dirs(job_id)
 
     summary = load_summary(out)
@@ -70,19 +70,19 @@ def _show_job_results(job_id: str, key_suffix: str = "") -> None:
     ])
 
     with tab_kymo:
-        _render_kymographs(kymographs, job_id, key_suffix)
+        render_kymographs(kymographs, job_id, key_suffix)
 
     with tab_traj:
         _render_trajectories(traj, job_id, key_suffix)
 
     with tab_pop:
-        _render_population(summary)
+        render_population(summary)
 
     with tab_table:
-        _render_summary_table(summary)
+        render_summary_table(summary)
 
 
-def _render_kymographs(
+def render_kymographs(
     kymographs: list[Path], job_id: str, key_suffix: str = ""
 ) -> None:
     if not kymographs:
@@ -148,7 +148,7 @@ def _render_trajectories(traj: dict | None, job_id: str, key_suffix: str = "") -
     plt.close(fig)
 
 
-def _render_population(summary: dict | None) -> None:
+def render_population(summary: dict | None) -> None:
     if summary is None:
         st.info("summary.json not found.")
         return
@@ -166,10 +166,12 @@ def _render_population(summary: dict | None) -> None:
         for col, sweep in zip(cols, sweeps):
             with col:
                 mean_val = sweep.get("MEAN", {}).get(prop, float("nan"))
+                std_val = sweep.get("STD", {}).get(prop, float("nan"))
                 fwhm_val = sweep.get("FWHM", {}).get(prop, float("nan"))
                 res_val = sweep.get("RESOLUTION", {}).get(prop, float("nan"))
                 legend = sweep.get("legend", "")
                 st.metric(f"{legend} MEAN", f"{mean_val:.4g}")
+                st.metric("STD", f"{std_val:.4g}")
                 st.metric("FWHM", f"{fwhm_val:.4g}")
                 st.metric("RESOLUTION", f"{res_val:.4g}")
 
@@ -193,7 +195,7 @@ def _render_population(summary: dict | None) -> None:
             plt.close(fig)
 
 
-def _render_summary_table(summary: dict | None) -> None:
+def render_summary_table(summary: dict | None) -> None:
     if summary is None:
         st.info("summary.json not found.")
         return
@@ -213,6 +215,7 @@ def _render_summary_table(summary: dict | None) -> None:
         }
         for prop in props:
             row[f"{prop} MEAN"] = s.get("MEAN", {}).get(prop, float("nan"))
+            row[f"{prop} STD"] = s.get("STD", {}).get(prop, float("nan"))
             row[f"{prop} FWHM"] = s.get("FWHM", {}).get(prop, float("nan"))
             row[f"{prop} RESOLUTION"] = s.get("RESOLUTION", {}).get(prop, float("nan"))
         rows.append(row)

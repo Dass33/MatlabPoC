@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import io
 import json
 import logging
 import time
 
 import pandas as pd
+
+from pandas.io.common import zipfile
+from pathlib import Path
 import streamlit as st
 
 logging.basicConfig(
@@ -17,7 +21,7 @@ from job_manager import (
     job_dirs,
     list_all_jobs,
 )
-from results import _render_kymographs, _show_job_results, list_kymographs
+from results import list_kymographs, render_kymographs, show_job_results
 
 STATUS_ICON = {
     "processing": "⏳",
@@ -74,8 +78,17 @@ def page_history() -> None:
             options=list(options.keys()),
             format_func=lambda k: options[k],
         )
+
+        results = get_zipped_results(str(selected_id))
+        st.download_button(
+            label="Download Results",
+            data=results,
+            mime="application/zip",
+            file_name=f"{selected_id}.zip",
+        )
+
         if selected_id:
-            _show_job_results(selected_id, key_suffix="history")
+            show_job_results(selected_id, key_suffix="history")
     else:
         st.caption("No completed jobs to display yet.")
 
@@ -100,7 +113,7 @@ def page_history() -> None:
             kymographs = list_kymographs(out)
             if kymographs:
                 st.caption("Kymographs generated before failure:")
-                _render_kymographs(kymographs, selected_failed, key_suffix="failed")
+                render_kymographs(kymographs, selected_failed, key_suffix="failed")
 
     stuck_jobs = [j for j in jobs if j["status"] == "processing"]
     if stuck_jobs:
@@ -116,7 +129,7 @@ def page_history() -> None:
                 key="admin_select",
             )
             if st.button("Force free slot", key="admin_force"):
-                _, _, out = job_dirs(selected)
+                _, _, out = job_dirs(str(selected))
                 out.mkdir(parents=True, exist_ok=True)
                 (out / "status.json").write_text(
                     json.dumps({"status": "failed", "error": "Manually freed by admin"})
@@ -126,3 +139,13 @@ def page_history() -> None:
     if auto_refresh:
         time.sleep(10)
         st.rerun()
+
+
+def get_zipped_results(id: str) -> bytes:
+    path, _, _ = job_dirs(str(id))
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file in path.rglob("*"):
+            if file.is_file():
+                zf.write(file, file.relative_to(path))
+    return buffer.getvalue()
