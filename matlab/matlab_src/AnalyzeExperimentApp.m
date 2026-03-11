@@ -15,78 +15,79 @@ function AnalyzeExperimentApp(inputDir, outputDir)
 statusFile = fullfile(outputDir, 'status.json');
 
 try
-    if ~exist(outputDir, 'dir')
-        mkdir(outputDir);
+  if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+  end
+
+  write_status(statusFile, 'processing', '');
+
+  % ── Headless ──────────────────────────────────────────────────────────
+  set(0, 'DefaultFigureVisible', 'off');
+
+  % ── Load config ───────────────────────────────────────────────────────
+  configFile = fullfile(inputDir, '..', 'config.json');
+  if ~exist(configFile, 'file')
+    error('config.json not found at: %s', configFile);
+  end
+  config = jsondecode(fileread(configFile));
+
+  % ── Build Setting ─────────────────────────────────────────────────────
+  Setting = build_setting(config, outputDir);
+
+  % ── Add paths (source mode only) ──────────────────────────────────────
+  if ~isdeployed
+    addpath(genpath(Setting.Path.projectFolder));
+  end
+
+  % ── Kymograph analysis ────────────────────────────────────────────────
+  [collection, inputDataInfo] = kymographAnalysis(inputDir, Setting);
+
+  % ── Add positionStart + positionEnd (always computed separately, never
+  %    via trajectoryProperties passed to kymographAnalysis)
+  if ~isfield(collection, 'positionStart')
+    collection = setfield(collection, {1}, 'positionStart', []);
+  end
+  if ~isfield(collection, 'positionEnd')
+    collection = setfield(collection, {1}, 'positionEnd', []);
+  end
+  for iSweep = 1:length(collection)
+    collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionStart', [], []);
+    collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionEnd', [], []);
+  end
+
+  % ── Collection postprocessing ─────────────────────────────────────────
+  for iSweep = 1:length(collection)
+    if isfield(collection(iSweep), 'iOC') && isempty(collection(iSweep).iOC)
+      error('No trajectories detected (sweep %d/%d). Check your data and detection parameters (pfa, flowEstimate).', iSweep, length(collection));
     end
+    [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = ...
+      collectionPostprocessing(collection(iSweep), Setting);
+  end
 
-    write_status(statusFile, 'processing', '');
-
-    % ── Headless ──────────────────────────────────────────────────────────
-    set(0, 'DefaultFigureVisible', 'off');
-
-    % ── Load config ───────────────────────────────────────────────────────
-    configFile = fullfile(inputDir, '..', 'config.json');
-    if ~exist(configFile, 'file')
-        error('config.json not found at: %s', configFile);
+  % ── Population analysis ───────────────────────────────────────────────
+  for iSweep = 1:length(collection)
+    if strcmp(Setting.populationAnalysis.Title, 'GMM')
+      population(iSweep) = analyzePopulation_GMM( ...
+        collectionPostprocessed(iSweep), Setting.populationAnalysis);
+    else
+      population(iSweep) = analyzePopulation_robustMean( ...
+        collectionPostprocessed(iSweep), Setting.populationAnalysis);
     end
-    config = jsondecode(fileread(configFile));
+  end
 
-    % ── Build Setting ─────────────────────────────────────────────────────
-    Setting = build_setting(config, outputDir);
+  % ── Save outputs ──────────────────────────────────────────────────────
+  save_trajectories(outputDir, collectionPostprocessed);
+  save_summary(outputDir, population, collectionPostprocessed, ...
+    Setting.populationAnalysis.properties);
+  save(fullfile(outputDir, 'Analysis.mat'), ...
+    'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
+    'population', 'inputDataInfo', '-v7.3');
+  save(fullfile(outputDir, 'config.json'), 'config');
 
-    % ── Add paths (source mode only) ──────────────────────────────────────
-    if ~isdeployed
-        addpath(genpath(Setting.Path.projectFolder));
-    end
-
-    % ── Kymograph analysis ────────────────────────────────────────────────
-    [collection, inputDataInfo] = kymographAnalysis(inputDir, Setting);
-
-    % ── Add positionStart + positionEnd (always computed separately, never
-    %    via trajectoryProperties passed to kymographAnalysis)
-    if ~isfield(collection, 'positionStart')
-        collection = setfield(collection, {1}, 'positionStart', []);
-    end
-    if ~isfield(collection, 'positionEnd')
-        collection = setfield(collection, {1}, 'positionEnd', []);
-    end
-    for iSweep = 1:length(collection)
-        collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionStart', [], []);
-        collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionEnd', [], []);
-    end
-
-    % ── Collection postprocessing ─────────────────────────────────────────
-    for iSweep = 1:length(collection)
-        if isfield(collection(iSweep), 'iOC') && isempty(collection(iSweep).iOC)
-            error('No trajectories detected (sweep %d/%d). Check your data and detection parameters (pfa, flowEstimate).', iSweep, length(collection));
-        end
-        [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = ...
-            collectionPostprocessing(collection(iSweep), Setting);
-    end
-
-    % ── Population analysis ───────────────────────────────────────────────
-    for iSweep = 1:length(collection)
-        if strcmp(Setting.populationAnalysis.Title, 'GMM')
-            population(iSweep) = analyzePopulation_GMM( ...
-                collectionPostprocessed(iSweep), Setting.populationAnalysis);
-        else
-            population(iSweep) = analyzePopulation_robustMean( ...
-                collectionPostprocessed(iSweep), Setting.populationAnalysis);
-        end
-    end
-
-    % ── Save outputs ──────────────────────────────────────────────────────
-    save_trajectories(outputDir, collectionPostprocessed);
-    save_summary(outputDir, population, collectionPostprocessed, ...
-        Setting.populationAnalysis.properties);
-    save(fullfile(outputDir, 'results.mat'), ...
-        'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
-        'population', 'inputDataInfo', '-v7.3');
-
-    write_status(statusFile, 'completed', '');
+  write_status(statusFile, 'completed', '');
 
 catch ME
-    write_status(statusFile, 'failed', ME.message);
+  write_status(statusFile, 'failed', ME.message);
 end
 
 end % AnalyzeExperimentApp
@@ -115,9 +116,9 @@ Setting.flowEstimate    = config.flowEstimate;
 Setting.flowEstimate_ums = Setting.Dx / Setting.Dt * Setting.flowEstimate;
 
 if isfield(config, 'inputDataFormat')
-    Setting.inputDataFormat = config.inputDataFormat;
+  Setting.inputDataFormat = config.inputDataFormat;
 else
-    Setting.inputDataFormat = 'tiff2';
+  Setting.inputDataFormat = 'tiff2';
 end
 
 % Kymograph preprocessing
@@ -134,15 +135,15 @@ Setting.FeatureExtraction.fittingRadius = Setting.Detection.localOptimumRange;
 % Trajectory detection algorithm (configurable; defaults to gabClosingTracker)
 valid_trackers = {'gabClosingTracker', 'trackBeforeDetect'};
 if isfield(config, 'tracker') && ismember(config.tracker, valid_trackers)
-    Setting.trajectoryDetecton.Title = config.tracker;
+  Setting.trajectoryDetecton.Title = config.tracker;
 else
-    Setting.trajectoryDetecton.Title = 'gabClosingTracker';
+  Setting.trajectoryDetecton.Title = 'gabClosingTracker';
 end
 
 if strcmp(Setting.trajectoryDetecton.Title, 'trackBeforeDetect')
-    Setting.Tlength        = config.Tlength;
-    Setting.thresholdLimit = config.thresholdLimit;
-    Setting.TmaxNo         = config.TmaxNo;
+  Setting.Tlength        = config.Tlength;
+  Setting.thresholdLimit = config.thresholdLimit;
+  Setting.TmaxNo         = config.TmaxNo;
 end
 
 % Linking
@@ -187,22 +188,22 @@ sweepIdx      = [];
 sweepLegends  = {};
 
 for iSweep = 1:length(collectionPostprocessed)
-    c = collectionPostprocessed(iSweep);
-    n = length(c.iOC);
+  c = collectionPostprocessed(iSweep);
+  n = length(c.iOC);
 
-    iOC           = [iOC;           c.iOC(:)];           %#ok<AGROW>
-    D             = [D;             c.D(:)];             %#ok<AGROW>
-    velocity      = [velocity;      c.velocity(:)];      %#ok<AGROW>
-    N             = [N;             c.N(:)];             %#ok<AGROW>
-    positionStart = [positionStart; c.positionStart(:)]; %#ok<AGROW>
-    positionEnd   = [positionEnd;   c.positionEnd(:)];   %#ok<AGROW>
-    sweepIdx      = [sweepIdx;      iSweep * ones(n, 1)]; %#ok<AGROW>
-    sweepLegends{end+1} = c.SweepLegend;                %#ok<AGROW>
+  iOC           = [iOC;           c.iOC(:)];           %#ok<AGROW>
+  D             = [D;             c.D(:)];             %#ok<AGROW>
+  velocity      = [velocity;      c.velocity(:)];      %#ok<AGROW>
+  N             = [N;             c.N(:)];             %#ok<AGROW>
+  positionStart = [positionStart; c.positionStart(:)]; %#ok<AGROW>
+  positionEnd   = [positionEnd;   c.positionEnd(:)];   %#ok<AGROW>
+  sweepIdx      = [sweepIdx;      iSweep * ones(n, 1)]; %#ok<AGROW>
+  sweepLegends{end+1} = c.SweepLegend;                %#ok<AGROW>
 end
 
 save(fullfile(outputDir, 'trajectories.mat'), ...
-    'iOC', 'D', 'velocity', 'N', 'positionStart', 'positionEnd', ...
-    'sweepIdx', 'sweepLegends', '-v7');
+  'iOC', 'D', 'velocity', 'N', 'positionStart', 'positionEnd', ...
+  'sweepIdx', 'sweepLegends', '-v7');
 
 end % save_trajectories
 
@@ -214,16 +215,16 @@ function save_summary(outputDir, population, collectionPostprocessed, properties
 
 sweeps = cell(1, length(population));
 for iSweep = 1:length(population)
-    pop = population(iSweep);
-    s.legend        = collectionPostprocessed(iSweep).SweepLegend;
-    s.nTrajectories = pop.Ntrajectories;
-    for i = 1:length(properties)
-        prop = properties{i};
-        s.MEAN.(prop)       = pop.MEAN.(prop);
-        s.FWHM.(prop)       = pop.FWHM.(prop);
-        s.RESOLUTION.(prop) = pop.RESOLUTION.(prop);
-    end
-    sweeps{iSweep} = s;
+  pop = population(iSweep);
+  s.legend        = collectionPostprocessed(iSweep).SweepLegend;
+  s.nTrajectories = pop.Ntrajectories;
+  for i = 1:length(properties)
+    prop = properties{i};
+    s.MEAN.(prop)       = pop.MEAN.(prop);
+    s.FWHM.(prop)       = pop.FWHM.(prop);
+    s.RESOLUTION.(prop) = pop.RESOLUTION.(prop);
+  end
+  sweeps{iSweep} = s;
 end
 
 summary.sweeps = sweeps;
@@ -231,7 +232,7 @@ jsonStr = jsonencode(summary);
 
 fid = fopen(fullfile(outputDir, 'summary.json'), 'w');
 if fid == -1
-    error('save_summary: could not open summary.json for writing in %s', outputDir);
+  error('save_summary: could not open summary.json for writing in %s', outputDir);
 end
 fprintf(fid, '%s', jsonStr);
 fclose(fid);
@@ -244,85 +245,85 @@ end % save_summary
 function validate_config(config)
 
 required_top = {'Dt','Dx','flipIntensity','flowEstimate', ...
-    'kymographPreprocessing','Detection','Linking', ...
-    'trajectoryProperties','iOCcalibration','outlierFiltering','populationAnalysis'};
+  'kymographPreprocessing','Detection','Linking', ...
+  'trajectoryProperties','iOCcalibration','outlierFiltering','populationAnalysis'};
 for i = 1:length(required_top)
-    if ~isfield(config, required_top{i})
-        error('config.json missing required field: %s', required_top{i});
-    end
+  if ~isfield(config, required_top{i})
+    error('config.json missing required field: %s', required_top{i});
+  end
 end
 
 numeric_fields = {'Dt','Dx','flowEstimate'};
 for i = 1:length(numeric_fields)
-    f = numeric_fields{i};
-    if ~isnumeric(config.(f))
-        error('config.json field "%s" must be numeric, got %s', f, class(config.(f)));
-    end
+  f = numeric_fields{i};
+  if ~isnumeric(config.(f))
+    error('config.json field "%s" must be numeric, got %s', f, class(config.(f)));
+  end
 end
 
 det_required = {'peakSign','pfa','localOptimumRange'};
 for i = 1:length(det_required)
-    if ~isfield(config.Detection, det_required{i})
-        error('config.json missing required field: Detection.%s', det_required{i});
-    end
+  if ~isfield(config.Detection, det_required{i})
+    error('config.json missing required field: Detection.%s', det_required{i});
+  end
 end
 if ~isnumeric(config.Detection.pfa)
-    error('config.json field "Detection.pfa" must be numeric, got %s', class(config.Detection.pfa));
+  error('config.json field "Detection.pfa" must be numeric, got %s', class(config.Detection.pfa));
 end
 
 link_required = {'minTrackLength','cut_off_distance','unmatched_penalty_distance', ...
-    'maxNegativeGab','maxPositiveGab','gab_closing_cut_off_distance','gab_closing_penalty_distance'};
+  'maxNegativeGab','maxPositiveGab','gab_closing_cut_off_distance','gab_closing_penalty_distance'};
 for i = 1:length(link_required)
-    if ~isfield(config.Linking, link_required{i})
-        error('config.json missing required field: Linking.%s', link_required{i});
-    end
+  if ~isfield(config.Linking, link_required{i})
+    error('config.json missing required field: Linking.%s', link_required{i});
+  end
 end
 
 preproc_required = {'Wx','Wt','ws','darkCalibration'};
 for i = 1:length(preproc_required)
-    if ~isfield(config.kymographPreprocessing, preproc_required{i})
-        error('config.json missing required field: kymographPreprocessing.%s', preproc_required{i});
-    end
+  if ~isfield(config.kymographPreprocessing, preproc_required{i})
+    error('config.json missing required field: kymographPreprocessing.%s', preproc_required{i});
+  end
 end
 if ~isnumeric(config.kymographPreprocessing.Wx)
-    error('config.json field "kymographPreprocessing.Wx" must be numeric, got %s', class(config.kymographPreprocessing.Wx));
+  error('config.json field "kymographPreprocessing.Wx" must be numeric, got %s', class(config.kymographPreprocessing.Wx));
 end
 if ~isnumeric(config.kymographPreprocessing.Wt)
-    error('config.json field "kymographPreprocessing.Wt" must be numeric, got %s', class(config.kymographPreprocessing.Wt));
+  error('config.json field "kymographPreprocessing.Wt" must be numeric, got %s', class(config.kymographPreprocessing.Wt));
 end
 
 if isempty(config.trajectoryProperties)
-    error('config.json field "trajectoryProperties" must be non-empty');
+  error('config.json field "trajectoryProperties" must be non-empty');
 end
 
 if ~ischar(config.iOCcalibration) || ~ismember(config.iOCcalibration, {'on','off'})
-    error('config.json field "iOCcalibration" must be "on" or "off", got: %s', mat2str(config.iOCcalibration));
+  error('config.json field "iOCcalibration" must be "on" or "off", got: %s', mat2str(config.iOCcalibration));
 end
 
 outfilt_required = {'referenceProperty','filterProperties','thresholdDirection','thresholdValue'};
 for i = 1:length(outfilt_required)
-    if ~isfield(config.outlierFiltering, outfilt_required{i})
-        error('config.json missing required field: outlierFiltering.%s', outfilt_required{i});
-    end
+  if ~isfield(config.outlierFiltering, outfilt_required{i})
+    error('config.json missing required field: outlierFiltering.%s', outfilt_required{i});
+  end
 end
 
 if isfield(config, 'tracker') && strcmp(config.tracker, 'trackBeforeDetect')
-    tbd_required = {'Tlength', 'thresholdLimit', 'TmaxNo'};
-    for i = 1:length(tbd_required)
-        if ~isfield(config, tbd_required{i})
-            error('config.json missing required field for trackBeforeDetect: %s', tbd_required{i});
-        end
+  tbd_required = {'Tlength', 'thresholdLimit', 'TmaxNo'};
+  for i = 1:length(tbd_required)
+    if ~isfield(config, tbd_required{i})
+      error('config.json missing required field for trackBeforeDetect: %s', tbd_required{i});
     end
+  end
 end
 
 if ~isfield(config.populationAnalysis, 'Title')
-    error('config.json missing required field: populationAnalysis.Title');
+  error('config.json missing required field: populationAnalysis.Title');
 end
 if ~isfield(config.populationAnalysis, 'properties')
-    error('config.json missing required field: populationAnalysis.properties');
+  error('config.json missing required field: populationAnalysis.properties');
 end
 if isempty(config.populationAnalysis.properties)
-    error('config.json field "populationAnalysis.properties" must be non-empty');
+  error('config.json field "populationAnalysis.properties" must be non-empty');
 end
 
 end % validate_config
@@ -334,16 +335,16 @@ function write_status(statusFile, status, errorMsg)
 
 s.status = status;
 if isempty(errorMsg)
-    s.error = [];
+  s.error = [];
 else
-    s.error = errorMsg;
+  s.error = errorMsg;
 end
 jsonStr = [jsonencode(s) newline];
 
 tmpFile = [statusFile '.tmp'];
 fid = fopen(tmpFile, 'w');
 if fid == -1
-    error('write_status: could not open %s for writing', tmpFile);
+  error('write_status: could not open %s for writing', tmpFile);
 end
 fprintf(fid, '%s', jsonStr);
 fclose(fid);
