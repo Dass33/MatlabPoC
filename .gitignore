@@ -1,35 +1,16 @@
-# MATLAB compiled output
 matlab/Compiled/
-
-# MATLAB Runtime installer
 MATLAB_Runtime_*.zip
 
-# Job data (inputs, outputs, configs generated at runtime)
 data/
-
-# Demo data
 DemoData/
 
-# Python
 __pycache__/
 *.py[cod]
-*.so
-*.egg-info/
-*.egg
-.eggs/
 dist/
 build/
 
-# Virtual environments
 *venv*/
 env/
 ENV/
 
-# OS
-.DS_Store
-
-# Environment (use .env.example as template)
-.env
-
-# Claude Code
-.claude
+**/.env
