@@ -6,7 +6,6 @@ RUN mkdir -p /opt/matlab_app
 
 COPY Compiled/AnalyzeExperimentApp /opt/matlab_app/
 COPY Compiled/run_AnalyzeExperimentApp.sh /opt/matlab_app/
-COPY Compiled/*.ctf /opt/matlab_app/
 
 RUN chmod +x /opt/matlab_app/run_AnalyzeExperimentApp.sh
 

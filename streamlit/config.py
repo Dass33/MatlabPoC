@@ -6,6 +6,7 @@ from typing import Any
 import streamlit as st
 
 DEFAULT_CONFIG: dict[str, Any] = {
+    "exportOptionalFigures": False,
     # Acquisition
     "Dt": 0.007,
     "Dx": 0.066,
@@ -58,14 +59,14 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
-def _apply_config_to_session_state(cfg: dict) -> None:
+def apply_config_to_session_state(built_config: dict) -> None:
     flat: dict = {}
 
     for k in ("Dt", "Dx", "flipIntensity", "flowEstimate"):
-        if k in cfg:
-            flat[k] = cfg[k]
+        if k in built_config:
+            flat[k] = built_config[k]
 
-    pp = cfg.get("kymographPreprocessing", {})
+    pp = built_config.get("kymographPreprocessing", {})
     if "darkCalibration" in pp:
         flat["darkCalibration"] = pp["darkCalibration"]
     if "ws" in pp:
@@ -85,18 +86,18 @@ def _apply_config_to_session_state(cfg: dict) -> None:
         else:
             flat["Wt_single"] = float(wt)
 
-    det = cfg.get("Detection", {})
+    det = built_config.get("Detection", {})
     for k in ("peakSign", "pfa", "localOptimumRange"):
         if k in det:
             flat[k] = det[k]
 
-    if "tracker" in cfg:
-        flat["tracker"] = cfg["tracker"]
+    if "tracker" in built_config:
+        flat["tracker"] = built_config["tracker"]
     for k in ("Tlength", "thresholdLimit", "TmaxNo"):
-        if k in cfg:
-            flat[k] = cfg[k]
+        if k in built_config:
+            flat[k] = built_config[k]
 
-    link = cfg.get("Linking", {})
+    link = built_config.get("Linking", {})
     for k in (
         "minTrackLength",
         "cut_off_distance",
@@ -109,10 +110,10 @@ def _apply_config_to_session_state(cfg: dict) -> None:
         if k in link:
             flat[k] = link[k]
 
-    if "iOCcalibration" in cfg:
-        flat["iOCcalibration_toggle"] = cfg["iOCcalibration"] == "on"
+    if "iOCcalibration" in built_config:
+        flat["iOCcalibration_toggle"] = built_config["iOCcalibration"] == "on"
 
-    pop = cfg.get("populationAnalysis", {})
+    pop = built_config.get("populationAnalysis", {})
     if "Title" in pop:
         flat["pop_method"] = pop["Title"]
 
@@ -120,109 +121,41 @@ def _apply_config_to_session_state(cfg: dict) -> None:
         st.session_state[k] = v
 
 
-def _parse_sweep_values(s: str) -> list[float]:
-    try:
-        return [float(v.strip()) for v in s.split(",") if v.strip()]
-    except ValueError:
-        st.warning(f"Could not parse sweep values from {s!r} — using default [15.0].")
-        return [15.0]
-
-
-def _build_config(
-    Dt,
-    Dx,
-    flipIntensity,
-    flowEstimate,
-    darkCalibration,
-    Wx,
-    Wt,
-    ws,
-    peakSign,
-    pfa,
-    localOptimumRange,
-    tracker,
-    minTrackLength,
-    cut_off_distance,
-    unmatched_penalty_distance,
-    maxNegativeGab,
-    maxPositiveGab,
-    gab_closing_cut_off_distance,
-    gab_closing_penalty_distance,
-    Tlength,
-    thresholdLimit,
-    TmaxNo,
-    iOCcalibration,
-    pop_method,
-) -> dict:
-    cfg = DEFAULT_CONFIG.copy()
-    cfg["Dt"] = Dt
-    cfg["Dx"] = Dx
-    cfg["flipIntensity"] = flipIntensity
-    cfg["flowEstimate"] = flowEstimate
-    cfg["kymographPreprocessing"] = {
-        "darkCalibration": int(darkCalibration),
-        "Wx": Wx if isinstance(Wx, list) else float(Wx),
-        "Wt": Wt if isinstance(Wt, list) else float(Wt),
-        "ws": float(ws),
-    }
-    cfg["Detection"] = {
-        "peakSign": peakSign,
-        "pfa": float(pfa),
-        "localOptimumRange": int(localOptimumRange),
-    }
-    cfg["tracker"] = tracker
-    cfg["Linking"] = {
-        "minTrackLength": int(minTrackLength),
-        "cut_off_distance": float(cut_off_distance),
-        "unmatched_penalty_distance": float(unmatched_penalty_distance),
-        "maxNegativeGab": int(maxNegativeGab),
-        "maxPositiveGab": int(maxPositiveGab),
-        "gab_closing_cut_off_distance": float(gab_closing_cut_off_distance),
-        "gab_closing_penalty_distance": float(gab_closing_penalty_distance),
-    }
-    cfg["Tlength"] = int(Tlength)
-    cfg["thresholdLimit"] = float(thresholdLimit)
-    cfg["TmaxNo"] = int(TmaxNo)
-    cfg["iOCcalibration"] = iOCcalibration
-    cfg["populationAnalysis"]["Title"] = pop_method
-    return cfg
-
-
 def render_config_sidebar() -> dict:
+    built_config = DEFAULT_CONFIG
+
     st.sidebar.header("Algorithm Parameters")
 
     with st.sidebar.expander("Save / Load config"):
-        uploaded_cfg = st.file_uploader(
-            "Load config JSON", type=["json"], key="cfg_upload"
+        uploaded_built_config = st.file_uploader(
+            "Load config JSON", type=["json"], key="built_config_upload"
         )
-        if uploaded_cfg:
+        if uploaded_built_config:
             try:
-                loaded = json.load(uploaded_cfg)
-                _apply_config_to_session_state(loaded)
+                loaded = json.load(uploaded_built_config)
+                apply_config_to_session_state(loaded)
                 st.success("Config loaded.")
             except Exception as e:  # noqa: BLE001
                 st.error(f"Could not load config: {e}")
-
-    cfg = DEFAULT_CONFIG
-
+    
     # ── Acquisition ──────────────────────────────────────────────────────
-    with st.sidebar.expander("Acquisition", expanded=True):
+    with st.sidebar.expander("Acquisition", expanded=False):
         Dt = st.number_input(
             "Dt (frame duration, s)",
-            value=cfg["Dt"],
+            value=built_config["Dt"],
             format="%.4f",
             step=0.001,
             key="Dt",
         )
         Dx = st.number_input(
-            "Dx (pixel size, μm)", value=cfg["Dx"], format="%.4f", step=0.001, key="Dx"
+            "Dx (pixel size, μm)", value=built_config["Dx"], format="%.4f", step=0.001, key="Dx"
         )
         flipIntensity = st.checkbox(
-            "Flip intensity", value=cfg["flipIntensity"], key="flipIntensity"
+            "Flip intensity", value=built_config["flipIntensity"], key="flipIntensity"
         )
         flowEstimate = st.number_input(
             "Flow estimate (px/frame)",
-            value=cfg["flowEstimate"],
+            value=built_config["flowEstimate"],
             format="%.2f",
             step=0.1,
             key="flowEstimate",
@@ -232,25 +165,25 @@ def render_config_sidebar() -> dict:
     with st.sidebar.expander("Preprocessing"):
         darkCalibration = st.number_input(
             "Dark calibration",
-            value=int(cfg["kymographPreprocessing"]["darkCalibration"]),
+            value=int(built_config["kymographPreprocessing"]["darkCalibration"]),
             step=1,
             key="darkCalibration",
         )
         Wx = st.number_input(
             "Wx (spatial window, px)",
-            value=float(cfg["kymographPreprocessing"]["Wx"]),
+            value=float(built_config["kymographPreprocessing"]["Wx"]),
             step=1.0,
             key="Wx_single",
         )
         Wt = st.number_input(
             "Wt (temporal window, frames)",
-            value=float(cfg["kymographPreprocessing"]["Wt"]),
+            value=float(built_config["kymographPreprocessing"]["Wt"]),
             step=1.0,
             key="Wt_single",
         )
         ws = st.number_input(
             "ws (PSF width, px)",
-            value=cfg["kymographPreprocessing"]["ws"],
+            value=built_config["kymographPreprocessing"]["ws"],
             format="%.2f",
             step=0.01,
             key="ws",
@@ -265,11 +198,11 @@ def render_config_sidebar() -> dict:
             key="peakSign",
         )
         pfa = st.number_input(
-            "pfa", value=cfg["Detection"]["pfa"], format="%.e", key="pfa"
+            "pfa", value=built_config["Detection"]["pfa"], format="%.e", key="pfa"
         )
         localOptimumRange = st.number_input(
             "Local optimum range",
-            value=int(cfg["Detection"]["localOptimumRange"]),
+            value=int(built_config["Detection"]["localOptimumRange"]),
             step=1,
             key="localOptimumRange",
         )
@@ -277,7 +210,7 @@ def render_config_sidebar() -> dict:
     # ── Tracking ─────────────────────────────────────────────────────────
     with st.sidebar.expander("Tracking"):
         _tracker_options = ["gabClosingTracker", "trackBeforeDetect"]
-        _tracker_default = cfg.get("tracker", "gabClosingTracker")
+        _tracker_default = built_config.get("tracker", "gabClosingTracker")
         tracker = st.selectbox(
             "Tracker algorithm",
             _tracker_options,
@@ -286,74 +219,74 @@ def render_config_sidebar() -> dict:
         )
         minTrackLength = st.number_input(
             "Min track length",
-            value=int(cfg["Linking"]["minTrackLength"]),
+            value=int(built_config["Linking"]["minTrackLength"]),
             step=1,
             key="minTrackLength",
         )
         cut_off_distance = st.number_input(
             "Cut-off distance",
-            value=float(cfg["Linking"]["cut_off_distance"]),
+            value=float(built_config["Linking"]["cut_off_distance"]),
             step=1.0,
             key="cut_off_distance",
         )
         unmatched_penalty_distance = st.number_input(
             "Unmatched penalty distance",
-            value=float(cfg["Linking"]["unmatched_penalty_distance"]),
+            value=float(built_config["Linking"]["unmatched_penalty_distance"]),
             step=1.0,
             key="unmatched_penalty_distance",
         )
         if tracker == "gabClosingTracker":
             maxNegativeGab = st.number_input(
                 "Max negative gap",
-                value=int(cfg["Linking"]["maxNegativeGab"]),
+                value=int(built_config["Linking"]["maxNegativeGab"]),
                 step=1,
                 key="maxNegativeGab",
             )
             maxPositiveGab = st.number_input(
                 "Max positive gap",
-                value=int(cfg["Linking"]["maxPositiveGab"]),
+                value=int(built_config["Linking"]["maxPositiveGab"]),
                 step=1,
                 key="maxPositiveGab",
             )
             gab_closing_cut_off_distance = st.number_input(
                 "Gap closing cut-off distance",
-                value=float(cfg["Linking"]["gab_closing_cut_off_distance"]),
+                value=float(built_config["Linking"]["gab_closing_cut_off_distance"]),
                 step=1.0,
                 key="gab_closing_cut_off_distance",
             )
             gab_closing_penalty_distance = st.number_input(
                 "Gap closing penalty distance",
-                value=float(cfg["Linking"]["gab_closing_penalty_distance"]),
+                value=float(built_config["Linking"]["gab_closing_penalty_distance"]),
                 step=1.0,
                 key="gab_closing_penalty_distance",
             )
-            Tlength = cfg["Tlength"]
-            thresholdLimit = cfg["thresholdLimit"]
-            TmaxNo = cfg["TmaxNo"]
+            Tlength = built_config["Tlength"]
+            thresholdLimit = built_config["thresholdLimit"]
+            TmaxNo = built_config["TmaxNo"]
         else:
-            maxNegativeGab = cfg["Linking"]["maxNegativeGab"]
-            maxPositiveGab = cfg["Linking"]["maxPositiveGab"]
-            gab_closing_cut_off_distance = cfg["Linking"][
+            maxNegativeGab = built_config["Linking"]["maxNegativeGab"]
+            maxPositiveGab = built_config["Linking"]["maxPositiveGab"]
+            gab_closing_cut_off_distance = built_config["Linking"][
                 "gab_closing_cut_off_distance"
             ]
-            gab_closing_penalty_distance = cfg["Linking"][
+            gab_closing_penalty_distance = built_config["Linking"][
                 "gab_closing_penalty_distance"
             ]
             Tlength = st.selectbox(
                 "Track length (Tlength)",
                 [2, 4, 8, 16, 32, 64],
-                index=[2, 4, 8, 16, 32, 64].index(cfg["Tlength"]),
+                index=[2, 4, 8, 16, 32, 64].index(built_config["Tlength"]),
                 key="Tlength",
             )
             thresholdLimit = st.number_input(
                 "Intensity threshold limit",
-                value=float(cfg["thresholdLimit"]),
+                value=float(built_config["thresholdLimit"]),
                 step=0.5,
                 key="thresholdLimit",
             )
             TmaxNo = st.number_input(
                 "Max associations per DIPS (TmaxNo)",
-                value=int(cfg["TmaxNo"]),
+                value=int(built_config["TmaxNo"]),
                 step=1,
                 key="TmaxNo",
             )
@@ -362,7 +295,7 @@ def render_config_sidebar() -> dict:
     with st.sidebar.expander("Post-processing"):
         ioc_cal_on = st.toggle(
             "iOC calibration",
-            value=(cfg["iOCcalibration"] == "on"),
+            value=(built_config["iOCcalibration"] == "on"),
             key="iOCcalibration_toggle",
         )
         iOCcalibration = "on" if ioc_cal_on else "off"
@@ -374,32 +307,45 @@ def render_config_sidebar() -> dict:
     with st.sidebar.expander("Population analysis"):
         pop_method = st.selectbox("Method", ["robustMean"], index=0, key="pop_method")
 
-    built_config = _build_config(
-        Dt,
-        Dx,
-        flipIntensity,
-        flowEstimate,
-        darkCalibration,
-        Wx,
-        Wt,
-        ws,
-        peakSign,
-        pfa,
-        localOptimumRange,
-        tracker,
-        minTrackLength,
-        cut_off_distance,
-        unmatched_penalty_distance,
-        maxNegativeGab,
-        maxPositiveGab,
-        gab_closing_cut_off_distance,
-        gab_closing_penalty_distance,
-        Tlength,
-        thresholdLimit,
-        TmaxNo,
-        iOCcalibration,
-        pop_method,
-    )
+    exportOptionalFigures = st.sidebar.checkbox(label="Export optional figures", )
+
+
+    # ── Build cofig ───────────────────────────────────────────────────────
+    built_config = DEFAULT_CONFIG.copy()
+    built_config["exportOptionalFigures"] = exportOptionalFigures
+    built_config["Dt"] = Dt
+    built_config["Dx"] = Dx
+    built_config["flipIntensity"] = flipIntensity
+    built_config["flowEstimate"] = flowEstimate
+    built_config["kymographPreprocessing"] = {
+        "darkCalibration": int(darkCalibration),
+        "Wx": Wx if isinstance(Wx, list) else float(Wx),
+        "Wt": Wt if isinstance(Wt, list) else float(Wt),
+        "ws": float(ws),
+    }
+
+    built_config["Detection"] = {
+        "peakSign": peakSign,
+        "pfa": float(pfa),
+        "localOptimumRange": int(localOptimumRange),
+    }
+
+    built_config["tracker"] = tracker
+    built_config["Linking"] = {
+        "minTrackLength": int(minTrackLength),
+        "cut_off_distance": float(cut_off_distance),
+        "unmatched_penalty_distance": float(unmatched_penalty_distance),
+        "maxNegativeGab": int(maxNegativeGab),
+        "maxPositiveGab": int(maxPositiveGab),
+        "gab_closing_cut_off_distance": float(gab_closing_cut_off_distance),
+        "gab_closing_penalty_distance": float(gab_closing_penalty_distance),
+    }
+
+    built_config["Tlength"] = int(Tlength)
+    built_config["thresholdLimit"] = float(thresholdLimit)
+    built_config["TmaxNo"] = int(TmaxNo)
+    built_config["iOCcalibration"] = iOCcalibration
+    built_config["populationAnalysis"]["Title"] = pop_method
 
     st.sidebar.download_button(
         "Export current config",

@@ -108,7 +108,7 @@ Setting.Path.projectFolder = fileparts(fileparts(mfilename('fullpath')));
 
 % Export
 Setting.exportDpi = 150;
-Setting.exportOptinalFigures = false;
+Setting.exportOptinalFigures = config.exportOptionalFigures;
 
 % Acquisition
 Setting.Dt              = config.Dt;
