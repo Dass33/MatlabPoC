@@ -181,12 +181,8 @@ try
 
   save( fullfile(outputDir,'Analysis.mat'), 'Analysis');
 
-  save_setting_json(outputDir, Setting);
+  writestruct(Setting, fullfile(outputDir,'Setting.json' ), FileType='json');
   save_summary(outputDir, population, collectionPostprocessed, Setting.populationAnalysis.properties);
-  save(fullfile(outputDir, 'results.mat'), ...
-    'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
-    'population', 'inputDataInfo', '-v7.3');
-
   close all
   write_status(statusFile, 'completed', '');
 
@@ -272,21 +268,6 @@ Setting.populationAnalysis.Title      = config.populationAnalysis.Title;
 Setting.populationAnalysis.properties = config.populationAnalysis.properties.';
 
 end % build_setting
-
-
-% ─────────────────────────────────────────────────────────────────────────────
-
-function save_setting_json(outputDir, Setting)
-
-jsonStr = jsonencode(Setting);
-fid = fopen(fullfile(outputDir, 'Setting.json'), 'w');
-if fid == -1
-  error('save_setting_json: could not open Setting.json for writing in %s', outputDir);
-end
-fprintf(fid, '%s', jsonStr);
-fclose(fid);
-
-end % save_setting_json
 
 
 % ─────────────────────────────────────────────────────────────────────────────
