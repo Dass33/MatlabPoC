@@ -1,5 +1,6 @@
-import streamlit as st
 from job_manager import MAX_WORKERS
+
+import streamlit as st
 
 
 def page_help():
@@ -20,10 +21,10 @@ def page_help():
 
         | File | Contents |
         |------|----------|
-        | `kymographs/*.png` | Kymograph images with track overlays |
-        | `trajectories.mat` | Per-trajectory: iOC, D, velocity, N, positionStart, positionEnd |
-        | `summary.json` | Population statistics per sweep (MEAN, FWHM, RESOLUTION) |
-        | `results.mat` | Full archive for MATLAB post-processing |
+        | `anlysis/*` | Calibration, cluster anlysis, outliers, scatter plot, sweep figures |
+        | `Anlysis.mat` | Matlab struct representing the anlysis |
+        | `collection/*` | collection matlab files |
+        | `Setting.json` | Settings wiht which the algorithm ran |
 
         ### Worker slots
 

@@ -6,9 +6,8 @@ import logging
 import time
 
 import pandas as pd
-
 from pandas.io.common import zipfile
-from pathlib import Path
+
 import streamlit as st
 
 logging.basicConfig(
@@ -78,7 +77,6 @@ def page_history() -> None:
             options=list(options.keys()),
             format_func=lambda k: options[k],
         )
-
         results = get_zipped_results(str(selected_id))
         st.download_button(
             label="Download Results",
@@ -143,9 +141,28 @@ def page_history() -> None:
 
 def get_zipped_results(id: str) -> bytes:
     path, _, _ = job_dirs(str(id))
+    path = path / "output"
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for file in path.rglob("*"):
-            if file.is_file():
-                zf.write(file, file.relative_to(path))
+        analysis_mat = path / "Analysis.mat"
+        if analysis_mat.is_file():
+            zf.write(analysis_mat, analysis_mat.relative_to(path))
+
+        setting = path / "Setting.json"
+        if setting.is_file():
+            zf.write(setting, setting.relative_to(path))
+
+        for folder in (
+            "analysis",
+            "collection",
+            "contrast",
+            "detections",
+            "final_tracks",
+        ):
+            folder_path = path / folder
+            if folder_path.is_dir():
+                for file in folder_path.rglob("*"):
+                    if file.is_file():
+                        zf.write(file, file.relative_to(path))
+
     return buffer.getvalue()
