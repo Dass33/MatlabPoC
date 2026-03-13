@@ -1,5 +1,5 @@
 function AnalyzeExperimentApp(inputDir, outputDir)
-% ANALYZEEXPERIMENTAPP  App entry point for the AnalyzeExperiment pipeline.
+% App entry point for the AnalyzeExperiment pipeline.
 %
 statusFile = fullfile(outputDir, 'status.json');
 
@@ -20,72 +20,174 @@ try
   end
   config = jsondecode(fileread(configFile));
 
-  % ── Build Setting ─────────────────────────────────────────────────────
   Setting = build_setting(config, outputDir);
 
-  % ── Add paths (source mode only) ──────────────────────────────────────
-  if ~isdeployed
-    addpath(genpath(Setting.Path.projectFolder));
-  end
-
-  % ── Kymograph analysis ────────────────────────────────────────────────
   [collection, inputDataInfo] = kymographAnalysis(inputDir, Setting);
 
-  % ── Add positionStart + positionEnd (always computed separately, never
-  %    via trajectoryProperties passed to kymographAnalysis)
-  if ~isfield(collection, 'positionStart')
-    collection = setfield(collection, {1}, 'positionStart', []);
-  end
-  if ~isfield(collection, 'positionEnd')
-    collection = setfield(collection, {1}, 'positionEnd', []);
-  end
+  makeFolderIfNotExisting(fullfile(outputDir, 'collection'));
+  save( fullfile(outputDir,'collection','collection'), 'collection');
+
+  collection = setfield(collection, {1}, 'positionStart', []);
+  collection = setfield(collection, {1}, 'positionEnd', []);
   for iSweep = 1:length(collection)
     collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionStart', [], []);
     collection(iSweep) = trajectoryAnalysis(collection(iSweep), 'positionEnd', [], []);
   end
 
+  makeFolderIfNotExisting(fullfile(outputDir, 'analysis'));
+
+  plotProperties = {'iOC', 'D', 'STDiOC','velocity','N','positionStart', 'positionEnd'}; % select from collection fields
+
+  for iSweep = 1:length(collection)
+    figScatterPlots = figure('Name', collection(iSweep).SweepLegend);
+    scatterPlotCollection(collection(iSweep), plotProperties, '.');
+
+    exportgraphics( figScatterPlots, fullfile(outputDir,'analysis','scatterPlot.png'),'Resolution',Setting.exportDpi );
+    saveas( figScatterPlots, fullfile(outputDir,'analysis','scatterPlot.fig') );
+
+  end
+
   % ── Collection postprocessing ─────────────────────────────────────────
   for iSweep = 1:length(collection)
-    if isfield(collection(iSweep), 'iOC') && isempty(collection(iSweep).iOC)
-      error('No trajectories detected (sweep %d/%d). Check your data and detection parameters (pfa, flowEstimate).', iSweep, length(collection));
+    [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = collectionPostprocessing(collection(iSweep), Setting);
+  end
+
+
+  save( fullfile(outputDir,'collection','collection_postprocessed'), 'collectionPostprocessed' )
+
+  plotProperties = [Setting.outlierFiltering.referenceProperty, Setting.outlierFiltering.filterProperties];
+
+  for iSweep = 1:length(collectionPostprocessed)
+    figOutliers = figure('Name', collection(iSweep).SweepLegend, ...
+      'Position', [0 0 760 453]);
+    scatterPlotCollection(collection(iSweep), plotProperties, '.');
+    scatterPlotCollection(collectionCalibrated(iSweep), plotProperties, '.', collectionCalibrated(iSweep).threshold);
+    scatterPlotCollection(collectionPostprocessed(iSweep), plotProperties, 'o');
+    legend({'collection', 'collection calibrated','lower threshold','upper threshold','collection postprocessed'})
+
+    exportgraphics( figOutliers, fullfile(outputDir,'analysis','outliers.png'),'Resolution',Setting.exportDpi );
+    saveas( figOutliers, fullfile(outputDir,'analysis','outliers.fig') );
+
+  end
+
+  if strcmp(Setting.iOCcalibration,'on')
+    for iSweep = 1:length(collectionCalibrated)
+
+      figCalibration = figure('Name', collection(iSweep).SweepLegend);
+
+      subplot(1,3,1)
+      plot(collectionCalibrated(iSweep).calibration.x,collectionCalibrated(iSweep).calibration.A); hold on
+      xlabel('x')
+      ylabel('A')
+
+      subplot(1,3,2)
+      plot(collectionCalibrated(iSweep).calibration.x, collectionCalibrated(iSweep).calibration.Astd); hold on
+      xlabel('x')
+      ylabel('Astd')
+
+      subplot(1,3,3)
+      plot(collectionCalibrated(iSweep).calibration.x, collectionCalibrated(iSweep).calibration.AN); hold on
+      xlabel('x')
+      ylabel('AN')
+
+      exportgraphics( figCalibration, fullfile(outputDir,'analysis','calibration.png'),'Resolution',Setting.exportDpi );
+      saveas( figCalibration, fullfile(outputDir,'analysis','calibration.fig') );
+
     end
-    [collectionPostprocessed(iSweep), collectionCalibrated(iSweep)] = ...
-      collectionPostprocessing(collection(iSweep), Setting);
   end
 
   % ── Population analysis ───────────────────────────────────────────────
   for iSweep = 1:length(collection)
     if strcmp(Setting.populationAnalysis.Title, 'GMM')
-      population(iSweep) = analyzePopulation_GMM( ...
-        collectionPostprocessed(iSweep), Setting.populationAnalysis);
+      population(iSweep) = analyzePopulation_GMM(collectionPostprocessed(iSweep), Setting.populationAnalysis);
     else
-      population(iSweep) = analyzePopulation_robustMean( ...
-        collectionPostprocessed(iSweep), Setting.populationAnalysis);
+      population(iSweep) = analyzePopulation_robustMean(collectionPostprocessed(iSweep), Setting.populationAnalysis);
     end
   end
 
-  % ── Save outputs ──────────────────────────────────────────────────────
-  collectionDir = fullfile(outputDir, 'collection');
-  if ~exist(collectionDir, 'dir')
-    mkdir(collectionDir);
+  save(fullfile(outputDir,'collection','collection_population'), 'population' )
+
+  % ── Plot population within the scatterplot ────────────────────────────
+  for iSweep = 1:length(collectionPostprocessed)
+    figClusterAnalysis = figure('Name', collection(iSweep).SweepLegend, ...
+      'Position', [0 0 790 476]);
+
+    scatterPlotCollection(collectionPostprocessed(iSweep), ...
+      Setting.populationAnalysis.properties, 'Nweighted', population(iSweep));
+
+    exportgraphics( figClusterAnalysis, fullfile(outputDir,'analysis','clusterAnalysis.png'),'Resolution',Setting.exportDpi );
+    saveas( figClusterAnalysis, fullfile(outputDir,'analysis','clusterAnalysis.fig') );
+
   end
 
-  save(fullfile(collectionDir, 'collection.mat'),              'collection',              '-v7.3');
-  save(fullfile(collectionDir, 'collection_postprocessed.mat'),'collectionPostprocessed', '-v7.3');
-  save(fullfile(collectionDir, 'collection_population.mat'),   'population',              '-v7.3');
+  %% plot MEAN, FWHM, RESOLUTION values as dependency on Sweep
+  plotProperty = 'iOC';
 
-  Analysis = build_analysis_table(collectionPostprocessed);
-  save(fullfile(outputDir, 'Analysis.mat'), 'Analysis', '-v7.3');
+  noSweep = 1:length(collectionPostprocessed);
+  MEAN = [population.MEAN];
+  MEAN = [MEAN.(plotProperty)];
+  FWHM = [population.FWHM];
+  FWHM = [FWHM.(plotProperty)];
+  RESOLUTION = [population.RESOLUTION];
+  RESOLUTION = [RESOLUTION.(plotProperty)];
+
+  figSweep = figure('Position', [0 0 960 620]);
+
+  subplot(3,1,1)
+  plot(noSweep, MEAN)
+  xlabel('Sweep no')
+  ylabel(strcat(plotProperty, ' MEAN'))
+  xticks(noSweep)
+  xticklabels({collectionPostprocessed.SweepLegend})
+
+  subplot(3,1,2)
+  plot(noSweep, FWHM)
+  xlabel('Sweep no')
+  ylabel(strcat(plotProperty, ' FWHM'))
+  xticks(noSweep)
+  xticklabels({collectionPostprocessed.SweepLegend})
+
+  subplot(3,1,3)
+  plot(noSweep, RESOLUTION)
+  xlabel('Sweep no')
+  ylabel(strcat(plotProperty, ' RESOLUTION'))
+  xticks(noSweep)
+  xticklabels({collectionPostprocessed.SweepLegend})
+
+  exportgraphics( figSweep, fullfile(outputDir,'analysis','sweep.png'),'Resolution',Setting.exportDpi );
+  saveas( figSweep, fullfile(outputDir,'analysis','sweep.fig') );
+
+  % convert collection to table of analysis
+
+  Analysis.file_name = collectionPostprocessed.ExperimentTimeStamp;
+
+  % Analysis.positions = cellfun(@round, collectionPostprocessed.positionRefined, 'UniformOutput', false);
+  Analysis.positions_refined = collectionPostprocessed.positionRefined;
+  Analysis.frames = collectionPostprocessed.timeFrame;
+  Analysis.iOCs = collectionPostprocessed.iOCprofile;
+
+  Analysis.mean_D = collectionPostprocessed.D;
+  Analysis.mean_iOC = collectionPostprocessed.iOC;
+  Analysis.std_iOC = collectionPostprocessed.STDiOC;
+  Analysis.velocity_ums = collectionPostprocessed.velocity;
+  Analysis.length = collectionPostprocessed.N;
+
+  Analysis.position_start = collectionPostprocessed.positionStart;
+  Analysis.position_end = collectionPostprocessed.positionEnd;
+
+  Analysis = structfun(@transpose, Analysis, 'UniformOutput', false);
+
+  Analysis = struct2table(Analysis);
+
+  save( fullfile(outputDir,'Analysis.mat'), 'Analysis');
 
   save_setting_json(outputDir, Setting);
-  save_trajectories(outputDir, collectionPostprocessed);
-  save_summary(outputDir, population, collectionPostprocessed, ...
-    Setting.populationAnalysis.properties);
-
+  save_summary(outputDir, population, collectionPostprocessed, Setting.populationAnalysis.properties);
   save(fullfile(outputDir, 'results.mat'), ...
     'collection', 'collectionPostprocessed', 'collectionCalibrated', ...
     'population', 'inputDataInfo', '-v7.3');
 
+  close all
   write_status(statusFile, 'completed', '');
 
 catch ME
@@ -99,11 +201,8 @@ end % AnalyzeExperimentApp
 
 function Setting = build_setting(config, outputDir)
 
-validate_config(config);
-
 % Paths
 Setting.Path.exportFolder = outputDir;
-% In deployed mode addpath is a no-op, but the field must still exist
 Setting.Path.projectFolder = fileparts(fileparts(mfilename('fullpath')));
 
 % Export
@@ -130,11 +229,11 @@ Setting.kymographPreprocessing = config.kymographPreprocessing;
 Setting.Detection = config.Detection;
 Setting.Detection.boarderRange = Setting.Detection.localOptimumRange;
 
-% Feature extraction (not user-configurable)
+% Feature extraction
 Setting.FeatureExtraction.positionRefinementMethod = 'centroid';
 Setting.FeatureExtraction.fittingRadius = Setting.Detection.localOptimumRange;
 
-% Trajectory detection algorithm (configurable; defaults to gabClosingTracker)
+% Trajectory detection algorithm
 valid_trackers = {'gabClosingTracker', 'trackBeforeDetect'};
 if isfield(config, 'tracker') && ismember(config.tracker, valid_trackers)
   Setting.trajectoryDetecton.Title = config.tracker;
@@ -153,7 +252,7 @@ Setting.Linking = config.Linking;
 Setting.Linking.flowEstimate_ums = Setting.flowEstimate_ums;
 Setting.Linking.showTrackIds = true;
 
-% Kymograph analysis (hardcoded titles)
+% Kymograph analysis
 Setting.kymographAnalysis.Title          = 'OnePassKymographAnalysis';
 Setting.kymographAnalysis.plotKymograph  = 'off';
 Setting.kymographAnalysis.saveKymograph  = 'png';
@@ -177,49 +276,6 @@ end % build_setting
 
 % ─────────────────────────────────────────────────────────────────────────────
 
-function Analysis = build_analysis_table(collectionPostprocessed)
-% Build a per-trajectory table matching the original AnalyzeExperiment output.
-
-file_name         = {};
-positions_refined = {};
-frames            = {};
-iOCs              = {};
-mean_D            = [];
-mean_iOC          = [];
-std_iOC           = [];
-velocity_ums      = [];
-traj_length       = [];
-position_start    = [];
-position_end      = [];
-
-for iSweep = 1:length(collectionPostprocessed)
-  c = collectionPostprocessed(iSweep);
-  n = length(c.iOC);
-  for i = 1:n
-    file_name{end+1,1}         = c.ExperimentTimeStamp{i};  %#ok<AGROW>
-    positions_refined{end+1,1} = c.positionRefined{i};      %#ok<AGROW>
-    frames{end+1,1}            = c.timeFrame{i};             %#ok<AGROW>
-    iOCs{end+1,1}              = c.iOCprofile{i};            %#ok<AGROW>
-    mean_D(end+1,1)            = c.D(i);                     %#ok<AGROW>
-    mean_iOC(end+1,1)          = c.iOC(i);                  %#ok<AGROW>
-    std_iOC(end+1,1)           = c.STDiOC(i);               %#ok<AGROW>
-    velocity_ums(end+1,1)      = c.velocity(i);              %#ok<AGROW>
-    traj_length(end+1,1)       = c.N(i);                     %#ok<AGROW>
-    position_start(end+1,1)    = c.positionStart(i);         %#ok<AGROW>
-    position_end(end+1,1)      = c.positionEnd(i);           %#ok<AGROW>
-  end
-end
-
-Analysis = table(file_name, positions_refined, frames, iOCs, ...
-  mean_D, mean_iOC, std_iOC, velocity_ums, traj_length, position_start, position_end, ...
-  'VariableNames', {'file_name','positions_refined','frames','iOCs', ...
-    'mean_D','mean_iOC','std_iOC','velocity_ums','length','position_start','position_end'});
-
-end % build_analysis_table
-
-
-% ─────────────────────────────────────────────────────────────────────────────
-
 function save_setting_json(outputDir, Setting)
 
 jsonStr = jsonencode(Setting);
@@ -231,41 +287,6 @@ fprintf(fid, '%s', jsonStr);
 fclose(fid);
 
 end % save_setting_json
-
-
-% ─────────────────────────────────────────────────────────────────────────────
-
-function save_trajectories(outputDir, collectionPostprocessed)
-% Concatenate per-sweep trajectory scalars into flat arrays (scipy v7 compatible).
-
-iOC           = [];
-D             = [];
-velocity      = [];
-N             = [];
-positionStart = [];
-positionEnd   = [];
-sweepIdx      = [];
-sweepLegends  = {};
-
-for iSweep = 1:length(collectionPostprocessed)
-  c = collectionPostprocessed(iSweep);
-  n = length(c.iOC);
-
-  iOC           = [iOC;           c.iOC(:)];           %#ok<AGROW>
-  D             = [D;             c.D(:)];             %#ok<AGROW>
-  velocity      = [velocity;      c.velocity(:)];      %#ok<AGROW>
-  N             = [N;             c.N(:)];             %#ok<AGROW>
-  positionStart = [positionStart; c.positionStart(:)]; %#ok<AGROW>
-  positionEnd   = [positionEnd;   c.positionEnd(:)];   %#ok<AGROW>
-  sweepIdx      = [sweepIdx;      iSweep * ones(n, 1)]; %#ok<AGROW>
-  sweepLegends{end+1} = c.SweepLegend;                %#ok<AGROW>
-end
-
-save(fullfile(outputDir, 'trajectories.mat'), ...
-  'iOC', 'D', 'velocity', 'N', 'positionStart', 'positionEnd', ...
-  'sweepIdx', 'sweepLegends', '-v7');
-
-end % save_trajectories
 
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -302,96 +323,6 @@ end % save_summary
 
 
 % ─────────────────────────────────────────────────────────────────────────────
-
-function validate_config(config)
-
-required_top = {'Dt','Dx','flipIntensity','flowEstimate', ...
-  'kymographPreprocessing','Detection','Linking', ...
-  'trajectoryProperties','iOCcalibration','outlierFiltering','populationAnalysis'};
-for i = 1:length(required_top)
-  if ~isfield(config, required_top{i})
-    error('config.json missing required field: %s', required_top{i});
-  end
-end
-
-numeric_fields = {'Dt','Dx','flowEstimate'};
-for i = 1:length(numeric_fields)
-  f = numeric_fields{i};
-  if ~isnumeric(config.(f))
-    error('config.json field "%s" must be numeric, got %s', f, class(config.(f)));
-  end
-end
-
-det_required = {'peakSign','pfa','localOptimumRange'};
-for i = 1:length(det_required)
-  if ~isfield(config.Detection, det_required{i})
-    error('config.json missing required field: Detection.%s', det_required{i});
-  end
-end
-if ~isnumeric(config.Detection.pfa)
-  error('config.json field "Detection.pfa" must be numeric, got %s', class(config.Detection.pfa));
-end
-
-link_required = {'minTrackLength','cut_off_distance','unmatched_penalty_distance', ...
-  'maxNegativeGab','maxPositiveGab','gab_closing_cut_off_distance','gab_closing_penalty_distance'};
-for i = 1:length(link_required)
-  if ~isfield(config.Linking, link_required{i})
-    error('config.json missing required field: Linking.%s', link_required{i});
-  end
-end
-
-preproc_required = {'Wx','Wt','ws','darkCalibration'};
-for i = 1:length(preproc_required)
-  if ~isfield(config.kymographPreprocessing, preproc_required{i})
-    error('config.json missing required field: kymographPreprocessing.%s', preproc_required{i});
-  end
-end
-if ~isnumeric(config.kymographPreprocessing.Wx)
-  error('config.json field "kymographPreprocessing.Wx" must be numeric, got %s', class(config.kymographPreprocessing.Wx));
-end
-if ~isnumeric(config.kymographPreprocessing.Wt)
-  error('config.json field "kymographPreprocessing.Wt" must be numeric, got %s', class(config.kymographPreprocessing.Wt));
-end
-
-if isempty(config.trajectoryProperties)
-  error('config.json field "trajectoryProperties" must be non-empty');
-end
-
-if ~ischar(config.iOCcalibration) || ~ismember(config.iOCcalibration, {'on','off'})
-  error('config.json field "iOCcalibration" must be "on" or "off", got: %s', mat2str(config.iOCcalibration));
-end
-
-outfilt_required = {'referenceProperty','filterProperties','thresholdDirection','thresholdValue'};
-for i = 1:length(outfilt_required)
-  if ~isfield(config.outlierFiltering, outfilt_required{i})
-    error('config.json missing required field: outlierFiltering.%s', outfilt_required{i});
-  end
-end
-
-if isfield(config, 'tracker') && strcmp(config.tracker, 'trackBeforeDetect')
-  tbd_required = {'Tlength', 'thresholdLimit', 'TmaxNo'};
-  for i = 1:length(tbd_required)
-    if ~isfield(config, tbd_required{i})
-      error('config.json missing required field for trackBeforeDetect: %s', tbd_required{i});
-    end
-  end
-end
-
-if ~isfield(config.populationAnalysis, 'Title')
-  error('config.json missing required field: populationAnalysis.Title');
-end
-if ~isfield(config.populationAnalysis, 'properties')
-  error('config.json missing required field: populationAnalysis.properties');
-end
-if isempty(config.populationAnalysis.properties)
-  error('config.json field "populationAnalysis.properties" must be non-empty');
-end
-
-end % validate_config
-
-
-% ─────────────────────────────────────────────────────────────────────────────
-
 function write_status(statusFile, status, errorMsg)
 
 s.status = status;

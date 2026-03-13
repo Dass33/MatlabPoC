@@ -33,6 +33,7 @@ rsync -az --delete \
     --exclude='.git/' \
     --exclude='.claude/' \
     --exclude='.env' \
+    --exclude='streamlit/venv' \
     --exclude='data/' \
     --exclude='DemoData/' \
     --exclude='__pycache__/' \
