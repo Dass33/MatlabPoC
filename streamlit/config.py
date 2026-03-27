@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 from typing import Any
 
@@ -8,6 +9,7 @@ import streamlit as st
 DEFAULT_CONFIG: dict[str, Any] = {
     "exportOptionalFigures": False,
     # Acquisition
+    "inputDataFormat": "tiff2",
     "Dt": 0.007,
     "Dx": 0.066,
     "flipIntensity": True,
@@ -47,6 +49,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "iOCcalibration": "on",
     "outlierFiltering": {
         "referenceProperty": "iOC",
+        # filterProperties, thresholdDirection, thresholdValue must always be the same length
         "filterProperties": ["STDiOC", "velocity", "N", "positionStart", "positionEnd"],
         "thresholdDirection": ["upper", "both", "lower", "upper", "lower"],
         "thresholdValue": ["3std", "3std", "3std", "3std", "3std"],
@@ -68,7 +71,13 @@ def apply_config_to_session_state(built_config: dict) -> None:
 
     pp = built_config.get("kymographPreprocessing", {})
     if "darkCalibration" in pp:
-        flat["darkCalibration"] = pp["darkCalibration"]
+        dc = pp["darkCalibration"]
+        if isinstance(dc, str):
+            flat["dark_cal_mode"] = "File path"
+            flat["dark_cal_path"] = dc
+        else:
+            flat["dark_cal_mode"] = "Scalar"
+            flat["darkCalibration"] = int(dc)
     if "ws" in pp:
         flat["ws"] = pp["ws"]
     if "Wx" in pp:
@@ -133,6 +142,7 @@ def render_config_sidebar() -> dict:
         if uploaded_built_config:
             try:
                 loaded = json.load(uploaded_built_config)
+                st.session_state["_loaded_config"] = loaded
                 apply_config_to_session_state(loaded)
                 st.success("Config loaded.")
             except Exception as e:  # noqa: BLE001
@@ -163,12 +173,30 @@ def render_config_sidebar() -> dict:
 
     # ── Preprocessing ────────────────────────────────────────────────────
     with st.sidebar.expander("Preprocessing"):
-        darkCalibration = st.number_input(
-            "Dark calibration",
-            value=int(built_config["kymographPreprocessing"]["darkCalibration"]),
-            step=1,
-            key="darkCalibration",
+        dark_cal_mode = st.radio(
+            "Dark calibration source",
+            ["Scalar", "File path"],
+            key="dark_cal_mode",
         )
+        if dark_cal_mode == "Scalar":
+            darkCalibration: int | str = st.number_input(
+                "Dark calibration value",
+                value=8,
+                step=1,
+                key="darkCalibration",
+            )
+        else:
+            dark_cal_upload = st.file_uploader(
+                "Dark calibration .mat file",
+                type=["mat"],
+                key="dark_cal_file",
+            )
+            if dark_cal_upload is not None:
+                st.session_state["dark_cal_bytes"] = dark_cal_upload.getvalue()
+                darkCalibration = "/job/dark_cal.mat"
+            else:
+                st.session_state.pop("dark_cal_bytes", None)
+                darkCalibration = 8
         Wx = st.number_input(
             "Wx (spatial window, px)",
             value=float(built_config["kymographPreprocessing"]["Wx"]),
@@ -311,14 +339,14 @@ def render_config_sidebar() -> dict:
 
 
     # ── Build cofig ───────────────────────────────────────────────────────
-    built_config = DEFAULT_CONFIG.copy()
+    built_config = copy.deepcopy(st.session_state.get("_loaded_config", DEFAULT_CONFIG))
     built_config["exportOptionalFigures"] = exportOptionalFigures
     built_config["Dt"] = Dt
     built_config["Dx"] = Dx
     built_config["flipIntensity"] = flipIntensity
     built_config["flowEstimate"] = flowEstimate
     built_config["kymographPreprocessing"] = {
-        "darkCalibration": int(darkCalibration),
+        "darkCalibration": darkCalibration if isinstance(darkCalibration, str) else int(darkCalibration),
         "Wx": Wx if isinstance(Wx, list) else float(Wx),
         "Wt": Wt if isinstance(Wt, list) else float(Wt),
         "ws": float(ws),

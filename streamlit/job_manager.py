@@ -114,7 +114,7 @@ def launch_matlab_container(job_id: str) -> None:
     ).start()
 
 
-def submit_job(uploaded_files: list, config: dict) -> str:
+def submit_job(uploaded_files: list, config: dict, dark_cal_bytes: bytes | None = None) -> str:
     job_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
@@ -124,6 +124,9 @@ def submit_job(uploaded_files: list, config: dict) -> str:
     for uf in uploaded_files:
         stream_upload_to_disk(uf, inp / uf.name)
         filenames.append(uf.name)
+
+    if dark_cal_bytes is not None:
+        (base / "dark_cal.mat").write_bytes(dark_cal_bytes)
 
     (base / "config.json").write_text(json.dumps(config, indent=2))
     now = datetime.now().isoformat(timespec="seconds")
