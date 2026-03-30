@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-PROD_HOST_IPV6="2a01:4f8:1c19:6ed8::1"
+PROD_HOST_IPV6="2a01:4f8:c014:1089::1"
 PROD_HOST_IPV4="49.12.232.89"  # kept for reference / app URL display
 PROD_USER="root"
 PROD_DIR="/opt/nsm-poc"
