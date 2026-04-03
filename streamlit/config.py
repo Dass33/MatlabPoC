@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+from pathlib import Path
 from typing import Any
 
 import streamlit as st
@@ -15,7 +16,13 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "flipIntensity": True,
     "flowEstimate": -3.4,
     # Preprocessing
-    "kymographPreprocessing": {"darkCalibration": 8, "Wx": 15, "Wt": 50, "ws": 2.36},
+    "kymographPreprocessing": {
+        "darkCalibration": 8,
+        "Wx": 15,
+        "Wt": 50,
+        "ws": 2.36,
+        "removeBackground": "robustmean",
+    },
     # Detection
     "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
     # Tracker algorithm
@@ -79,7 +86,7 @@ def apply_config_to_session_state(built_config: dict) -> None:
             flat["dark_cal_mode"] = "Scalar"
             flat["darkCalibration"] = int(dc)
     if "ws" in pp:
-        flat["ws"] = pp["ws"]
+        flat["ws"] = pp["Ws"]
     if "Wx" in pp:
         wx = pp["Wx"]
         if isinstance(wx, list):
@@ -147,7 +154,7 @@ def render_config_sidebar() -> dict:
                 st.success("Config loaded.")
             except Exception as e:  # noqa: BLE001
                 st.error(f"Could not load config: {e}")
-    
+
     # ── Acquisition ──────────────────────────────────────────────────────
     with st.sidebar.expander("Acquisition", expanded=False):
         Dt = st.number_input(
@@ -158,7 +165,11 @@ def render_config_sidebar() -> dict:
             key="Dt",
         )
         Dx = st.number_input(
-            "Dx (pixel size, μm)", value=built_config["Dx"], format="%.4f", step=0.001, key="Dx"
+            "Dx (pixel size, μm)",
+            value=built_config["Dx"],
+            format="%.4f",
+            step=0.001,
+            key="Dx",
         )
         flipIntensity = st.checkbox(
             "Flip intensity", value=built_config["flipIntensity"], key="flipIntensity"
@@ -175,7 +186,7 @@ def render_config_sidebar() -> dict:
     with st.sidebar.expander("Preprocessing"):
         dark_cal_mode = st.radio(
             "Dark calibration source",
-            ["Scalar", "File path"],
+            options=["Scalar", "Template"],
             key="dark_cal_mode",
         )
         if dark_cal_mode == "Scalar":
@@ -186,17 +197,17 @@ def render_config_sidebar() -> dict:
                 key="darkCalibration",
             )
         else:
-            dark_cal_upload = st.file_uploader(
-                "Dark calibration .mat file",
-                type=["mat"],
-                key="dark_cal_file",
+            dark_cal_template = st.selectbox(
+                "Dark calibration .mat template",
+                options=["some", "different", "templates"],
+                index=0,
+                key="dark_cal_template",
             )
-            if dark_cal_upload is not None:
-                st.session_state["dark_cal_bytes"] = dark_cal_upload.getvalue()
-                darkCalibration = "/job/dark_cal.mat"
-            else:
-                st.session_state.pop("dark_cal_bytes", None)
-                darkCalibration = 8
+            dark_calibration_path = (
+                Path(__file__).parent / "templates" / f"{dark_cal_template}.mat"
+            )
+            st.session_state["dark_cal_bytes"] = dark_calibration_path.read_bytes()
+            darkCalibration = str(dark_calibration_path)
         Wx = st.number_input(
             "Wx (spatial window, px)",
             value=float(built_config["kymographPreprocessing"]["Wx"]),
@@ -215,6 +226,12 @@ def render_config_sidebar() -> dict:
             format="%.2f",
             step=0.01,
             key="ws",
+        )
+        remove_background_mode = st.selectbox(
+            "Remove background mode",
+            ["movmedian", "movmean"],
+            index=0,
+            key="remove_background_mode",
         )
 
     # ── Detection ────────────────────────────────────────────────────────
@@ -335,8 +352,9 @@ def render_config_sidebar() -> dict:
     with st.sidebar.expander("Population analysis"):
         pop_method = st.selectbox("Method", ["robustMean"], index=0, key="pop_method")
 
-    exportOptionalFigures = st.sidebar.checkbox(label="Export optional figures", )
-
+    exportOptionalFigures = st.sidebar.checkbox(
+        label="Export optional figures",
+    )
 
     # ── Build cofig ───────────────────────────────────────────────────────
     built_config = copy.deepcopy(st.session_state.get("_loaded_config", DEFAULT_CONFIG))
@@ -346,10 +364,13 @@ def render_config_sidebar() -> dict:
     built_config["flipIntensity"] = flipIntensity
     built_config["flowEstimate"] = flowEstimate
     built_config["kymographPreprocessing"] = {
-        "darkCalibration": darkCalibration if isinstance(darkCalibration, str) else int(darkCalibration),
+        "darkCalibration": darkCalibration
+        if isinstance(darkCalibration, str)
+        else int(darkCalibration),
         "Wx": Wx if isinstance(Wx, list) else float(Wx),
         "Wt": Wt if isinstance(Wt, list) else float(Wt),
         "ws": float(ws),
+        "removeBackground": remove_background_mode,
     }
 
     built_config["Detection"] = {

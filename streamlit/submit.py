@@ -98,7 +98,9 @@ def page_submit(config: dict) -> None:
         with st.spinner("Writing files to disk..."):
             try:
                 dark_cal_bytes = st.session_state.get("dark_cal_bytes")
-                job_id = submit_job(uploaded_files, config, dark_cal_bytes=dark_cal_bytes)
+                job_id = submit_job(
+                    uploaded_files, config, dark_cal_bytes=dark_cal_bytes
+                )
             except Exception as e:  # noqa: BLE001
                 st.error(f"Failed to submit job: {e}")
                 return

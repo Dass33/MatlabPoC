@@ -114,7 +114,9 @@ def launch_matlab_container(job_id: str) -> None:
     ).start()
 
 
-def submit_job(uploaded_files: list, config: dict, dark_cal_bytes: bytes | None = None) -> str:
+def submit_job(
+    uploaded_files: list, config: dict, dark_cal_bytes: bytes | None = None
+) -> str:
     job_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
