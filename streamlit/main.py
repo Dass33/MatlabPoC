@@ -40,6 +40,9 @@ logging.basicConfig(
 from config import render_config_sidebar
 from help import page_help
 from history import page_history
+from kymograph import page_kymograph_analysis
+from population import page_population_analysis
+from postprocessing import page_postprocessing
 from submit import page_submit
 
 STATUS_ICON = {
@@ -68,10 +71,33 @@ def main() -> None:
 
     config = render_config_sidebar()
 
-    tab_submit, tab_history, tab_help = st.tabs(["Submit", "History", "Help"])
+    (
+        tab_submit,
+        tab_kymograph,
+        tab_history,
+        tab_postprocessing,
+        tab_population,
+        tab_help,
+    ) = st.tabs([
+        "Submit",
+        "Kymograph Analysis",
+        "Postprocessing",
+        "Population Analysis",
+        "History",
+        "Help",
+    ])
 
     with tab_submit:
         page_submit(config)
+
+    with tab_kymograph:
+        page_kymograph_analysis()
+
+    with tab_postprocessing:
+        page_postprocessing()
+
+    with tab_population:
+        page_population_analysis()
 
     with tab_history:
         page_history()
