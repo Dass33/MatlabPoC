@@ -1,0 +1,3 @@
+[submodule "matlab/nsm-data-analysis"]
+	path = matlab/nsm-data-analysis
+	url = git@gitlab.com:BarboraSpackova/nsm-data-analysis.git
