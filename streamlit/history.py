@@ -2,40 +2,18 @@ from __future__ import annotations
 
 import io
 import json
-import logging
 import time
+from pathlib import Path
 
 import pandas as pd
+from job_manager import STATUS_ICON, job_dirs, list_all_jobs
 from pandas.io.common import zipfile
 
 import streamlit as st
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-)
-
-from job_manager import (
-    job_dirs,
-    list_all_jobs,
-)
-from results import list_kymographs, render_kymographs, show_job_results
-
-STATUS_ICON = {
-    "processing": "⏳",
-    "completed": "✅",
-    "failed": "❌",
-    "unknown": "❓",
-}
-
-# ─────────────────────────────────────────────
-# Page: History
-# ─────────────────────────────────────────────
-
 
 def page_history() -> None:
-    st.header("Experiment History")
+    st.subheader("Experiment History")
 
     col_refresh, col_auto = st.columns([1, 3])
     with col_refresh:
@@ -54,7 +32,6 @@ def page_history() -> None:
         pd.DataFrame([
             {
                 "Job ID": j["job_id"],
-                "Files": ", ".join(j.get("filenames", [])),
                 "Submitted": j.get("submitted_at", "—"),
                 "Status": f"{STATUS_ICON.get(j['status'], '❓')} {j['status']}",
                 "Error": j.get("error") or "" if j["status"] == "failed" else "",
@@ -65,65 +42,41 @@ def page_history() -> None:
         hide_index=True,
     )
 
+    # ── Download ────────────────────────────────────────────────
     completed_jobs = [j for j in jobs if j["status"] == "completed"]
     if completed_jobs:
         st.divider()
-        options = {
-            j["job_id"]: f"{j['job_id']} — {', '.join(j['filenames'])}"
-            for j in completed_jobs
-        }
+        st.subheader("Download results")
         selected_id = st.selectbox(
-            "View results for job",
-            options=list(options.keys()),
-            format_func=lambda k: options[k],
+            "Job",
+            options=[j["job_id"] for j in completed_jobs],
+            key="history_download_select",
         )
-        results = get_zipped_results(str(selected_id))
-        st.download_button(
-            label="Download Results",
-            data=results,
-            mime="application/zip",
-            file_name=f"{selected_id}.zip",
-        )
-
         if selected_id:
-            show_job_results(selected_id, key_suffix="history")
-    else:
-        st.caption("No completed jobs to display yet.")
+            st.download_button(
+                label="Download Results",
+                data=_zip_results(selected_id),
+                mime="application/zip",
+                file_name=f"{selected_id}.zip",
+            )
 
+    # ── Failed jobs ─────────────────────────────────────────────
     failed_jobs = [j for j in jobs if j["status"] == "failed"]
     if failed_jobs:
         st.divider()
         st.subheader("Failed jobs")
-        options = {
-            j["job_id"]: f"{j['job_id']} — {', '.join(j['filenames'])}"
-            for j in failed_jobs
-        }
-        selected_failed = st.selectbox(
-            "Select failed job",
-            options=list(options.keys()),
-            format_func=lambda k: options[k],
-            key="failed_select",
-        )
-        if selected_failed:
-            failed_job = next(j for j in failed_jobs if j["job_id"] == selected_failed)
-            st.error(failed_job.get("error") or "Unknown error")
-            _, _, out = job_dirs(selected_failed)
-            kymographs = list_kymographs(out)
-            if kymographs:
-                st.caption("Kymographs generated before failure:")
-                render_kymographs(kymographs, selected_failed, key_suffix="failed")
+        for j in failed_jobs:
+            with st.expander(f"{j['job_id']}"):
+                st.error(j.get("error") or "Unknown error")
 
+    # ── Admin ────────────────────────────────────────────────────
     stuck_jobs = [j for j in jobs if j["status"] == "processing"]
     if stuck_jobs:
-        with st.expander("Admin"):
-            options = {
-                j["job_id"]: f"{j['job_id']} — {', '.join(j['filenames'])}"
-                for j in stuck_jobs
-            }
+        st.divider()
+        with st.expander("Admin — stuck jobs"):
             selected = st.selectbox(
                 "Stuck job",
-                options=list(options.keys()),
-                format_func=lambda k: options[k],
+                options=[j["job_id"] for j in stuck_jobs],
                 key="admin_select",
             )
             if st.button("Force free slot", key="admin_force"):
@@ -139,30 +92,35 @@ def page_history() -> None:
         st.rerun()
 
 
-def get_zipped_results(id: str) -> bytes:
-    path, _, _ = job_dirs(str(id))
-    path = path / "output"
+def _zip_results(job_id: str) -> bytes:
+    base, _, out = job_dirs(job_id)
     buffer = io.BytesIO()
+
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        analysis_mat = path / "Analysis.mat"
-        if analysis_mat.is_file():
-            zf.write(analysis_mat, analysis_mat.relative_to(path))
+        # config used for this job
+        config = base / "config.json"
+        if config.is_file():
+            zf.write(config, "config.json")
 
-        setting = path / "Setting.json"
-        if setting.is_file():
-            zf.write(setting, setting.relative_to(path))
+        # kymograph images
+        kymo_dir = out / "kymographs"
+        if kymo_dir.is_dir():
+            for f in sorted(kymo_dir.glob("*.png")):
+                zf.write(f, Path("kymographs") / f.name)
 
-        for folder in (
-            "analysis",
-            "collection",
-            "contrast",
-            "detections",
-            "final_tracks",
+        # trajectory data
+        for name in (
+            "collection/collection.mat",
+            "collection_postprocessed.json",
+            "population.json",
         ):
-            folder_path = path / folder
-            if folder_path.is_dir():
-                for file in folder_path.rglob("*"):
-                    if file.is_file():
-                        zf.write(file, file.relative_to(path))
+            p = out / name
+            if p.is_file():
+                zf.write(p, name)
+
+        # MATLAB settings if present
+        setting = out / "Setting.json"
+        if setting.is_file():
+            zf.write(setting, "Setting.json")
 
     return buffer.getvalue()

@@ -8,8 +8,18 @@ import threading
 import uuid
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import docker
+
+_TZ = ZoneInfo("Europe/Prague")
+
+STATUS_ICON = {
+    "processing": "⏳",
+    "completed": "✅",
+    "failed": "❌",
+    "unknown": "❓",
+}
 
 log = logging.getLogger(__name__)
 
@@ -114,10 +124,14 @@ def launch_matlab_container(job_id: str) -> None:
     ).start()
 
 
+def list_completed_jobs() -> list[dict]:
+    return [j for j in list_all_jobs() if j["status"] == "completed"]
+
+
 def submit_job(
     uploaded_files: list, config: dict, dark_cal_bytes: bytes | None = None
 ) -> str:
-    job_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+    job_id = datetime.now(_TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
@@ -131,7 +145,7 @@ def submit_job(
         (base / "dark_cal.mat").write_bytes(dark_cal_bytes)
 
     (base / "config.json").write_text(json.dumps(config, indent=2))
-    now = datetime.now().isoformat(timespec="seconds")
+    now = datetime.now(_TZ).isoformat(timespec="seconds")
     (base / "meta.json").write_text(
         json.dumps(
             {

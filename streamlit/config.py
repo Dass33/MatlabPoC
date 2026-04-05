@@ -52,8 +52,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "D",
         "velocity",
     ],
-    # Post-processing
-    "iOCcalibration": "on",
     "outlierFiltering": {
         "referenceProperty": "iOC",
         # filterProperties, thresholdDirection, thresholdValue must always be the same length
@@ -86,7 +84,7 @@ def apply_config_to_session_state(built_config: dict) -> None:
             flat["dark_cal_mode"] = "Scalar"
             flat["darkCalibration"] = int(dc)
     if "ws" in pp:
-        flat["ws"] = pp["Ws"]
+        flat["ws"] = pp["ws"]
     if "Wx" in pp:
         wx = pp["Wx"]
         if isinstance(wx, list):
@@ -125,13 +123,6 @@ def apply_config_to_session_state(built_config: dict) -> None:
     ):
         if k in link:
             flat[k] = link[k]
-
-    if "iOCcalibration" in built_config:
-        flat["iOCcalibration_toggle"] = built_config["iOCcalibration"] == "on"
-
-    pop = built_config.get("populationAnalysis", {})
-    if "Title" in pop:
-        flat["pop_method"] = pop["Title"]
 
     for k, v in flat.items():
         st.session_state[k] = v
@@ -336,22 +327,6 @@ def render_config_sidebar() -> dict:
                 key="TmaxNo",
             )
 
-    # ── Post-processing ──────────────────────────────────────────────────
-    with st.sidebar.expander("Post-processing"):
-        ioc_cal_on = st.toggle(
-            "iOC calibration",
-            value=(built_config["iOCcalibration"] == "on"),
-            key="iOCcalibration_toggle",
-        )
-        iOCcalibration = "on" if ioc_cal_on else "off"
-        st.caption(
-            "Outlier filtering properties and thresholds use defaults (upload config JSON for full control)."
-        )
-
-    # ── Population analysis ──────────────────────────────────────────────
-    with st.sidebar.expander("Population analysis"):
-        pop_method = st.selectbox("Method", ["robustMean"], index=0, key="pop_method")
-
     exportOptionalFigures = st.sidebar.checkbox(
         label="Export optional figures",
     )
@@ -393,8 +368,6 @@ def render_config_sidebar() -> dict:
     built_config["Tlength"] = int(Tlength)
     built_config["thresholdLimit"] = float(thresholdLimit)
     built_config["TmaxNo"] = int(TmaxNo)
-    built_config["iOCcalibration"] = iOCcalibration
-    built_config["populationAnalysis"]["Title"] = pop_method
 
     st.sidebar.download_button(
         "Export current config",

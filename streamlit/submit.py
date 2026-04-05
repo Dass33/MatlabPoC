@@ -1,16 +1,9 @@
 from __future__ import annotations
 
-import logging
 import time
 from pathlib import Path
 
 import streamlit as st
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-)
 
 from job_manager import (
     MAX_WORKERS,
@@ -20,13 +13,6 @@ from job_manager import (
     submit_job,
 )
 from results import show_job_results
-
-STATUS_ICON = {
-    "processing": "⏳",
-    "completed": "✅",
-    "failed": "❌",
-    "unknown": "❓",
-}
 
 UPLOADER_CLEAR = "uploader_clear"
 UPLOADER = "uploader_"
@@ -38,7 +24,7 @@ UPLOADER = "uploader_"
 
 
 def page_submit(config: dict) -> None:
-    st.header("Submit Analysis")
+    st.subheader("Submit Analysis")
 
     # We do this to be able to have clear all files button
     if UPLOADER_CLEAR not in st.session_state:
