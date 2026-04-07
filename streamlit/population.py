@@ -15,7 +15,15 @@ from job_manager import job_dirs
 
 import streamlit as st
 
-AVAILABLE_PROPS = ["iOC", "D", "velocity"]
+AVAILABLE_PROPS = [
+    "iOC",
+    "D",
+    "STDiOC",
+    "velocity",
+    "N",
+    "positionStart",
+    "positionEnd",
+]
 
 
 def page_population_analysis(job_id: str | None, config: dict) -> None:
@@ -101,17 +109,14 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
         hide_index=True,
         use_container_width=True,
     )
-    _render_histograms(collection, result, props_used, job_id, method_used)
-    st.info(
-        "Not happy with the result? Go back to **Postprocessing** to adjust outlier thresholds and accept again, then re-run here."
-    )
+    _render_histograms(collection, result, props_used, method_used)
 
 
 # ─── robustMean (port of analyzePopulation_robustMean.m + std_modified_ND.m) ───
 
 
 def _render_histograms(
-    collection: dict, result: dict, props: list[str], job_id: str, method: str
+    collection: dict, result: dict, props: list[str], method: str
 ) -> None:
     if not props:
         return

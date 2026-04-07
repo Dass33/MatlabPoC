@@ -47,9 +47,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     ],
     "outlierFiltering": {
         "referenceProperty": "iOC",
-        "filterProperties": ["STDiOC", "velocity", "N", "positionStart", "positionEnd"],
-        "thresholdDirection": ["upper", "both", "lower", "upper", "lower"],
-        "thresholdValue": ["3std", "3std", "3std", "3std", "3std"],
+        "filterProperties": ["iOC", "STDiOC", "velocity", "N", "positionStart", "positionEnd"],
+        "thresholdDirection": ["both", "upper", "both", "lower", "upper", "lower"],
+        "thresholdValue": ["3std", "3std", "3std", "3std", "3std", "3std"],
     },
     "populationAnalysis": {
         "Title": "robustMean",

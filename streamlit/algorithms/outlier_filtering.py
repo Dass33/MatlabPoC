@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
+DEFAULT_SIGMA = 6.0
+
 
 def find_outliers(collection: dict, filt_config: dict, thresholds: dict) -> np.ndarray:
     """Returns bool array: True = not outlier."""
@@ -33,11 +35,11 @@ def find_outliers(collection: dict, filt_config: dict, thresholds: dict) -> np.n
                 continue
 
             cfg = thresholds.get(
-                prop, {"sigma": 3.0, "direction": "upper", "tv": "3std"}
+                prop, {"sigma": DEFAULT_SIGMA, "direction": "upper", "tv": "3std"}
             )
             direction = cfg.get("direction", "upper")
             tv = cfg.get("tv", "3std")
-            sigma = float(cfg.get("sigma", 3.0))
+            sigma = float(cfg.get("sigma", DEFAULT_SIGMA))
             y = np.array(collection[prop], dtype=float)
 
             if tv == "3std":

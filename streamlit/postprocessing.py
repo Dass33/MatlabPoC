@@ -11,7 +11,7 @@ import numpy as np
 import plotly.graph_objects as go
 import scipy.io
 from algorithms.calibration import run_ioc_calibration
-from algorithms.outlier_filtering import find_outliers
+from algorithms.outlier_filtering import DEFAULT_SIGMA, find_outliers
 from job_manager import job_dirs
 
 import streamlit as st
@@ -64,7 +64,7 @@ def page_postprocessing(job_id: str | None, config: dict) -> None:
         props = filt.get("filterProperties", [])
         st.session_state[f"pp_thresholds_{job_id}"] = {
             p: {
-                "sigma": 3.0,
+                "sigma": DEFAULT_SIGMA,
                 "direction": d,
                 "tv": tv,
                 "value": 0.0,
@@ -153,7 +153,7 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
 
     changed = False
     for prop in filter_props:
-        cfg = thresholds.get(prop, {"sigma": 3.0, "direction": "upper", "tv": "3std"})
+        cfg = thresholds.get(prop, {"sigma": DEFAULT_SIGMA, "direction": "upper", "tv": "3std"})
         c0, c1, c2, c3 = st.columns([1, 1, 1, 2])
         c0.markdown(f"**{prop}**")
         new_tv = c1.selectbox(
@@ -188,7 +188,7 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
                         key=f"pp_vhi_{job_id}_{prop}",
                         label_visibility="collapsed",
                     )
-                    new_val, new_sigma = cfg.get("value", 0.0), cfg.get("sigma", 3.0)
+                    new_val, new_sigma = cfg.get("value", 0.0), cfg.get("sigma", DEFAULT_SIGMA)
                 else:
                     new_val = st.number_input(
                         "threshold",
@@ -199,13 +199,13 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
                     new_lo, new_hi, new_sigma = (
                         cfg.get("value_lo", 0.0),
                         cfg.get("value_hi", 0.0),
-                        cfg.get("sigma", 3.0),
+                        cfg.get("sigma", DEFAULT_SIGMA),
                     )
             else:
                 new_sigma = st.slider(
                     "σ",
                     1.0,
-                    6.0,
+                    DEFAULT_SIGMA,
                     float(cfg["sigma"]),
                     0.1,
                     key=f"pp_slider_{job_id}_{prop}",
