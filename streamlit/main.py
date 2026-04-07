@@ -96,10 +96,12 @@ def render_experiment_selector() -> None:
         return
 
     options = [j["job_id"] for j in completed]
+    labels  = {j["job_id"]: j.get("name") or j["job_id"] for j in completed}
 
     st.selectbox(
         "Active experiment",
         options,
+        format_func=lambda x: labels[x],
         key="active_experiment",
     )
     st.divider()

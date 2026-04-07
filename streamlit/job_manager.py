@@ -129,7 +129,10 @@ def list_completed_jobs() -> list[dict]:
 
 
 def submit_job(
-    uploaded_files: list, config: dict, dark_cal_bytes: bytes | None = None
+    uploaded_files: list,
+    config: dict,
+    dark_cal_bytes: bytes | None = None,
+    name: str = "",
 ) -> str:
     job_id = datetime.now(_TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
@@ -150,6 +153,7 @@ def submit_job(
         json.dumps(
             {
                 "job_id": job_id,
+                "name": name.strip() or None,
                 "filenames": filenames,
                 "submitted_at": now,
                 "started_at": now,
