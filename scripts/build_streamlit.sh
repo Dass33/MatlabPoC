@@ -6,5 +6,4 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo "Project root resolved to: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
-cd ./streamlit
-docker build -t matlabpoc-streamlit:latest .
+docker build -t matlabpoc-streamlit:latest -f streamlit/Dockerfile .

@@ -10,7 +10,7 @@ import json
 import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
-from algorithms.population import gauss_fit, robust_mean
+import matlab_bridge
 from job_manager import job_dirs
 
 import streamlit as st
@@ -78,10 +78,9 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
     if st.button("Run Population Analysis", type="primary", key=f"pop_run_{job_id}"):
         with st.spinner("Computing..."):
             try:
-                result = (
-                    robust_mean(collection, selected_props)
-                    if method == "robustMean"
-                    else gauss_fit(collection, selected_props)
+                result = matlab_bridge.run_population_analysis(
+                    collection,
+                    {"Title": method, "properties": selected_props},
                 )
             except Exception as e:
                 st.error(f"Population analysis failed: {e}")

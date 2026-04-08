@@ -10,8 +10,7 @@ import json
 import numpy as np
 import plotly.graph_objects as go
 import scipy.io
-from algorithms.calibration import run_ioc_calibration
-from algorithms.outlier_filtering import DEFAULT_SIGMA, find_outliers
+import matlab_bridge
 from job_manager import job_dirs
 
 import streamlit as st
@@ -64,7 +63,6 @@ def page_postprocessing(job_id: str | None, config: dict) -> None:
         props = filt.get("filterProperties", [])
         st.session_state[f"pp_thresholds_{job_id}"] = {
             p: {
-                "sigma": DEFAULT_SIGMA,
                 "direction": d,
                 "tv": tv,
                 "value": 0.0,
@@ -86,7 +84,9 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
     thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
     filter_props = filt_config.get("filterProperties", [])
 
-    not_outlier = find_outliers(collection, filt_config, thresholds)
+    not_outlier = matlab_bridge.find_outliers(
+        collection, _build_matlab_setting(filt_config, thresholds)
+    )
     n_traj = len(collection["iOC"])
     states = _compute_states(n_traj, not_outlier, overrides)
     scalar_props = [p for p in SCALAR_PROPS if p in collection]
@@ -145,16 +145,15 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
     st.divider()
     st.subheader("Outlier thresholds")
 
-    hdr = st.columns([1, 1, 1, 2])
+    hdr = st.columns([1, 1, 2])
     hdr[0].caption("Property")
     hdr[1].caption("Threshold type")
-    hdr[2].caption("Direction")
-    hdr[3].caption("σ multiplier")
+    hdr[2].caption("Direction / value")
 
     changed = False
     for prop in filter_props:
-        cfg = thresholds.get(prop, {"sigma": DEFAULT_SIGMA, "direction": "upper", "tv": "3std"})
-        c0, c1, c2, c3 = st.columns([1, 1, 1, 2])
+        cfg = thresholds.get(prop, {"direction": "upper", "tv": "3std"})
+        c0, c1, c2 = st.columns([1, 1, 2])
         c0.markdown(f"**{prop}**")
         new_tv = c1.selectbox(
             "tv",
@@ -172,8 +171,13 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
             key=f"pp_dir_{job_id}_{prop}",
             label_visibility="collapsed",
         )
-        with c3:
-            if new_tv == "number":
+        new_val, new_lo, new_hi = (
+            cfg.get("value", 0.0),
+            cfg.get("value_lo", 0.0),
+            cfg.get("value_hi", 0.0),
+        )
+        if new_tv == "number":
+            with c2:
                 if new_dir == "both":
                     ca, cb = st.columns(2)
                     new_lo = ca.number_input(
@@ -188,7 +192,6 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
                         key=f"pp_vhi_{job_id}_{prop}",
                         label_visibility="collapsed",
                     )
-                    new_val, new_sigma = cfg.get("value", 0.0), cfg.get("sigma", DEFAULT_SIGMA)
                 else:
                     new_val = st.number_input(
                         "threshold",
@@ -196,28 +199,7 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
                         key=f"pp_val_{job_id}_{prop}",
                         label_visibility="collapsed",
                     )
-                    new_lo, new_hi, new_sigma = (
-                        cfg.get("value_lo", 0.0),
-                        cfg.get("value_hi", 0.0),
-                        cfg.get("sigma", DEFAULT_SIGMA),
-                    )
-            else:
-                new_sigma = st.slider(
-                    "σ",
-                    1.0,
-                    DEFAULT_SIGMA,
-                    float(cfg["sigma"]),
-                    0.1,
-                    key=f"pp_slider_{job_id}_{prop}",
-                    label_visibility="collapsed",
-                )
-                new_val, new_lo, new_hi = (
-                    cfg.get("value", 0.0),
-                    cfg.get("value_lo", 0.0),
-                    cfg.get("value_hi", 0.0),
-                )
         new_cfg = {
-            "sigma": new_sigma,
             "direction": new_dir,
             "tv": new_tv,
             "value": new_val,
@@ -413,6 +395,31 @@ def _render_track_preview(collection: dict, states: list[str], job_id: str) -> N
     plt.close(fig)
 
 
+def _build_matlab_setting(filt_config: dict, thresholds: dict) -> dict:
+    """Translate per-property UI thresholds into the MATLAB setting struct format."""
+    filter_props = filt_config.get("filterProperties", [])
+    threshold_values = []
+    directions = []
+    for prop in filter_props:
+        cfg = thresholds.get(prop, {})
+        tv = cfg.get("tv", "3std")
+        direction = cfg.get("direction", "upper")
+        directions.append(direction)
+        if tv == "number":
+            if direction == "both":
+                threshold_values.append([cfg.get("value_lo", 0.0), cfg.get("value_hi", 0.0)])
+            else:
+                threshold_values.append([cfg.get("value", 0.0)])
+        else:
+            threshold_values.append(tv)
+    return {
+        "referenceProperty": filt_config.get("referenceProperty", "iOC"),
+        "filterProperties": filter_props,
+        "thresholdDirection": directions,
+        "thresholdValue": threshold_values,
+    }
+
+
 def _accept(
     job_id: str, collection: dict, states: list[str], calibration_on: bool
 ) -> None:
@@ -429,7 +436,8 @@ def _accept(
             and collection.get("positionRefined") is not None
         ):
             try:
-                calibration, collection = run_ioc_calibration(collection, keep_mask)
+                calibration, updated = matlab_bridge.run_ioc_calibration(collection, keep_mask)
+                collection = {**collection, **updated}
             except Exception as e:
                 st.warning(f"iOC calibration failed: {e}. Saving without calibration.")
 
