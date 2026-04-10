@@ -9,12 +9,13 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY streamlit/requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+ENV AGREE_TO_MATLAB_RUNTIME_LICENSE=yes
+ENV LD_LIBRARY_PATH=/opt/matlabruntime/R2025b/runtime/glnxa64:/opt/matlabruntime/R2025b/bin/glnxa64:/opt/matlabruntime/R2025b/sys/os/glnxa64:/opt/matlabruntime/R2025b/extern/bin/glnxa64
 
-# Install the compiled MATLAB Python package (produced by compile_matlab.sh)
+COPY streamlit/requirements.txt .
+RUN pip3 install  --break-system-packages --no-cache-dir -r requirements.txt
+
 COPY matlab/Compiled/PythonPackage/nsm_algorithms/ ./nsm_algorithms/
-RUN pip3 install --no-cache-dir ./nsm_algorithms/
 
 COPY streamlit/ .
 
