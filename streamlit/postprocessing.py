@@ -40,12 +40,23 @@ _TRACK_PALETTE = [
     "#000075",
 ]
 
-SCALAR_PROPS = ["iOC", "STDiOC", "D", "velocity", "N", "positionStart", "positionEnd"]
 _TV_OPTIONS = ["3std", "3std_conditional", "number"]
 _DIR_OPTIONS = ["upper", "lower", "both"]
+_MICRO_PROPS = {"iOC", "STDiOC"}
+_FILTER_DEFAULTS = {
+    "iOC":          {"direction": "both",  "tv": "3std"},
+    "STDiOC":       {"direction": "upper", "tv": "3std"},
+    "D":            {"direction": "both",  "tv": "3std"},
+    "velocity":     {"direction": "both",  "tv": "3std"},
+    "N":            {"direction": "lower", "tv": "3std"},
+    "positionStart":{"direction": "upper", "tv": "3std"},
+    "positionEnd":  {"direction": "lower", "tv": "3std"},
+}
+
+SCALAR_PROPS = list(_FILTER_DEFAULTS)
 
 
-def page_postprocessing(job_id: str | None, config: dict) -> None:
+def page_postprocessing(job_id: str | None) -> None:
     st.subheader("Post-processing")
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
@@ -56,38 +67,29 @@ def page_postprocessing(job_id: str | None, config: dict) -> None:
         st.warning("collection.mat not found for this job.")
         return
 
-    filt = config.get("outlierFiltering", {})
     st.session_state.setdefault(f"overrides_{job_id}", {})
     st.session_state.setdefault(f"pp_axes_{job_id}", ("iOC", "velocity"))
-    if f"pp_thresholds_{job_id}" not in st.session_state:
-        props = filt.get("filterProperties", [])
+    stored = st.session_state.get(f"pp_thresholds_{job_id}", {})
+    if set(stored) != set(_FILTER_DEFAULTS):
         st.session_state[f"pp_thresholds_{job_id}"] = {
-            p: {
-                "direction": d,
-                "tv": tv,
-                "value": 0.0,
-                "value_lo": 0.0,
-                "value_hi": 0.0,
-            }
-            for p, d, tv in zip(
-                props,
-                filt.get("thresholdDirection", []),
-                filt.get("thresholdValue", []),
-            )
+            p: {"enabled": True, "value": 0.0, "value_lo": 0.0, "value_hi": 0.0, **defaults}
+            for p, defaults in _FILTER_DEFAULTS.items()
         }
 
-    _render_postprocessing(job_id, collection, filt)
+    _render_postprocessing(job_id, collection)
 
 
-def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> None:
+def _render_postprocessing(job_id: str, collection: dict) -> None:
     overrides: dict = st.session_state[f"overrides_{job_id}"]
     thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
-    filter_props = filt_config.get("filterProperties", [])
+    filter_props = list(_FILTER_DEFAULTS)
 
-    not_outlier = matlab_bridge.find_outliers(
-        collection, _build_matlab_setting(filt_config, thresholds)
-    )
+    matlab_setting = _build_matlab_setting(thresholds)
     n_traj = len(collection["iOC"])
+    if matlab_setting["filterProperties"]:
+        not_outlier = matlab_bridge.find_outliers(collection, matlab_setting)
+    else:
+        not_outlier = np.ones(n_traj, dtype=bool)
     states = _compute_states(n_traj, not_outlier, overrides)
     scalar_props = [p for p in SCALAR_PROPS if p in collection]
 
@@ -145,16 +147,26 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
     st.divider()
     st.subheader("Outlier thresholds")
 
-    hdr = st.columns([1, 1, 2])
-    hdr[0].caption("Property")
-    hdr[1].caption("Threshold type")
-    hdr[2].caption("Direction / value")
+    hdr = st.columns([0.4, 1, 1, 2])
+    hdr[0].caption("Filter")
+    hdr[1].caption("Property")
+    hdr[2].caption("Threshold type")
+    hdr[3].caption("Direction / value")
 
     changed = False
     for prop in filter_props:
-        cfg = thresholds.get(prop, {"direction": "upper", "tv": "3std"})
-        c0, c1, c2 = st.columns([1, 1, 2])
-        c0.markdown(f"**{prop}**")
+        cfg = thresholds.get(
+            prop, {"enabled": True, "direction": "upper", "tv": "3std"}
+        )
+        c_en, c0, c1, c2 = st.columns([0.4, 1, 1, 2])
+        new_enabled = c_en.checkbox(
+            "enabled",
+            value=cfg.get("enabled", True),
+            key=f"pp_en_{job_id}_{prop}",
+            label_visibility="collapsed",
+        )
+        label = f"**{prop} (µ)**" if prop in _MICRO_PROPS else f"**{prop}**"
+        c0.markdown(label)
         new_tv = c1.selectbox(
             "tv",
             _TV_OPTIONS,
@@ -177,29 +189,31 @@ def _render_postprocessing(job_id: str, collection: dict, filt_config: dict) -> 
             cfg.get("value_hi", 0.0),
         )
         if new_tv == "number":
+            unit = " µ" if prop in _MICRO_PROPS else ""
             with c2:
                 if new_dir == "both":
                     ca, cb = st.columns(2)
                     new_lo = ca.number_input(
-                        "lo",
+                        f"lo{unit}",
                         value=float(cfg.get("value_lo", 0.0)),
                         key=f"pp_vlo_{job_id}_{prop}",
-                        label_visibility="collapsed",
+                        label_visibility="visible",
                     )
                     new_hi = cb.number_input(
-                        "hi",
+                        f"hi{unit}",
                         value=float(cfg.get("value_hi", 0.0)),
                         key=f"pp_vhi_{job_id}_{prop}",
-                        label_visibility="collapsed",
+                        label_visibility="visible",
                     )
                 else:
                     new_val = st.number_input(
-                        "threshold",
+                        f"threshold{unit}",
                         value=float(cfg.get("value", 0.0)),
                         key=f"pp_val_{job_id}_{prop}",
-                        label_visibility="collapsed",
+                        label_visibility="visible",
                     )
         new_cfg = {
+            "enabled": new_enabled,
             "direction": new_dir,
             "tv": new_tv,
             "value": new_val,
@@ -395,29 +409,31 @@ def _render_track_preview(collection: dict, states: list[str], job_id: str) -> N
     plt.close(fig)
 
 
-def _build_matlab_setting(filt_config: dict, thresholds: dict) -> dict:
-    """Translate per-property UI thresholds into the MATLAB setting struct format."""
-    filter_props = filt_config.get("filterProperties", [])
+def _build_matlab_setting(thresholds: dict) -> dict:
+    active_props = []
     threshold_values = []
     directions = []
-    for prop in filter_props:
+    for prop in _FILTER_DEFAULTS:
         cfg = thresholds.get(prop, {})
+        if not cfg.get("enabled", True):
+            continue
         tv = cfg.get("tv", "3std")
         direction = cfg.get("direction", "upper")
+        active_props.append(prop)
         directions.append(direction)
         if tv == "number":
+            scale = 1e-6 if prop in _MICRO_PROPS else 1.0
             if direction == "both":
                 threshold_values.append([
-                    cfg.get("value_lo", 0.0),
-                    cfg.get("value_hi", 0.0),
+                    cfg.get("value_lo", 0.0) * scale,
+                    cfg.get("value_hi", 0.0) * scale,
                 ])
             else:
-                threshold_values.append([cfg.get("value", 0.0)])
+                threshold_values.append([cfg.get("value", 0.0) * scale])
         else:
             threshold_values.append(tv)
     return {
-        "referenceProperty": filt_config.get("referenceProperty", "iOC"),
-        "filterProperties": filter_props,
+        "filterProperties": active_props,
         "thresholdDirection": directions,
         "thresholdValue": threshold_values,
     }

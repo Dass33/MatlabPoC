@@ -4,9 +4,7 @@ import time
 from pathlib import Path
 
 from job_manager import (
-    MAX_WORKERS,
     POLL_INTERVAL_S,
-    count_running_jobs,
     read_status,
     submit_job,
 )
@@ -19,6 +17,9 @@ UPLOADER = "uploader_"
 
 def page_submit(config: dict) -> None:
     st.subheader("Submit Analysis")
+
+    if toast_msg := st.session_state.pop("_submit_toast", None):
+        st.toast(toast_msg)
 
     if UPLOADER_CLEAR not in st.session_state:
         st.session_state[UPLOADER_CLEAR] = 0
@@ -35,13 +36,6 @@ def page_submit(config: dict) -> None:
     )
     st.button(
         "Clear uploaded files", key="Clear files button", on_click=_clear_uploader
-    )
-
-    running = count_running_jobs()
-    slots_free = MAX_WORKERS - running
-    slots_color = "green" if slots_free > 0 else "red"
-    st.markdown(
-        f"**Worker slots:** :{slots_color}[{slots_free} / {MAX_WORKERS} available]"
     )
 
     if not uploaded_files:
@@ -61,14 +55,9 @@ def page_submit(config: dict) -> None:
 
     col_submit, col_wait = st.columns(2)
     submit = col_submit.button(
-        "Submit job", type="primary", disabled=(slots_free == 0), width="stretch"
+        "Submit job", type="primary", width="stretch"
     )
     wait_for_result = col_wait.toggle("Wait for result", value=False)
-
-    if slots_free == 0:
-        st.warning(
-            "Both worker slots are busy. Submit your job once a slot is free, or check the History tab."
-        )
 
     if submit:
         with st.spinner("Writing files to disk..."):
@@ -82,9 +71,11 @@ def page_submit(config: dict) -> None:
             except Exception as e:
                 st.error(f"Failed to submit job: {e}")
                 return
-        st.success(f"Job submitted — ID: `{job_id}`")
         st.session_state["last_job_id"] = job_id
         st.session_state["waiting"] = wait_for_result
+        if not wait_for_result:
+            st.session_state["_submit_toast"] = f"Job submitted — `{job_id}`"
+            st.rerun()
 
     active_job_id = st.session_state.get("last_job_id")
     if active_job_id and st.session_state.get("waiting"):
@@ -105,6 +96,7 @@ def page_submit(config: dict) -> None:
                 )
             else:
                 st.error(f"Job failed: {status.get('error', 'unknown error')}")
+            st.rerun()
 
     missing_txt = tiff_stems - txt_stems
     if missing_txt:

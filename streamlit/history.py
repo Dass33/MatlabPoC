@@ -67,7 +67,7 @@ def page_history() -> None:
         with st.expander("Admin — stuck jobs"):
             labels_stuck = {j["job_id"]: j.get("name") or j["job_id"] for j in stuck_jobs}
             selected = st.selectbox("Stuck job", [j["job_id"] for j in stuck_jobs], format_func=lambda x: labels_stuck[x], key="admin_select")
-            if st.button("Force free slot", key="admin_force"):
+            if st.button("Mark as failed", key="admin_force"):
                 _, _, out = job_dirs(str(selected))
                 out.mkdir(parents=True, exist_ok=True)
                 (out / "status.json").write_text(json.dumps({"status": "failed", "error": "Manually freed by admin"}))

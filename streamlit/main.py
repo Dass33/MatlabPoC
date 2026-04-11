@@ -6,7 +6,6 @@ Environment variables (set in docker-compose / .env)
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   HOST_DATA_DIR     same path as seen by the host daemon (required)
   MATLAB_IMAGE      Docker image name                    (default: matlab-algorithm:latest)
-  MAX_WORKERS       concurrent MATLAB slots              (default: 2)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
 """
 
@@ -78,10 +77,10 @@ def main() -> None:
         page_kymograph_analysis(active_job)
 
     with tab_postprocessing:
-        page_postprocessing(active_job, config)
+        page_postprocessing(active_job)
 
     with tab_population:
-        page_population_analysis(active_job, config)
+        page_population_analysis(active_job)
 
     with tab_history:
         page_history()

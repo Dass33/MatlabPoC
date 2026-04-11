@@ -1,8 +1,3 @@
-"""
-Two methods: robustMean and gaussFit, selectable by user.
-Runs entirely in Python — scipy for Gaussian fitting, numpy for robust statistics.
-"""
-
 from __future__ import annotations
 
 import json
@@ -15,6 +10,8 @@ from job_manager import job_dirs
 
 import streamlit as st
 
+_MICRO_PROPS = {"iOC", "STDiOC"}
+
 AVAILABLE_PROPS = [
     "iOC",
     "D",
@@ -26,7 +23,7 @@ AVAILABLE_PROPS = [
 ]
 
 
-def page_population_analysis(job_id: str | None, config: dict) -> None:
+def page_population_analysis(job_id: str | None) -> None:
     st.subheader("Population Analysis")
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
@@ -53,9 +50,8 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
         )
         return
 
-    pop_config = config.get("populationAnalysis", {})
-    default_method = pop_config.get("Title", "robustMean")
-    default_props = pop_config.get("properties", AVAILABLE_PROPS)
+    default_method = "robustMean"
+    default_props = AVAILABLE_PROPS
 
     cm, cp = st.columns([1, 2])
     method = cm.selectbox(
@@ -71,8 +67,8 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
         key=f"pop_props_{job_id}",
     )
 
-    if not selected_props:
-        st.info("Select at least one property.")
+    if len(selected_props) < 2:
+        st.warning("Select at least 2 properties.")
         return
 
     if st.button("Run Population Analysis", type="primary", key=f"pop_run_{job_id}"):
@@ -99,10 +95,20 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
 
     import pandas as pd
 
+    scaled_keys = {"MEAN", "STD", "FWHM"}
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]
+
+    def _display_val(prop, key, val):
+        if prop in _MICRO_PROPS and key in scaled_keys:
+            return val * 1e6
+        return val
+
     st.dataframe(
         pd.DataFrame([
-            {"Property": p, **{k: result.get(p, {}).get(k, float("nan")) for k in keys}}
+            {
+                "Property": f"{p} (µ)" if p in _MICRO_PROPS else p,
+                **{k: _display_val(p, k, result.get(p, {}).get(k, float("nan"))) for k in keys},
+            }
             for p in props_used
         ]),
         hide_index=True,
@@ -111,18 +117,17 @@ def page_population_analysis(job_id: str | None, config: dict) -> None:
     _render_histograms(collection, result, props_used, method_used)
 
 
-# ─── robustMean (port of analyzePopulation_robustMean.m + std_modified_ND.m) ───
-
-
 def _render_histograms(
     collection: dict, result: dict, props: list[str], method: str
 ) -> None:
     if not props:
         return
-    fig = sp.make_subplots(rows=1, cols=len(props), subplot_titles=props)
+    titles = [f"{p} (µ)" if p in _MICRO_PROPS else p for p in props]
+    fig = sp.make_subplots(rows=1, cols=len(props), subplot_titles=titles)
     for col, prop in enumerate(props, 1):
         r = result.get(prop, {})
-        Y = np.array(collection.get(prop, []), dtype=float)
+        scale = 1e6 if prop in _MICRO_PROPS else 1.0
+        Y = np.array(collection.get(prop, []), dtype=float) * scale
         Y = Y[~np.isnan(Y)]
         if not len(Y):
             continue
@@ -139,10 +144,10 @@ def _render_histograms(
             col=col,
         )
         if method == "gaussFit" and "_hist_centers" in r:
-            centers = np.array(r["_hist_centers"])
+            centers = np.array(r["_hist_centers"]) * scale
             x_fine = np.linspace(centers[0], centers[-1], 200)
             y_fine = float(np.array(r["_hist_counts"]).max()) * np.exp(
-                -((x_fine - r["MEAN"]) ** 2) / (2 * r["STD"] ** 2)
+                -((x_fine - r["MEAN"] * scale) ** 2) / (2 * (r["STD"] * scale) ** 2)
             )
             fig.add_trace(
                 go.Scatter(
@@ -159,8 +164,8 @@ def _render_histograms(
         elif method == "robustMean":
             fig.add_shape(
                 type="line",
-                x0=r.get("MEAN", 0),
-                x1=r.get("MEAN", 0),
+                x0=r.get("MEAN", 0) * scale,
+                x1=r.get("MEAN", 0) * scale,
                 y0=0,
                 y1=1,
                 yref="paper",

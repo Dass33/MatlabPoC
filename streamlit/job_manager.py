@@ -26,7 +26,6 @@ log = logging.getLogger(__name__)
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./data/jobs"))
 HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
 MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "matlab-algorithm:latest")
-MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "2"))
 POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "5"))
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,16 +46,6 @@ def read_status(job_id: str) -> dict:
     except (json.JSONDecodeError, OSError) as e:
         log.error("[read_status] %s: %s", job_id, e)
         return {"status": "unknown", "error": "Could not read status.json"}
-
-
-def count_running_jobs() -> int:
-    if not DATA_DIR.exists():
-        return 0
-    return sum(
-        1
-        for d in DATA_DIR.iterdir()
-        if d.is_dir() and read_status(d.name)["status"] == "processing"
-    )
 
 
 def list_all_jobs() -> list[dict]:

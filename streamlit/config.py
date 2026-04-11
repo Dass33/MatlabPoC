@@ -19,7 +19,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "Wx": 15,
         "Wt": 50,
         "ws": 2.36,
-        "removeBackground": "robustmean",
+        "removeBackground": "movmedian",
     },
     "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
     "tracker": "gabClosingTracker",
@@ -45,16 +45,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "D",
         "velocity",
     ],
-    "outlierFiltering": {
-        "referenceProperty": "iOC",
-        "filterProperties": ["iOC", "STDiOC", "velocity", "N", "positionStart", "positionEnd"],
-        "thresholdDirection": ["both", "upper", "both", "lower", "upper", "lower"],
-        "thresholdValue": ["3std", "3std", "3std", "3std", "3std", "3std"],
-    },
-    "populationAnalysis": {
-        "Title": "robustMean",
-        "properties": ["iOC", "D", "velocity"],
-    },
 }
 
 
