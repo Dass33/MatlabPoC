@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import json
 
+import matlab_bridge
 import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
-import matlab_bridge
 from job_manager import job_dirs
 
 import streamlit as st

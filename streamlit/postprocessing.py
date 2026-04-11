@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import json
 
+import matlab_bridge
 import numpy as np
 import plotly.graph_objects as go
 import scipy.io
-import matlab_bridge
 from job_manager import job_dirs
 
 import streamlit as st
@@ -407,7 +407,10 @@ def _build_matlab_setting(filt_config: dict, thresholds: dict) -> dict:
         directions.append(direction)
         if tv == "number":
             if direction == "both":
-                threshold_values.append([cfg.get("value_lo", 0.0), cfg.get("value_hi", 0.0)])
+                threshold_values.append([
+                    cfg.get("value_lo", 0.0),
+                    cfg.get("value_hi", 0.0),
+                ])
             else:
                 threshold_values.append([cfg.get("value", 0.0)])
         else:
@@ -436,7 +439,9 @@ def _accept(
             and collection.get("positionRefined") is not None
         ):
             try:
-                calibration, updated = matlab_bridge.run_ioc_calibration(collection, keep_mask)
+                calibration, updated = matlab_bridge.run_ioc_calibration(
+                    collection, keep_mask
+                )
                 collection = {**collection, **updated}
             except Exception as e:
                 st.warning(f"iOC calibration failed: {e}. Saving without calibration.")
