@@ -1,5 +1,7 @@
 matlab/Compiled/
 MATLAB_Runtime_*.zip
+*.zip
+local_machine_name
 
 data/
 DemoData/

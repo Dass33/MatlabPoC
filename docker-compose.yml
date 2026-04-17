@@ -1,8 +1,11 @@
 services:
   streamlit:
+    image: dass33/nsm-streamlit:latest
     build:
       context: .
       dockerfile: streamlit/Dockerfile
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     ports:
       - "8501:8501"
     volumes:
@@ -11,7 +14,7 @@ services:
     environment:
       DATA_DIR: /data/jobs
       HOST_DATA_DIR: ${HOST_DATA_DIR:?HOST_DATA_DIR must be set in .env}
-      MATLAB_IMAGE: matlab-algorithm:latest
+      MATLAB_IMAGE: dass33/nsm-matlab:latest
       MAX_WORKERS: 2
       POLL_INTERVAL_S: 5
     restart: unless-stopped
@@ -20,3 +23,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --label-enable --interval 300
+    restart: unless-stopped

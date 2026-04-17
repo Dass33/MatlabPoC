@@ -80,6 +80,11 @@ def _container_reaper(container, log_dest: Path) -> None:
     try:
         container.wait()
         log_dest.write_bytes(container.logs(stdout=True, stderr=True))
+        for p in [log_dest.parent, *log_dest.parent.rglob("*")]:
+            try:
+                p.chmod(0o777)
+            except OSError:
+                pass
     finally:
         container.remove(force=True)
 
