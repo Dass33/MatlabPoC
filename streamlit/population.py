@@ -78,6 +78,9 @@ def page_population_analysis(job_id: str | None) -> None:
                     collection,
                     {"Title": method, "properties": selected_props},
                 )
+            except (ValueError, KeyError, TypeError) as e:
+                st.error(f"Population analysis failed: invalid data or parameter error: {e}")
+                return
             except Exception as e:
                 st.error(f"Population analysis failed: {e}")
                 return

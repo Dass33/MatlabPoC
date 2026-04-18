@@ -107,8 +107,11 @@ def launch_matlab_container(job_id: str) -> None:
             remove=False,
         )
         log.info("[launch] container started: %s", container.short_id)
-    except Exception as e:
-        log.error("[launch] ERROR: %s", e)
+    except docker.errors.ImageNotFound as e:
+        log.error("[launch] image not found: %s", MATLAB_IMAGE)
+        raise
+    except docker.errors.APIError as e:
+        log.error("[launch] docker API error: %s", e)
         raise
 
     threading.Thread(

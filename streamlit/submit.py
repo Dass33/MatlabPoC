@@ -68,6 +68,9 @@ def page_submit(config: dict) -> None:
                     dark_cal_bytes=st.session_state.get("dark_cal_bytes"),
                     name=name,
                 )
+            except (OSError, IOError) as e:
+                st.error(f"Failed to write files: {e}")
+                return
             except Exception as e:
                 st.error(f"Failed to submit job: {e}")
                 return
@@ -110,9 +113,9 @@ def page_submit(config: dict) -> None:
             st.write(f.name)
 
 
-def _uploader_key():
+def _uploader_key() -> str:
     return f"{UPLOADER}{st.session_state[UPLOADER_CLEAR]}"
 
 
-def _clear_uploader():
+def _clear_uploader() -> None:
     st.session_state[UPLOADER_CLEAR] += 1

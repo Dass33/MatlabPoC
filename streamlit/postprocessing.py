@@ -459,6 +459,8 @@ def _accept(
                     collection, keep_mask
                 )
                 collection = {**collection, **updated}
+            except (ValueError, KeyError, TypeError) as e:
+                st.warning(f"iOC calibration data error: {e}. Saving without calibration.")
             except Exception as e:
                 st.warning(f"iOC calibration failed: {e}. Saving without calibration.")
 

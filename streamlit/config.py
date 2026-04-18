@@ -122,8 +122,10 @@ def render_config_sidebar() -> dict:
                 st.session_state["_loaded_config"] = loaded
                 apply_config_to_session_state(loaded)
                 st.success("Config loaded.")
-            except Exception as e:  # noqa: BLE001
-                st.error(f"Could not load config: {e}")
+            except json.JSONDecodeError as e:
+                st.error(f"Invalid JSON in config file: {e}")
+            except (KeyError, TypeError, ValueError) as e:
+                st.error(f"Config format error: {e}")
 
     with st.sidebar.expander("Acquisition", expanded=False):
         Dt = st.number_input(
