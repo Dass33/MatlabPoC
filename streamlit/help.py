@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def page_help():
+def page_help() -> None:
     st.markdown("""
         ### How to use
 

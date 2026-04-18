@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import matlab_bridge
 import numpy as np
@@ -101,7 +102,7 @@ def page_population_analysis(job_id: str | None) -> None:
     scaled_keys = {"MEAN", "STD", "FWHM"}
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]
 
-    def _display_val(prop, key, val):
+    def _display_val(prop: str, key: str, val: float) -> float:
         if prop in _MICRO_PROPS and key in scaled_keys:
             return val * 1e6
         return val
@@ -185,8 +186,10 @@ def _render_histograms(
 # ─── Save ───
 
 
-def _save_population(out, result: dict, method: str, props: list[str], n_kept) -> None:
-    def _default(obj):
+def _save_population(
+    out: Path, result: dict, method: str, props: list[str], n_kept: int | None
+) -> None:
+    def _default(obj: object) -> int | float | list:
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):

@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 _pkg = None
 
 
-def _get_pkg():
+def _get_pkg() -> Any:
     global _pkg
     if _pkg is None:
         import nsm_algorithms  # installed from matlab/Compiled/PythonPackage/nsm_algorithms
@@ -45,7 +45,7 @@ def _from_json(s: Any) -> Any:
     return json.loads(str(s))
 
 
-def _prep_collection(collection: dict) -> dict:
+def _prep_collection(collection: dict[str, object]) -> dict[str, object]:
     """Convert numpy arrays to plain Python lists for JSON serialisation."""
     out: dict = {}
     for k, v in collection.items():
@@ -60,7 +60,7 @@ def _prep_collection(collection: dict) -> dict:
 
 # ─── public API ──────────────────────────────────────────────────────────────
 
-def find_outliers(collection: dict, matlab_setting: dict) -> np.ndarray:
+def find_outliers(collection: dict[str, object], matlab_setting: dict[str, object]) -> np.ndarray:
     """
     Call MATLAB findTrajectoryOutliers.
 
@@ -80,8 +80,8 @@ def find_outliers(collection: dict, matlab_setting: dict) -> np.ndarray:
 
 
 def run_ioc_calibration(
-    collection: dict, keep_mask: np.ndarray
-) -> tuple[dict, dict]:
+    collection: dict[str, object], keep_mask: np.ndarray
+) -> tuple[dict[str, object], dict[str, object]]:
     """
     Run iOC calibration on the kept subset, then apply it to all trajectories.
 
@@ -98,7 +98,7 @@ def run_ioc_calibration(
     return _from_json(cal_json), _from_json(upd_json)
 
 
-def run_population_analysis(collection: dict, setting: dict) -> dict:
+def run_population_analysis(collection: dict[str, object], setting: dict[str, object]) -> dict[str, object]:
     """
     Run population analysis.
 

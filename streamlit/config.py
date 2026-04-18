@@ -48,11 +48,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
-def _pick(src: dict, *keys) -> dict:
+def _pick(src: dict[str, Any], *keys: str) -> dict[str, Any]:
     return {k: src[k] for k in keys if k in src}
 
 
-def apply_config_to_session_state(built_config: dict) -> None:
+def apply_config_to_session_state(built_config: dict[str, Any]) -> None:
     flat = _pick(
         built_config,
         "Dt",
@@ -107,7 +107,7 @@ def apply_config_to_session_state(built_config: dict) -> None:
     st.session_state.update(flat)
 
 
-def render_config_sidebar() -> dict:
+def render_config_sidebar() -> dict[str, Any]:
     DC = DEFAULT_CONFIG
 
     st.sidebar.header("Algorithm Parameters")

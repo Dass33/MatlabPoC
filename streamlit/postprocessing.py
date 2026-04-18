@@ -241,7 +241,7 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
 
 
 @st.cache_data
-def _load_collection(job_id: str) -> dict | None:
+def _load_collection(job_id: str) -> dict[str, object] | None:
     _, _, out = job_dirs(job_id)
     mat_path = out / "collection" / "collection.mat"
     if not mat_path.exists():
@@ -259,7 +259,7 @@ def _load_collection(job_id: str) -> dict | None:
     return data
 
 
-def _compute_states(n: int, not_outlier: np.ndarray, overrides: dict) -> list[str]:
+def _compute_states(n: int, not_outlier: np.ndarray, overrides: dict[str, bool]) -> list[str]:
     return [
         ("manual-kept" if overrides[i] == "kept" else "manual-excluded")
         if i in overrides
@@ -409,7 +409,7 @@ def _render_track_preview(collection: dict, states: list[str], job_id: str) -> N
     plt.close(fig)
 
 
-def _build_matlab_setting(thresholds: dict) -> dict:
+def _build_matlab_setting(thresholds: dict[str, object]) -> dict[str, object]:
     active_props = []
     threshold_values = []
     directions = []
@@ -485,7 +485,7 @@ def _accept(
     st.info("Head to the **Population Analysis** tab to compute population statistics.")
 
 
-def _filter_collection(collection: dict, keep_mask: np.ndarray) -> dict:
+def _filter_collection(collection: dict[str, object], keep_mask: np.ndarray) -> dict[str, object]:
     result = {}
     for k, v in collection.items():
         if isinstance(v, np.ndarray) and len(v) == len(keep_mask):
@@ -505,7 +505,7 @@ def _json_default(obj):
     raise TypeError(type(obj))
 
 
-def _render_calibration(calibration: dict) -> None:
+def _render_calibration(calibration: dict[str, object]) -> None:
     import plotly.subplots as sp
 
     x = calibration["x"]
