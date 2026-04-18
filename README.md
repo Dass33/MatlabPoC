@@ -5,10 +5,6 @@ Upload raw kymograph TIFF files (+ paired `.txt` metadata),
 configure algorithm parameters, and retrieve results. The heavy computation is done in
 MATLAB; the "frontend" is in Streamlit.
 
-## Repository Structure
-
-
-
 ## Two-Container Design
 
 ### Streamlit container
@@ -29,9 +25,9 @@ MATLAB; the "frontend" is in Streamlit.
 - Docker and Docker Compose
 - MATLAB R2025b (only needed to recompile; not needed at runtime)
 
-### Quick Start
+### Local Development
 
-1. Set `HOST_DATA_DIR` in `.env` to the absolute path of the `data/` directory on your host:
+1. Create `.env` file with `HOST_DATA_DIR` set to the absolute path of the `data/` directory:
    ```
    HOST_DATA_DIR=/absolute/path/to/MatlabPoC/data
    ```
@@ -43,3 +39,14 @@ MATLAB; the "frontend" is in Streamlit.
    This compiles the MATLAB source, builds both Docker images, and starts the stack.
 
 3. Open http://localhost:8501
+
+### Production Deployment
+
+Push images to Docker registry (Watchtower will auto-update):
+```bash
+./scripts/push.sh              # Push both MATLAB and Streamlit images
+./scripts/push.sh --matlab     # Push only MATLAB image (after recompiling)
+./scripts/push.sh --streamlit  # Push only Streamlit image
+```
+
+Changes will be deployed within 5 minutes via Watchtower.
