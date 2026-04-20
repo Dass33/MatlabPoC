@@ -5,6 +5,7 @@ MCR is initialised once per process on first call. All functions communicate
 via JSON strings so no MATLAB-specific Python types leak into the rest of
 the codebase.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,12 +23,14 @@ def _get_pkg() -> Any:
     global _pkg
     if _pkg is None:
         import nsm_algorithms  # installed from matlab/Compiled/PythonPackage/nsm_algorithms
+
         _pkg = nsm_algorithms.initialize()
         log.info("MATLAB MCR initialised")
     return _pkg
 
 
 # ─── serialisation helpers ───────────────────────────────────────────────────
+
 
 def _to_json(obj: Any) -> str:
     def _default(o):
@@ -38,6 +41,7 @@ def _to_json(obj: Any) -> str:
         if isinstance(o, np.floating):
             return float(o)
         raise TypeError(type(o))
+
     return json.dumps(obj, default=_default)
 
 
@@ -60,7 +64,10 @@ def _prep_collection(collection: dict[str, object]) -> dict[str, object]:
 
 # ─── public API ──────────────────────────────────────────────────────────────
 
-def find_outliers(collection: dict[str, object], matlab_setting: dict[str, object]) -> np.ndarray:
+
+def find_outliers(
+    collection: dict[str, object], matlab_setting: dict[str, object]
+) -> np.ndarray:
     """
     Call MATLAB findTrajectoryOutliers.
 
@@ -79,26 +86,47 @@ def find_outliers(collection: dict[str, object], matlab_setting: dict[str, objec
     return np.array(_from_json(result), dtype=bool)
 
 
-def run_ioc_calibration(
-    collection: dict[str, object], keep_mask: np.ndarray
-) -> tuple[dict[str, object], dict[str, object]]:
+def run_postprocessing(
+    collection: dict[str, object],
+    matlab_setting: dict[str, object],
+    keep_mask: np.ndarray,
+    calibration_on: bool = True,
+) -> dict[str, object]:
     """
-    Run iOC calibration on the kept subset, then apply it to all trajectories.
+    Call MATLAB runPostprocessing — filter↔calibrate fixed-point loop.
 
-    Returns
-    -------
-    calibration : dict with keys x, A, Astd, AN
-    updated     : dict with keys iOC, STDiOC, N  (all trajectories, recalibrated)
+    matlab_setting is the flat outlierFiltering dict (filterProperties, thresholdDirection,
+    thresholdValue) as returned by _build_matlab_setting.
+
+    Returns dict with:
+        notOutlier  : bool ndarray, full length
+        iOC, STDiOC, N : float ndarray, full length (calibrated if calibration_on)
+        threshold   : threshold info from MATLAB
+        calibration : calibration curve dict (x, A, Astd, AN), or None
     """
-    cal_json, upd_json = _get_pkg().runIocCalibration(
+    postprocessing_setting = {
+        "iOCcalibration": "on" if calibration_on else "off",
+        "outlierFiltering": matlab_setting,
+    }
+    result_json = _get_pkg().runPostprocessing(
         _to_json(_prep_collection(collection)),
+        _to_json(postprocessing_setting),
         _to_json(keep_mask.tolist()),
-        nargout=2,
+        nargout=1,
     )
-    return _from_json(cal_json), _from_json(upd_json)
+    data = _from_json(result_json)
+    data["notOutlier"] = np.array(data["notOutlier"], dtype=bool)
+    for key in ("iOC", "STDiOC", "N"):
+        if key in data:
+            data[key] = np.array(data[key], dtype=float)
+    if not data.get("calibration"):
+        data["calibration"] = None
+    return data
 
 
-def run_population_analysis(collection: dict[str, object], setting: dict[str, object]) -> dict[str, object]:
+def run_population_analysis(
+    collection: dict[str, object], setting: dict[str, object]
+) -> dict[str, object]:
     """
     Run population analysis.
 
