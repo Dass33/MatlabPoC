@@ -17,3 +17,5 @@ ENV/
 
 **/.env
 .claude/
+CLAUDE.md
+AGENTS.md
