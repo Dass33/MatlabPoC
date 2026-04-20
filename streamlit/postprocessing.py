@@ -44,13 +44,13 @@ _TV_OPTIONS = ["3std", "3std_conditional", "number"]
 _DIR_OPTIONS = ["upper", "lower", "both"]
 _MICRO_PROPS = {"iOC", "STDiOC"}
 _FILTER_DEFAULTS = {
-    "iOC":          {"direction": "both",  "tv": "3std"},
-    "STDiOC":       {"direction": "upper", "tv": "3std"},
-    "D":            {"direction": "both",  "tv": "3std"},
-    "velocity":     {"direction": "both",  "tv": "3std"},
-    "N":            {"direction": "lower", "tv": "3std"},
-    "positionStart":{"direction": "upper", "tv": "3std"},
-    "positionEnd":  {"direction": "lower", "tv": "3std"},
+    "iOC": {"direction": "both", "tv": "3std"},
+    "STDiOC": {"direction": "upper", "tv": "3std"},
+    "D": {"direction": "both", "tv": "3std"},
+    "velocity": {"direction": "both", "tv": "3std"},
+    "N": {"direction": "lower", "tv": "3std"},
+    "positionStart": {"direction": "upper", "tv": "3std"},
+    "positionEnd": {"direction": "lower", "tv": "3std"},
 }
 
 SCALAR_PROPS = list(_FILTER_DEFAULTS)
@@ -69,10 +69,17 @@ def page_postprocessing(job_id: str | None) -> None:
 
     st.session_state.setdefault(f"overrides_{job_id}", {})
     st.session_state.setdefault(f"pp_axes_{job_id}", ("iOC", "velocity"))
+    st.session_state.setdefault(f"pp_dirty_{job_id}", True)
     stored = st.session_state.get(f"pp_thresholds_{job_id}", {})
     if set(stored) != set(_FILTER_DEFAULTS):
         st.session_state[f"pp_thresholds_{job_id}"] = {
-            p: {"enabled": True, "value": 0.0, "value_lo": 0.0, "value_hi": 0.0, **defaults}
+            p: {
+                "enabled": True,
+                "value": 0.0,
+                "value_lo": 0.0,
+                "value_hi": 0.0,
+                **defaults,
+            }
             for p, defaults in _FILTER_DEFAULTS.items()
         }
 
@@ -84,14 +91,17 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
     thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
     filter_props = list(_FILTER_DEFAULTS)
 
+    cal_updates: dict = st.session_state.get(f"pp_cal_updates_{job_id}", {})
+    effective_collection = {**collection, **cal_updates}
+
     matlab_setting = _build_matlab_setting(thresholds)
-    n_traj = len(collection["iOC"])
+    n_traj = len(effective_collection["iOC"])
     if matlab_setting["filterProperties"]:
-        not_outlier = matlab_bridge.find_outliers(collection, matlab_setting)
+        not_outlier = matlab_bridge.find_outliers(effective_collection, matlab_setting)
     else:
         not_outlier = np.ones(n_traj, dtype=bool)
     states = _compute_states(n_traj, not_outlier, overrides)
-    scalar_props = [p for p in SCALAR_PROPS if p in collection]
+    scalar_props = [p for p in SCALAR_PROPS if p in effective_collection]
 
     ax_x, ax_y = st.session_state[f"pp_axes_{job_id}"]
     cx, cy, _ = st.columns([1, 1, 3])
@@ -110,7 +120,7 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
     st.session_state[f"pp_axes_{job_id}"] = (ax_x, ax_y)
 
     event = st.plotly_chart(
-        _build_scatter(collection, states, ax_x, ax_y),
+        _build_scatter(effective_collection, states, ax_x, ax_y),
         use_container_width=True,
         on_select="rerun",
         selection_mode=["lasso", "box"],
@@ -122,21 +132,25 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
     if c1.button("Exclude selected", key=f"pp_exclude_{job_id}", disabled=not sel):
         for i in sel:
             overrides[i] = "excluded"
+        st.session_state[f"pp_dirty_{job_id}"] = True
         st.rerun()
     if c2.button("Include selected", key=f"pp_include_{job_id}", disabled=not sel):
         for i in sel:
             overrides[i] = "kept"
+        st.session_state[f"pp_dirty_{job_id}"] = True
         st.rerun()
     if c3.button(
         "Clear selection overrides", key=f"pp_clear_{job_id}", disabled=not sel
     ):
         for i in sel:
             overrides.pop(i, None)
+        st.session_state[f"pp_dirty_{job_id}"] = True
         st.rerun()
     if c4.button(
         "Reset all overrides", key=f"pp_reset_{job_id}", disabled=not overrides
     ):
         st.session_state[f"overrides_{job_id}"] = {}
+        st.session_state[f"pp_dirty_{job_id}"] = True
         st.rerun()
 
     kept = states.count("auto-kept") + states.count("manual-kept")
@@ -225,19 +239,35 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
             changed = True
 
     if changed:
+        st.session_state[f"pp_dirty_{job_id}"] = True
         st.rerun()
+
+    stored_calibration = st.session_state.get(f"pp_calibration_{job_id}")
+    if stored_calibration:
+        _render_calibration(stored_calibration)
 
     st.divider()
     with st.expander("Track preview (excluded highlighted)", expanded=True):
-        _render_track_preview(collection, states, job_id)
+        _render_track_preview(effective_collection, states, job_id)
 
     calibration_on = st.toggle(
         "Run iOC calibration",
         value=st.session_state.get(f"pp_ioc_cal_{job_id}", True),
         key=f"pp_ioc_cal_{job_id}",
     )
-    if st.button("Accept & Save", type="primary", key=f"pp_accept_{job_id}"):
-        _accept(job_id, collection, states, calibration_on)
+
+    dirty = st.session_state.get(f"pp_dirty_{job_id}", True)
+    c_apply, c_hint = st.columns([1, 4])
+    if c_apply.button(
+        "Accept & Save",
+        type="primary" if dirty else "secondary",
+        key=f"pp_apply_{job_id}",
+    ):
+        _accept(job_id, collection, states, matlab_setting, calibration_on)
+    if dirty:
+        c_hint.caption(
+            "Thresholds or selection changed — Accept & Save to recalibrate."
+        )
 
 
 @st.cache_data
@@ -259,7 +289,9 @@ def _load_collection(job_id: str) -> dict[str, object] | None:
     return data
 
 
-def _compute_states(n: int, not_outlier: np.ndarray, overrides: dict[str, bool]) -> list[str]:
+def _compute_states(
+    n: int, not_outlier: np.ndarray, overrides: dict[str, bool]
+) -> list[str]:
     return [
         ("manual-kept" if overrides[i] == "kept" else "manual-excluded")
         if i in overrides
@@ -436,56 +468,79 @@ def _build_matlab_setting(thresholds: dict[str, object]) -> dict[str, object]:
         "filterProperties": active_props,
         "thresholdDirection": directions,
         "thresholdValue": threshold_values,
+        "referenceProperty": "iOC",
     }
 
 
 def _accept(
-    job_id: str, collection: dict, states: list[str], calibration_on: bool
+    job_id: str,
+    collection: dict,
+    states: list[str],
+    matlab_setting: dict,
+    calibration_on: bool,
 ) -> None:
+    if calibration_on and (
+        collection.get("iOCprofile") is None
+        or collection.get("positionRefined") is None
+    ):
+        st.warning(
+            "Collection missing iOCprofile or positionRefined — cannot run calibration."
+        )
+        return
+
     _, _, out = job_dirs(job_id)
+    n_traj = len(states)
+    overrides: dict = st.session_state.get(f"overrides_{job_id}", {})
     keep_mask = np.array(
-        [s in ("auto-kept", "manual-kept") for s in states], dtype=bool
+        [overrides.get(i) != "excluded" for i in range(n_traj)], dtype=bool
     )
+
     calibration = None
+    effective_collection = collection
 
-    with st.spinner("Running iOC calibration..." if calibration_on else "Saving..."):
-        if (
-            calibration_on
-            and collection.get("iOCprofile") is not None
-            and collection.get("positionRefined") is not None
-        ):
-            try:
-                calibration, updated = matlab_bridge.run_ioc_calibration(
-                    collection, keep_mask
-                )
-                collection = {**collection, **updated}
-            except (ValueError, KeyError, TypeError) as e:
-                st.warning(f"iOC calibration data error: {e}. Saving without calibration.")
-            except Exception as e:
-                st.warning(f"iOC calibration failed: {e}. Saving without calibration.")
+    with st.spinner("Running postprocessing..."):
+        try:
+            result = matlab_bridge.run_postprocessing(
+                collection, matlab_setting, keep_mask, calibration_on
+            )
+        except Exception as e:
+            st.error(f"Postprocessing failed: {e}")
+            return
 
+        cal_updates = {k: result[k] for k in ("iOC", "STDiOC", "N") if k in result}
+        calibration = result.get("calibration")
+        effective_collection = {**collection, **cal_updates}
+
+        final_mask = result["notOutlier"]
         (out / "collection_postprocessed.json").write_text(
             json.dumps(
                 {
-                    "collection": _filter_collection(collection, keep_mask),
+                    "collection": _filter_collection(effective_collection, final_mask),
                     "calibration": calibration,
-                    "n_kept": int(keep_mask.sum()),
-                    "n_total": len(keep_mask),
+                    "n_kept": int(final_mask.sum()),
+                    "n_total": len(final_mask),
                 },
                 indent=2,
                 default=_json_default,
             )
         )
 
+    st.session_state[f"pp_cal_updates_{job_id}"] = cal_updates
+    st.session_state[f"pp_calibration_{job_id}"] = calibration
+    st.session_state[f"pp_keep_mask_{job_id}"] = keep_mask
+    st.session_state[f"pp_dirty_{job_id}"] = False
+
     st.success(
-        f"Saved {keep_mask.sum()} / {len(keep_mask)} trajectories to `collection_postprocessed.json`."
+        f"Saved {final_mask.sum()} / {len(final_mask)} trajectories to `collection_postprocessed.json`."
     )
-    if calibration is not None:
+    if calibration:
         _render_calibration(calibration)
     st.info("Head to the **Population Analysis** tab to compute population statistics.")
 
 
-def _filter_collection(collection: dict[str, object], keep_mask: np.ndarray) -> dict[str, object]:
+def _filter_collection(
+    collection: dict[str, object], keep_mask: np.ndarray
+) -> dict[str, object]:
     result = {}
     for k, v in collection.items():
         if isinstance(v, np.ndarray) and len(v) == len(keep_mask):
