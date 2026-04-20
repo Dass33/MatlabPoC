@@ -7,3 +7,4 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 echo "Project root resolved to: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 docker build -t matlabpoc-streamlit:latest -f streamlit/Dockerfile .
+docker tag matlabpoc-streamlit:latest dass33/nsm-streamlit:latest

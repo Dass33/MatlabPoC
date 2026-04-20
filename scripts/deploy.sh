@@ -10,7 +10,7 @@ echo "==> Step 1/4: Compiling MATLAB source..."
 echo "==> Step 2/4: Building MATLAB Docker image..."
 "$SCRIPT_DIR/build_matlab.sh"
 
-echo "==> Step 3/4: Building MATLAB Docker image..."
+echo "==> Step 3/4: Building Streamlit Docker image..."
 "$SCRIPT_DIR/build_streamlit.sh"
 
 echo "==> Step 4/4: Restarting stack..."

@@ -18,5 +18,6 @@ cd ./matlab/Compiled/PythonPackage
 matlab -batch "mcc -W python:nsm_algorithms \
     ../../nsm-data-analysis/runOutlierFiltering.m \
     ../../nsm-data-analysis/runIocCalibration.m \
+    ../../nsm-data-analysis/runPostprocessing.m \
     ../../nsm-data-analysis/runPopulationAnalysis.m \
     -a ../../nsm-data-analysis/"
