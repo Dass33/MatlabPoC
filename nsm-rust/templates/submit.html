@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl">
+  <h2 class="text-xl font-semibold text-blue mb-4">Submit Analysis Job</h2>
+
+  <!-- Worker slot indicator -->
+  <div class="mb-4 flex items-center gap-2 text-sm">
+    <span class="text-overlay">Worker slots:</span>
+    <span class="font-mono {% if running_jobs < max_workers %}text-green{% else %}text-red{% endif %}">
+      {{ running_jobs }} / {{ max_workers }} busy
+    </span>
+    {% if running_jobs >= max_workers %}
+    <span class="text-red text-xs">(all slots busy — please wait)</span>
+    {% endif %}
+  </div>
+
+  <form id="submit-form" method="POST" enctype="multipart/form-data" action="/submit">
+    <!-- Hidden config field, populated from sidebar on submit -->
+    <input type="hidden" name="config_json" id="submit-config-json">
+
+    <!-- Job name -->
+    <div class="mb-4">
+      <label class="block text-sm text-overlay mb-1">Job name (optional)</label>
+      <input type="text" name="name" placeholder="e.g. experiment_2024_01"
+             class="w-full bg-surface text-text text-sm rounded px-3 py-2 border border-overlay focus:border-blue focus:outline-none">
+    </div>
+
+    <!-- File upload -->
+    <div class="mb-4">
+      <label class="block text-sm text-overlay mb-1">
+        Upload .tiff files and matching .txt metadata
+      </label>
+      <input type="file" name="files" multiple accept=".tiff,.tif,.txt" id="file-input"
+             class="w-full text-sm text-text file:bg-surface file:text-text file:border-0 file:rounded file:px-3 file:py-1 file:mr-2"
+             onchange="validateFiles(this)">
+      <div id="file-validation" class="mt-1 text-xs text-red hidden"></div>
+      <div id="file-list" class="mt-2 space-y-1 text-xs text-overlay"></div>
+    </div>
+
+    <!-- Dark calibration (optional) -->
+    <div class="mb-4">
+      <label class="block text-sm text-overlay mb-1">Dark calibration .mat (optional override)</label>
+      <input type="file" name="dark_cal" accept=".mat"
+             class="text-sm text-text file:bg-surface file:text-text file:border-0 file:rounded file:px-3 file:py-1 file:mr-2">
+    </div>
+
+    <button type="submit"
+            id="submit-btn"
+            class="bg-blue text-base font-semibold px-6 py-2 rounded hover:opacity-90 transition disabled:opacity-40"
+            {% if running_jobs >= max_workers %}disabled{% endif %}
+            onclick="prepareAndSubmit(event)">
+      Submit Job
+    </button>
+  </form>
+</div>
+
+<script>
+function validateFiles(input) {
+  const files = Array.from(input.files);
+  const tiffs = files.filter(f => f.name.endsWith('.tiff') || f.name.endsWith('.tif'));
+  const txts  = files.filter(f => f.name.endsWith('.txt'));
+  const tiffStems = tiffs.map(f => f.name.replace(/\.tiff?$/, ''));
+  const txtStems  = txts.map(f => f.name.replace(/\.txt$/, ''));
+  const missing   = tiffStems.filter(s => !txtStems.includes(s));
+
+  const listEl = document.getElementById('file-list');
+  const errEl  = document.getElementById('file-validation');
+  listEl.innerHTML = files.map(f => `<div>📄 ${f.name}</div>`).join('');
+
+  if (missing.length > 0) {
+    errEl.textContent = 'Missing .txt for: ' + missing.join(', ');
+    errEl.classList.remove('hidden');
+    document.getElementById('submit-btn').disabled = true;
+  } else {
+    errEl.classList.add('hidden');
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+function prepareAndSubmit(event) {
+  // Inject current sidebar config into the hidden field before submission
+  const cfg = getConfigFromSidebar();
+  document.getElementById('submit-config-json').value = JSON.stringify(cfg);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,225 @@
+<!-- Algorithm Parameter Sidebar -->
+<!-- Config is passed as a hidden JSON field with every form POST -->
+<form id="sidebar-form">
+  <div class="space-y-2 text-sm">
+
+    <!-- Save / Load -->
+    <details class="border border-surface rounded">
+      <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text">Save / Load Config</summary>
+      <div class="p-3 space-y-2">
+        <a href="/api/config/download" class="block text-blue text-xs hover:underline">⬇ Export current config</a>
+        <label class="block text-xs text-overlay">Upload config JSON:</label>
+        <input type="file" accept=".json" id="config-upload-input"
+               class="text-xs text-text w-full"
+               onchange="loadConfigFile(this)">
+      </div>
+    </details>
+
+    <!-- Acquisition -->
+    <details class="border border-surface rounded" open>
+      <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text">Acquisition</summary>
+      <div class="p-3 space-y-2">
+        <label class="block text-xs text-overlay">Dt (frame duration, s)</label>
+        <input type="number" name="Dt" step="0.001" value="0.007" id="cfg-Dt"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Dx (pixel size, μm)</label>
+        <input type="number" name="Dx" step="0.001" value="0.066" id="cfg-Dx"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="flex items-center gap-2 text-xs text-overlay">
+          <input type="checkbox" name="flipIntensity" checked id="cfg-flip"> Flip intensity
+        </label>
+        <label class="block text-xs text-overlay">Flow estimate (px/frame)</label>
+        <input type="number" name="flowEstimate" step="0.1" value="-3.4" id="cfg-flow"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+      </div>
+    </details>
+
+    <!-- Preprocessing -->
+    <details class="border border-surface rounded">
+      <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text">Preprocessing</summary>
+      <div class="p-3 space-y-2">
+        <label class="block text-xs text-overlay">Dark calibration</label>
+        <input type="number" name="darkCalibration" value="8" id="cfg-darkcal"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Wx (spatial window, px)</label>
+        <input type="number" name="Wx" value="15" step="1" id="cfg-Wx"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Wt (temporal window, frames)</label>
+        <input type="number" name="Wt" value="50" step="1" id="cfg-Wt"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">ws (PSF width, px)</label>
+        <input type="number" name="ws" step="0.01" value="2.36" id="cfg-ws"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Remove background</label>
+        <select name="removeBackground" id="cfg-rmbg"
+                class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <option value="robustmean" selected>robustmean</option>
+          <option value="movmedian">movmedian</option>
+          <option value="movmean">movmean</option>
+        </select>
+      </div>
+    </details>
+
+    <!-- Detection -->
+    <details class="border border-surface rounded">
+      <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text">Detection</summary>
+      <div class="p-3 space-y-2">
+        <label class="block text-xs text-overlay">Peak sign</label>
+        <select name="peakSign" id="cfg-peak"
+                class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <option value="negative" selected>negative</option>
+          <option value="positive">positive</option>
+          <option value="negative-positive">negative-positive</option>
+        </select>
+        <label class="block text-xs text-overlay">pfa</label>
+        <input type="number" name="pfa" step="0.00001" value="0.00001" id="cfg-pfa"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Local optimum range</label>
+        <input type="number" name="localOptimumRange" value="6" step="1" id="cfg-lor"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+      </div>
+    </details>
+
+    <!-- Tracking -->
+    <details class="border border-surface rounded">
+      <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text">Tracking</summary>
+      <div class="p-3 space-y-2">
+        <label class="block text-xs text-overlay">Tracker algorithm</label>
+        <select name="tracker" id="cfg-tracker" onchange="updateTrackerFields(this.value)"
+                class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <option value="gabClosingTracker" selected>gabClosingTracker</option>
+          <option value="trackBeforeDetect">trackBeforeDetect</option>
+        </select>
+        <label class="block text-xs text-overlay">Min track length</label>
+        <input type="number" name="minTrackLength" value="10" step="1"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Cut-off distance</label>
+        <input type="number" name="cut_off_distance" value="20" step="1"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <label class="block text-xs text-overlay">Unmatched penalty distance</label>
+        <input type="number" name="unmatched_penalty_distance" value="15" step="1"
+               class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        <div id="gab-fields">
+          <label class="block text-xs text-overlay">Max negative gap</label>
+          <input type="number" name="maxNegativeGab" value="2" step="1"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <label class="block text-xs text-overlay mt-1">Max positive gap</label>
+          <input type="number" name="maxPositiveGab" value="3" step="1"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <label class="block text-xs text-overlay mt-1">Gap closing cut-off</label>
+          <input type="number" name="gab_closing_cut_off_distance" value="40" step="1"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <label class="block text-xs text-overlay mt-1">Gap closing penalty</label>
+          <input type="number" name="gab_closing_penalty_distance" value="30" step="1"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        </div>
+        <div id="tbd-fields" class="hidden">
+          <label class="block text-xs text-overlay">Tlength</label>
+          <select name="Tlength" class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+            <option>2</option><option selected>4</option><option>8</option>
+            <option>16</option><option>32</option><option>64</option>
+          </select>
+          <label class="block text-xs text-overlay mt-1">Intensity threshold limit</label>
+          <input type="number" name="thresholdLimit" value="-2.0" step="0.5"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+          <label class="block text-xs text-overlay mt-1">TmaxNo</label>
+          <input type="number" name="TmaxNo" value="8" step="1"
+                 class="w-full bg-surface text-text text-xs rounded px-2 py-1">
+        </div>
+      </div>
+    </details>
+
+    <!-- Export -->
+    <label class="flex items-center gap-2 text-xs text-overlay px-1 mt-2">
+      <input type="checkbox" name="exportOptionalFigures" id="cfg-export"> Export optional figures
+    </label>
+
+  </div>
+</form>
+
+<script>
+function updateTrackerFields(val) {
+  document.getElementById('gab-fields').classList.toggle('hidden', val !== 'gabClosingTracker');
+  document.getElementById('tbd-fields').classList.toggle('hidden', val !== 'trackBeforeDetect');
+}
+
+function getConfigFromSidebar() {
+  const f = document.getElementById('sidebar-form');
+  const d = new FormData(f);
+  return {
+    exportOptionalFigures: f.querySelector('[name=exportOptionalFigures]').checked,
+    inputDataFormat: 'tiff2',
+    Dt: parseFloat(d.get('Dt')) || 0.007,
+    Dx: parseFloat(d.get('Dx')) || 0.066,
+    flipIntensity: f.querySelector('[name=flipIntensity]').checked,
+    flowEstimate: parseFloat(d.get('flowEstimate')) || -3.4,
+    kymographPreprocessing: {
+      darkCalibration: parseInt(d.get('darkCalibration')) || 8,
+      Wx: parseFloat(d.get('Wx')) || 15,
+      Wt: parseFloat(d.get('Wt')) || 50,
+      ws: parseFloat(d.get('ws')) || 2.36,
+      removeBackground: d.get('removeBackground') || 'robustmean',
+    },
+    Detection: {
+      peakSign: d.get('peakSign') || 'negative',
+      pfa: parseFloat(d.get('pfa')) || 1e-5,
+      localOptimumRange: parseInt(d.get('localOptimumRange')) || 6,
+    },
+    tracker: d.get('tracker') || 'gabClosingTracker',
+    Tlength: parseInt(d.get('Tlength')) || 4,
+    thresholdLimit: parseFloat(d.get('thresholdLimit')) || -2.0,
+    TmaxNo: parseInt(d.get('TmaxNo')) || 8,
+    Linking: {
+      minTrackLength: parseInt(d.get('minTrackLength')) || 10,
+      cut_off_distance: parseFloat(d.get('cut_off_distance')) || 20,
+      unmatched_penalty_distance: parseFloat(d.get('unmatched_penalty_distance')) || 15,
+      maxNegativeGab: parseInt(d.get('maxNegativeGab')) || 2,
+      maxPositiveGab: parseInt(d.get('maxPositiveGab')) || 3,
+      gab_closing_cut_off_distance: parseFloat(d.get('gab_closing_cut_off_distance')) || 40,
+      gab_closing_penalty_distance: parseFloat(d.get('gab_closing_penalty_distance')) || 30,
+    },
+    trajectoryProperties: ['positionRefined','timeFrame','iOCprofile','N','iOC','STDiOC','D','velocity'],
+    outlierFiltering: {
+      referenceProperty: 'iOC',
+      filterProperties: ['iOC','STDiOC','velocity','N','positionStart','positionEnd'],
+      thresholdDirection: ['both','upper','both','lower','upper','lower'],
+      thresholdValue: ['3std','3std','3std','3std','3std','3std'],
+    },
+    populationAnalysis: { Title: 'robustMean', properties: ['iOC','D','velocity'] },
+  };
+}
+
+function loadConfigFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const cfg = JSON.parse(e.target.result);
+      applyConfigToSidebar(cfg);
+    } catch(err) { alert('Invalid config JSON: ' + err); }
+  };
+  reader.readAsText(file);
+}
+
+function applyConfigToSidebar(cfg) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const check = (name, val) => { const el = document.querySelector(`[name=${name}]`); if (el) el.checked = !!val; };
+  set('cfg-Dt', cfg.Dt || 0.007);
+  set('cfg-Dx', cfg.Dx || 0.066);
+  check('flipIntensity', cfg.flipIntensity);
+  set('cfg-flow', cfg.flowEstimate || -3.4);
+  const pp = cfg.kymographPreprocessing || {};
+  set('cfg-darkcal', pp.darkCalibration || 8);
+  set('cfg-Wx', pp.Wx || 15);
+  set('cfg-Wt', pp.Wt || 50);
+  set('cfg-ws', pp.ws || 2.36);
+  set('cfg-rmbg', pp.removeBackground || 'robustmean');
+  const det = cfg.Detection || {};
+  set('cfg-peak', det.peakSign || 'negative');
+  set('cfg-pfa', det.pfa || 0.00001);
+  set('cfg-lor', det.localOptimumRange || 6);
+  set('cfg-tracker', cfg.tracker || 'gabClosingTracker');
+  updateTrackerFields(cfg.tracker || 'gabClosingTracker');
+}
+</script>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSM Data Processing</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/app.css">
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        base:    '#1e1e2e', mantle: '#181825', crust:  '#11111b',
+        surface: '#313244', overlay:'#6c7086', text:   '#cdd6f4',
+        blue:    '#89b4fa', lavender:'#b4befe',green:'#a6e3a1',
+        red:     '#f38ba8', yellow: '#f9e2af', mauve:  '#cba6f7',
+      }}}
+    }
+  </script>
+</head>
+<body class="bg-base text-text min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-72 flex-shrink-0 bg-mantle overflow-y-auto flex flex-col">
+    <div class="p-4 border-b border-surface">
+      <h1 class="text-lg font-bold text-blue">🔬 NSM Processing</h1>
+    </div>
+    <div class="p-3 flex-1 overflow-y-auto">
+      {% include "sidebar.html" %}
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Top bar: experiment selector + tab nav -->
+    <div class="bg-mantle border-b border-surface px-6 py-2">
+      {% if completed_jobs %}
+      <div class="flex items-center gap-3 mb-2">
+        <label class="text-sm text-overlay">Experiment:</label>
+        <select id="experiment-select"
+                class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+                onchange="navigateToExperiment(this.value)">
+          <option value="">— select experiment —</option>
+          {% for job in completed_jobs %}
+          <option value="{{ job.job_id }}">
+            {{ job.name | default(value=job.job_id) }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <!-- Tab bar -->
+      <nav class="flex space-x-1">
+        {% set tabs = [
+          ["Submit",             "/submit"],
+          ["Kymograph",          "/kymograph"],
+          ["Post-processing",    "/postprocessing"],
+          ["Population",         "/population"],
+          ["History",            "/history"],
+          ["Help",               "/help"]
+        ] %}
+        {% for tab in tabs %}
+        <a href="{{ tab[1] }}"
+           hx-get="{{ tab[1] }}"
+           hx-target="#tab-content"
+           hx-push-url="true"
+           class="tab-btn px-4 py-1.5 text-sm rounded-t transition-colors
+                  {% if active_tab == tab[0] %}bg-surface text-blue font-semibold{% else %}text-overlay hover:text-text hover:bg-surface/50{% endif %}">
+          {{ tab[0] }}
+        </a>
+        {% endfor %}
+      </nav>
+    </div>
+
+    <!-- Tab content -->
+    <div id="tab-content" class="flex-1 overflow-y-auto p-6">
+      {% block content %}{% endblock %}
+    </div>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    function navigateToExperiment(jobId) {
+      if (!jobId) return;
+      const tab = document.querySelector('.tab-btn.font-semibold');
+      const path = tab ? tab.getAttribute('href') : '/postprocessing';
+      htmx.ajax('GET', path + '?job_id=' + jobId, {target: '#tab-content', swap: 'innerHTML', pushUrl: true});
+    }
+    // Restore experiment select to current job_id in URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const sel = document.getElementById('experiment-select');
+      if (sel && params.get('job_id')) sel.value = params.get('job_id');
+    });
+  </script>
+</body>
+</html>

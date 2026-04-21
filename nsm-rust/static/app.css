@@ -1,0 +1,33 @@
+/* NSM Processor — custom styles (Tailwind handles most, this supplements) */
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #181825; }
+::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6c7086; }
+
+/* Plotly chart dark mode overrides */
+.js-plotly-plot .plotly .modebar { background: transparent !important; }
+.js-plotly-plot .plotly .modebar-btn path { fill: #6c7086; }
+.js-plotly-plot .plotly .modebar-btn:hover path { fill: #cdd6f4; }
+
+/* Range input */
+input[type=range] { height: 4px; }
+
+/* Code elements */
+code {
+  background: #313244;
+  color: #cba6f7;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+/* Table hover */
+tr:hover td { background: rgba(49, 50, 68, 0.4); }
+
+/* Tailwind typography (basic) */
+.prose strong { color: #cdd6f4; }
+.prose h3 { margin-top: 1.2em; margin-bottom: 0.5em; }
+.prose dt { margin-top: 0.8em; }
+.prose dd { margin-bottom: 0.3em; }

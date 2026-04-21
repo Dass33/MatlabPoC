@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold text-blue mb-4">Post-processing</h2>
+
+{% if not job_id %}
+<p class="text-overlay">Select a completed experiment from the dropdown above.</p>
+{% elif error %}
+<div class="bg-red/20 border border-red rounded p-3 text-red text-sm">{{ error }}</div>
+{% else %}
+
+<div id="pp-root">
+  <!-- Axis selectors -->
+  <form id="axis-form" class="flex items-center gap-3 mb-3">
+    <input type="hidden" name="job_id" value="{{ job_id }}">
+    <label class="text-sm text-overlay">X axis:</label>
+    <select name="axis_x" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+            hx-post="/postprocessing/thresholds" hx-target="#pp-root" hx-swap="outerHTML"
+            hx-include="#axis-form, #threshold-form">
+      {% for p in scalar_props %}
+      <option value="{{ p }}" {% if p == axis_x %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+    <label class="text-sm text-overlay">Y axis:</label>
+    <select name="axis_y" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+            hx-post="/postprocessing/thresholds" hx-target="#pp-root" hx-swap="outerHTML"
+            hx-include="#axis-form, #threshold-form">
+      {% for p in scalar_props %}
+      <option value="{{ p }}" {% if p == axis_y %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+    <span class="text-xs text-overlay ml-auto">{{ kept }}/{{ total }} kept</span>
+  </form>
+
+  <!-- Scatter plot section -->
+  <div id="scatter-section" class="bg-mantle rounded border border-surface p-2 mb-4">
+    <div id="scatter-plot" style="height:450px"></div>
+    <script id="scatter-data-json" type="application/json">{{ scatter_json | safe }}</script>
+
+    <div class="flex items-center gap-2 mt-2">
+      <span id="sel-count" class="text-xs text-overlay">0 selected</span>
+      <input type="hidden" id="sel-indices" value="[]">
+      <button class="sel-action bg-red/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-exclude"
+              onclick="sendOverride('exclude')">Exclude selected</button>
+      <button class="sel-action bg-green/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-include"
+              onclick="sendOverride('keep')">Include selected</button>
+      <button class="sel-action bg-yellow/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-clear-sel"
+              onclick="sendOverride('clear')">Clear overrides for selected</button>
+      <button class="bg-surface text-overlay text-xs px-3 py-1 rounded ml-auto"
+              onclick="sendOverride('reset')">Reset all overrides</button>
+    </div>
+  </div>
+
+  <!-- Threshold configuration -->
+  <form id="threshold-form">
+    <input type="hidden" name="job_id" value="{{ job_id }}">
+    <div class="mb-3">
+      <h3 class="text-sm font-semibold text-overlay mb-2">Outlier Thresholds</h3>
+      <div class="grid grid-cols-[1fr_1fr_1fr_2fr] gap-1 text-xs text-overlay mb-1 px-1">
+        <span>Property</span><span>Type</span><span>Direction</span><span>σ / value</span>
+      </div>
+      {% for prop in filter_props %}
+      {% set cfg = thresholds[prop] %}
+      <div class="grid grid-cols-[1fr_1fr_1fr_2fr] gap-1 items-center mb-1 px-1">
+        <span class="text-xs font-mono text-text">{{ prop }}</span>
+        <select name="thresholds[{{ prop }}][tv]"
+                class="bg-surface text-text text-xs rounded px-1 py-0.5"
+                onchange="toggleThresholdInput('{{ prop }}', this.value)">
+          {% for opt in ["3std", "3std_conditional", "number"] %}
+          <option value="{{ opt }}" {% if cfg and cfg.tv == opt %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+        <select name="thresholds[{{ prop }}][direction]"
+                class="bg-surface text-text text-xs rounded px-1 py-0.5">
+          {% for d in ["upper", "lower", "both"] %}
+          <option value="{{ d }}" {% if cfg and cfg.direction == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+        <div id="thresh-input-{{ prop }}">
+          <input type="range" name="thresholds[{{ prop }}][sigma]"
+                 min="1" max="6" step="0.1"
+                 value="{% if cfg %}{{ cfg.sigma }}{% else %}6.0{% endif %}"
+                 class="w-full accent-blue"
+                 oninput="this.nextElementSibling.textContent = this.value">
+          <span class="text-xs text-overlay ml-1">{% if cfg %}{{ cfg.sigma }}{% else %}6.0{% endif %}</span>
+          <!-- Hidden number fields for "number" type -->
+          <input type="hidden" name="thresholds[{{ prop }}][value]"
+                 value="{% if cfg %}{{ cfg.value }}{% else %}0{% endif %}">
+          <input type="hidden" name="thresholds[{{ prop }}][value_lo]"
+                 value="{% if cfg %}{{ cfg.value_lo }}{% else %}0{% endif %}">
+          <input type="hidden" name="thresholds[{{ prop }}][value_hi]"
+                 value="{% if cfg %}{{ cfg.value_hi }}{% else %}0{% endif %}">
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button"
+            class="bg-blue text-base text-xs px-4 py-1 rounded"
+            hx-post="/postprocessing/thresholds"
+            hx-target="#pp-root"
+            hx-swap="outerHTML"
+            hx-include="#threshold-form, #axis-form">
+      Apply Thresholds
+    </button>
+  </form>
+
+  <!-- Track preview -->
+  <div class="mt-4">
+    <h3 class="text-sm font-semibold text-overlay mb-2">Track Preview</h3>
+    <div id="track-preview" style="height:280px"></div>
+    <script id="trajectory-data-json" type="application/json">{{ traj_json | safe }}</script>
+  </div>
+
+  <!-- iOC calibration + accept -->
+  <div class="mt-4 flex items-center gap-4">
+    <label class="flex items-center gap-2 text-sm text-overlay">
+      <input type="checkbox" id="ioc-cal-toggle" name="ioc_cal" value="on"
+             {% if ioc_cal_on %}checked{% endif %}> Run iOC calibration
+    </label>
+    <button type="button"
+            class="bg-mauve text-base font-semibold text-sm px-5 py-1.5 rounded hover:opacity-90"
+            onclick="acceptAndSave()">
+      Accept &amp; Save
+    </button>
+  </div>
+  <div id="accept-result" class="mt-2"></div>
+</div>
+
+<script>
+(function() {
+  function initPlot() {
+    const dataEl  = document.getElementById('scatter-data-json');
+    const trajEl  = document.getElementById('trajectory-data-json');
+    if (!dataEl) return;
+
+    const pd = JSON.parse(dataEl.textContent);
+    Plotly.newPlot('scatter-plot', pd.data, pd.layout, {
+      modeBarButtonsToAdd: ['lasso2d', 'select2d'],
+      displayModeBar: true, responsive: true
+    });
+
+    const plotDiv = document.getElementById('scatter-plot');
+    plotDiv.on('plotly_selected', (evt) => {
+      if (!evt || !evt.points) return;
+      const idx = evt.points.map(p => p.customdata[0]);
+      document.getElementById('sel-indices').value = JSON.stringify(idx);
+      document.getElementById('sel-count').textContent = idx.length + ' selected';
+      ['btn-exclude','btn-include','btn-clear-sel'].forEach(id =>
+        document.getElementById(id).disabled = idx.length === 0);
+    });
+
+    // Track preview
+    if (trajEl) {
+      const trajs = JSON.parse(trajEl.textContent);
+      renderTrackPreview(trajs, 'track-preview');
+    }
+  }
+
+  function renderTrackPreview(trajs, divId) {
+    const groups = {};
+    trajs.forEach(t => {
+      (groups[t.kymo_key] = groups[t.kymo_key] || []).push(t);
+    });
+    const allKeys = Object.keys(groups);
+    if (!allKeys.length) return;
+
+    // Show first group by default
+    const key = allKeys[0];
+    const traces = (groups[key] || []).map(t => ({
+      x: t.frames, y: t.positions,
+      mode: 'lines', type: 'scatter',
+      line: {
+        color: (t.state === 'auto-excluded' || t.state === 'manual-excluded')
+          ? '#f38ba8' : '#89b4fa',
+        width: t.state.includes('excluded') ? 2 : 1,
+      },
+      name: '#' + t.index,
+      showlegend: t.state.includes('excluded'),
+    }));
+    Plotly.newPlot(divId, traces, {
+      height: 280,
+      margin: {l:40,r:20,t:20,b:40},
+      paper_bgcolor: '#181825',
+      plot_bgcolor: '#181825',
+      font: {color: '#cdd6f4', size: 10},
+      yaxis: {autorange: 'reversed'},
+      xaxis: {title: 'Frame'},
+      yaxis_title: 'Position (px)',
+      showlegend: true,
+    }, {responsive: true});
+  }
+
+  window.sendOverride = function(action) {
+    const indices = JSON.parse(document.getElementById('sel-indices').value || '[]');
+    fetch('/postprocessing/override', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'HX-Request': 'true'},
+      body: JSON.stringify({job_id: '{{ job_id }}', indices, action})
+    }).then(r => r.text()).then(html => {
+      document.getElementById('pp-root').outerHTML = html;
+      // Re-init plot after swap
+      setTimeout(initPlot, 50);
+    });
+  };
+
+  window.acceptAndSave = function() {
+    const cal = document.getElementById('ioc-cal-toggle').checked ? 'on' : '';
+    const fd  = new FormData();
+    fd.append('job_id', '{{ job_id }}');
+    fd.append('ioc_cal', cal);
+    fetch('/postprocessing/accept', {method:'POST', body: fd, headers:{'HX-Request':'true'}})
+      .then(r => r.text())
+      .then(html => { document.getElementById('accept-result').innerHTML = html; });
+  };
+
+  document.addEventListener('DOMContentLoaded', initPlot);
+  document.body.addEventListener('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === 'pp-root' || e.detail.target.closest('#pp-root'))
+      setTimeout(initPlot, 50);
+  });
+})();
+</script>
+
+{% endif %}
+{% endblock %}

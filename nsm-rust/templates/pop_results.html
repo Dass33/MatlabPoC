@@ -1,0 +1,84 @@
+<!-- HTMX fragment: population analysis results -->
+{% if result %}
+<div class="overflow-x-auto mb-4">
+  <table class="text-sm w-full border-collapse">
+    <thead>
+      <tr class="border-b border-surface">
+        <th class="text-left py-1 px-2 text-overlay">Property</th>
+        <th class="text-right py-1 px-2 text-overlay">MEAN</th>
+        <th class="text-right py-1 px-2 text-overlay">STD</th>
+        <th class="text-right py-1 px-2 text-overlay">FWHM</th>
+        <th class="text-right py-1 px-2 text-overlay">RESOLUTION</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for prop in props_order %}
+      {% if result[prop] %}
+      <tr class="border-b border-surface/50 hover:bg-surface/30">
+        <td class="py-1 px-2 font-mono text-blue">{{ prop }}</td>
+        <td class="text-right py-1 px-2">{{ result[prop].MEAN | round(precision=6) }}</td>
+        <td class="text-right py-1 px-2">{{ result[prop].STD  | round(precision=6) }}</td>
+        <td class="text-right py-1 px-2">{{ result[prop].FWHM | round(precision=6) }}</td>
+        <td class="text-right py-1 px-2">{{ result[prop].RESOLUTION | round(precision=4) }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Histogram subplots via Plotly -->
+<div id="pop-histograms" style="height:300px"></div>
+<script id="hist-data-json" type="application/json">{{ hist_json | safe }}</script>
+<script>
+(function() {
+  const raw   = JSON.parse(document.getElementById('hist-data-json').textContent);
+  const props = {{ props | json_encode(pretty=false) | safe }};
+  const n     = props.length;
+  if (!n || !raw.length) return;
+
+  const traces = [];
+  const annotations = [];
+  raw.forEach((item, i) => {
+    const t = Object.assign(item.trace, {
+      xaxis: i === 0 ? 'x' : 'x' + (i+1),
+      yaxis: i === 0 ? 'y' : 'y' + (i+1),
+    });
+    traces.push(t);
+    if (item.mean != null) {
+      annotations.push({
+        x: item.mean, y: 0.95, xref: 'x' + (i > 0 ? i+1 : ''),
+        yref: 'y' + (i > 0 ? i+1 : '') + ' domain',
+        showarrow: true, arrowhead: 2, arrowcolor: '#f38ba8',
+        text: 'μ=' + item.mean.toFixed(4),
+        font: {color: '#f38ba8', size: 10},
+      });
+    }
+  });
+
+  const layout = {
+    height: 300,
+    margin: {l:40,r:20,t:40,b:40},
+    paper_bgcolor: '#1e1e2e', plot_bgcolor: '#1e1e2e',
+    font: {color: '#cdd6f4', size: 10},
+    annotations,
+    bargap: 0.05,
+  };
+  // Build grid layout
+  for (let i = 0; i < n; i++) {
+    const sfx = i === 0 ? '' : (i+1).toString();
+    const col = i + 1, cols = n;
+    layout['xaxis' + sfx] = {
+      domain: [(col-1)/cols + 0.02, col/cols - 0.02],
+      anchor: 'y' + sfx, color: '#cdd6f4',
+      title: props[i],
+    };
+    layout['yaxis' + sfx] = {anchor: 'x' + sfx, color: '#cdd6f4'};
+  }
+  Plotly.newPlot('pop-histograms', traces, layout, {responsive:true});
+})();
+</script>
+<p class="text-xs text-green mt-2">✅ Results saved to <code>population.json</code></p>
+{% else %}
+<p class="text-overlay text-sm">No results yet.</p>
+{% endif %}

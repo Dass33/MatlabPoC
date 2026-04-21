@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-semibold text-blue">Experiment History</h2>
+  <div class="flex items-center gap-3">
+    <span class="text-xs text-overlay">{{ jobs | length }} jobs</span>
+    <button class="bg-surface text-overlay text-xs px-3 py-1 rounded"
+            hx-get="/history/table" hx-target="#jobs-table-wrapper" hx-swap="innerHTML">
+      ↺ Refresh
+    </button>
+  </div>
+</div>
+
+{% if submitted_job %}
+<div class="bg-green/20 border border-green rounded p-2 text-sm mb-3">
+  ✅ Job submitted: <code class="text-green">{{ submitted_job }}</code> — processing…
+</div>
+{% endif %}
+
+<!-- Download section -->
+{% set completed = jobs | filter(attribute="status", value="completed") %}
+{% if completed | length > 0 %}
+<div class="flex items-center gap-3 mb-4 p-3 bg-mantle rounded border border-surface">
+  <label class="text-sm text-overlay">Download results for:</label>
+  <select id="download-select" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+          onchange="document.getElementById('download-link').href='/history/download/'+this.value">
+    {% for job in completed %}
+    <option value="{{ job.job_id }}">{{ job.name | default(value=job.job_id) }}</option>
+    {% endfor %}
+  </select>
+  <a id="download-link"
+     href="/history/download/{{ completed[0].job_id }}"
+     class="bg-blue text-base text-sm px-4 py-1 rounded hover:opacity-90">
+    ⬇ Download ZIP
+  </a>
+</div>
+{% endif %}
+
+<!-- Job table (auto-refreshed) -->
+<div id="jobs-table-wrapper"
+     hx-get="/history/table"
+     hx-trigger="every 10s"
+     hx-swap="innerHTML">
+  {% include "history_table.html" %}
+</div>
+
+<!-- Admin panel for stuck jobs -->
+{% set stuck = jobs | filter(attribute="status", value="processing") %}
+{% if stuck | length > 0 %}
+<details class="mt-4 border border-surface rounded">
+  <summary class="px-3 py-2 cursor-pointer text-overlay hover:text-text text-sm">
+    Admin — {{ stuck | length }} processing job(s)
+  </summary>
+  <div class="p-3 space-y-2">
+    {% for job in stuck %}
+    <div class="flex items-center gap-3 text-sm">
+      <span class="font-mono text-yellow">{{ job.name | default(value=job.job_id) }}</span>
+      <span class="text-overlay text-xs">{{ job.submitted_at }}</span>
+      <button class="bg-red/80 text-base text-xs px-3 py-1 rounded"
+              hx-post="/history/force-free/{{ job.job_id }}"
+              hx-confirm="Force-free this job slot?"
+              hx-target="body"
+              hx-push-url="/history">
+        Force free slot
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+</details>
+{% endif %}
+{% endblock %}

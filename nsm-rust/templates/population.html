@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold text-blue mb-4">Population Analysis</h2>
+
+{% if not job_id %}
+<p class="text-overlay">Select a completed experiment from the dropdown above.</p>
+{% elif not has_data %}
+<div class="bg-yellow/20 border border-yellow rounded p-3 text-sm">
+  No postprocessed collection found. Run post-processing first and click <strong>Accept &amp; Save</strong>.
+</div>
+{% else %}
+<p class="text-xs text-overlay mb-3">Using {{ n_kept }} / {{ n_total }} trajectories from postprocessing.</p>
+
+<form id="pop-form" action="/population/run" method="POST">
+  <input type="hidden" name="job_id" value="{{ job_id }}">
+  <div class="flex gap-4 mb-4 items-end">
+    <div>
+      <label class="block text-sm text-overlay mb-1">Method</label>
+      <select name="method" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay">
+        <option value="robustMean" selected>robustMean</option>
+        <option value="gaussFit">gaussFit</option>
+      </select>
+    </div>
+    <div class="flex-1">
+      <label class="block text-sm text-overlay mb-1">Properties (hold Ctrl for multi-select)</label>
+      <select name="props" multiple size="4"
+              class="w-full bg-surface text-text text-sm rounded px-2 py-1 border border-overlay">
+        {% for p in available_props %}
+        <option value="{{ p }}" {% if p == "iOC" or p == "D" or p == "velocity" %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="button"
+            class="bg-blue text-base font-semibold px-5 py-2 rounded hover:opacity-90"
+            hx-post="/population/run"
+            hx-target="#pop-results"
+            hx-swap="innerHTML"
+            hx-include="#pop-form">
+      Run Population Analysis
+    </button>
+  </div>
+</form>
+
+<div id="pop-results">
+  {% if pop_result %}
+  <p class="text-xs text-overlay">Previous result shown. Click Run to recompute.</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

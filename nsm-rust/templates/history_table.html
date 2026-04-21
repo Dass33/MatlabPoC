@@ -1,0 +1,50 @@
+<!-- HTMX polling fragment: job table only -->
+<table class="text-sm w-full border-collapse">
+  <thead>
+    <tr class="border-b border-surface text-overlay">
+      <th class="text-left py-1 px-2">Name</th>
+      <th class="text-left py-1 px-2">Submitted</th>
+      <th class="text-left py-1 px-2">Files</th>
+      <th class="text-left py-1 px-2">Status</th>
+      <th class="py-1 px-2"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if jobs | length == 0 %}
+    <tr>
+      <td colspan="5" class="py-4 text-center text-overlay">No jobs yet.</td>
+    </tr>
+    {% endif %}
+    {% for job in jobs %}
+    <tr class="border-b border-surface/50 hover:bg-surface/20">
+      <td class="py-1.5 px-2 font-mono text-blue text-xs">
+        {{ job.name | default(value=job.job_id) }}
+      </td>
+      <td class="py-1.5 px-2 text-xs text-overlay">{{ job.submitted_at }}</td>
+      <td class="py-1.5 px-2 text-xs text-overlay">
+        {{ job.filenames | join(sep=", ") | truncate(length=40) }}
+      </td>
+      <td class="py-1.5 px-2 text-xs">
+        {% if job.status == "completed" %}
+        <span class="text-green">✅ completed</span>
+        {% elif job.status == "processing" %}
+        <span class="text-yellow">⏳ processing</span>
+        {% elif job.status == "failed" %}
+        <span class="text-red">❌ failed</span>
+        {% else %}
+        <span class="text-overlay">❓ unknown</span>
+        {% endif %}
+      </td>
+      <td class="py-1.5 px-2 text-xs">
+        {% if job.status == "completed" %}
+        <a href="/postprocessing?job_id={{ job.job_id }}"
+           hx-get="/postprocessing?job_id={{ job.job_id }}"
+           hx-target="#tab-content" hx-push-url="true"
+           class="text-blue hover:underline">Open</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="text-xs text-overlay mt-1">Auto-refreshes every 10 s</p>

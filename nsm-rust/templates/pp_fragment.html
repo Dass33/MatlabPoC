@@ -1,0 +1,90 @@
+<!-- HTMX fragment: replaces #pp-root after threshold/override updates -->
+<div id="pp-root">
+  <form id="axis-form" class="flex items-center gap-3 mb-3">
+    <input type="hidden" name="job_id" value="{{ job_id }}">
+    <label class="text-sm text-overlay">X:</label>
+    <select name="axis_x" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+            hx-post="/postprocessing/thresholds" hx-target="#pp-root" hx-swap="outerHTML"
+            hx-include="#axis-form,#threshold-form">
+      {% for p in scalar_props %}
+      <option value="{{ p }}" {% if p == axis_x %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+    <label class="text-sm text-overlay">Y:</label>
+    <select name="axis_y" class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay"
+            hx-post="/postprocessing/thresholds" hx-target="#pp-root" hx-swap="outerHTML"
+            hx-include="#axis-form,#threshold-form">
+      {% for p in scalar_props %}
+      <option value="{{ p }}" {% if p == axis_y %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+    <span class="text-xs text-overlay ml-auto">{{ kept }}/{{ total }} kept</span>
+  </form>
+
+  <div id="scatter-section" class="bg-mantle rounded border border-surface p-2 mb-4">
+    <div id="scatter-plot" style="height:450px"></div>
+    <script id="scatter-data-json" type="application/json">{{ scatter_json | safe }}</script>
+    <div class="flex items-center gap-2 mt-2">
+      <span id="sel-count" class="text-xs text-overlay">0 selected</span>
+      <input type="hidden" id="sel-indices" value="[]">
+      <button class="sel-action bg-red/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-exclude" onclick="sendOverride('exclude')">Exclude selected</button>
+      <button class="sel-action bg-green/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-include" onclick="sendOverride('keep')">Include selected</button>
+      <button class="sel-action bg-yellow/80 text-base text-xs px-3 py-1 rounded disabled:opacity-40"
+              disabled id="btn-clear-sel" onclick="sendOverride('clear')">Clear for selected</button>
+      <button class="bg-surface text-overlay text-xs px-3 py-1 rounded ml-auto"
+              onclick="sendOverride('reset')">Reset all</button>
+    </div>
+  </div>
+
+  <form id="threshold-form">
+    <input type="hidden" name="job_id" value="{{ job_id }}">
+    <div class="mb-3">
+      <div class="grid grid-cols-[1fr_1fr_1fr_2fr] gap-1 text-xs text-overlay mb-1 px-1">
+        <span>Property</span><span>Type</span><span>Direction</span><span>σ</span>
+      </div>
+      {% for prop in filter_props %}
+      {% set cfg = thresholds[prop] %}
+      <div class="grid grid-cols-[1fr_1fr_1fr_2fr] gap-1 items-center mb-1 px-1">
+        <span class="text-xs font-mono text-text">{{ prop }}</span>
+        <select name="thresholds[{{ prop }}][tv]" class="bg-surface text-text text-xs rounded px-1 py-0.5">
+          {% for opt in ["3std", "3std_conditional", "number"] %}
+          <option value="{{ opt }}" {% if cfg and cfg.tv == opt %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+        <select name="thresholds[{{ prop }}][direction]" class="bg-surface text-text text-xs rounded px-1 py-0.5">
+          {% for d in ["upper", "lower", "both"] %}
+          <option value="{{ d }}" {% if cfg and cfg.direction == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+        <div>
+          <input type="range" name="thresholds[{{ prop }}][sigma]"
+                 min="1" max="6" step="0.1"
+                 value="{% if cfg %}{{ cfg.sigma }}{% else %}6.0{% endif %}"
+                 class="w-full accent-blue"
+                 oninput="this.nextElementSibling.textContent = parseFloat(this.value).toFixed(1)">
+          <span class="text-xs text-overlay">{% if cfg %}{{ cfg.sigma | round(precision=1) }}{% else %}6.0{% endif %}</span>
+          <input type="hidden" name="thresholds[{{ prop }}][value]"    value="{% if cfg %}{{ cfg.value }}{% else %}0{% endif %}">
+          <input type="hidden" name="thresholds[{{ prop }}][value_lo]" value="{% if cfg %}{{ cfg.value_lo }}{% else %}0{% endif %}">
+          <input type="hidden" name="thresholds[{{ prop }}][value_hi]" value="{% if cfg %}{{ cfg.value_hi }}{% else %}0{% endif %}">
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="bg-blue text-base text-xs px-4 py-1 rounded"
+            hx-post="/postprocessing/thresholds" hx-target="#pp-root" hx-swap="outerHTML"
+            hx-include="#threshold-form,#axis-form">Apply Thresholds</button>
+  </form>
+
+  <div class="mt-4 flex items-center gap-4">
+    <label class="flex items-center gap-2 text-sm text-overlay">
+      <input type="checkbox" id="ioc-cal-toggle" name="ioc_cal" value="on"
+             {% if ioc_cal_on %}checked{% endif %}> Run iOC calibration
+    </label>
+    <button type="button"
+            class="bg-mauve text-base font-semibold text-sm px-5 py-1.5 rounded hover:opacity-90"
+            onclick="acceptAndSave()">Accept &amp; Save</button>
+  </div>
+  <div id="accept-result" class="mt-2"></div>
+</div>

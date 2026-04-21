@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold text-blue mb-4">Kymograph Analysis</h2>
+
+{% if not job_id %}
+<p class="text-overlay">Select a completed experiment from the dropdown above.</p>
+{% elif images | length == 0 %}
+<p class="text-overlay">No kymograph images found for this job.</p>
+{% else %}
+<div class="flex items-center gap-3 mb-4">
+  <label class="text-sm text-overlay">Kymograph:</label>
+  <select id="kymo-select" onchange="showKymo(this.value)"
+          class="bg-surface text-text text-sm rounded px-2 py-1 border border-overlay">
+    {% for img in images %}
+    <option value="{{ img }}" {% if loop.first %}selected{% endif %}>{{ img }}</option>
+    {% endfor %}
+  </select>
+</div>
+<div class="bg-mantle rounded border border-surface p-2">
+  <img id="kymo-img"
+       src="/kymograph/image/{{ job_id }}/{{ images[0] }}"
+       alt="kymograph"
+       class="w-full rounded">
+</div>
+<script>
+function showKymo(filename) {
+  document.getElementById('kymo-img').src = '/kymograph/image/{{ job_id }}/' + filename;
+}
+</script>
+{% endif %}
+{% endblock %}
