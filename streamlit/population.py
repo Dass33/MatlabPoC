@@ -5,6 +5,7 @@ from pathlib import Path
 
 import matlab_bridge
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.subplots as sp
 from job_manager import job_dirs
@@ -96,8 +97,6 @@ def page_population_analysis(job_id: str | None) -> None:
 
     method_used = st.session_state.get(f"pop_method_used_{job_id}", method)
     props_used = st.session_state.get(f"pop_props_used_{job_id}", selected_props)
-
-    import pandas as pd
 
     scaled_keys = {"MEAN", "STD", "FWHM"}
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]

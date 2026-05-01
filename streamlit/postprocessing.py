@@ -1,5 +1,5 @@
 """
-Per-property threshold configuration: each property gets its own σ value and direction.
+Per property threshold configuration: each property gets its own σ value and direction.
 Manual overrides always win over threshold-based classification.
 """
 

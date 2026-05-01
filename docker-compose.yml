@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: streamlit/Dockerfile
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=false"
     ports:
       - "8501:8501"
     volumes:

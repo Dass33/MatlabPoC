@@ -5,6 +5,7 @@ import sys
 import time
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -12,12 +13,28 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "streamlit"))
 
 STREAMLIT_DIR = Path(__file__).parent.parent / "streamlit"
 REPO_ROOT = Path(__file__).parent.parent
-SYNTH_TIFF_DIR = REPO_ROOT / "matlab" / "nsm-data-analysis" / "syntheticDataCreation" / "output" / "tiff_kymographs"
+SYNTH_TIFF_DIR = (
+    REPO_ROOT
+    / "matlab"
+    / "nsm-data-analysis"
+    / "syntheticDataCreation"
+    / "output"
+    / "tiff_kymographs"
+)
 
 # A known-good TIFF pair from the submodule (iOC=0.002, velocity=15, D=5)
 FIXTURE_STEM = "iOC0.002_velocity15_D5_conc1_1"
 # A TIFF pair that is known to cause iOC calibration to fail
 FIXTURE_STEM_CAL_FAIL = "iOC0.0008_velocity15_D5_conc2_1"
+
+# MATLAB Runtime library paths
+MCR_RUNTIME_PATHS = [
+    "/usr/local/MATLAB/R2025b/runtime/glnxa64",
+    "/usr/local/MATLAB/R2025b/bin/glnxa64",
+    "/usr/local/MATLAB/R2025b/extern/glnxa64",
+    "/usr/local/MATLAB/R2025b/sys/os/glnxa64",
+    "/usr/local/MATLAB/R2025b/sys/opengl/glnxa64",
+]
 
 
 def pytest_addoption(parser):
@@ -26,12 +43,6 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Run integration tests that require Docker + matlab-algorithm:latest",
-    )
-    parser.addoption(
-        "--ai-review",
-        action="store_true",
-        default=False,
-        help="Run AI review of output figures via Claude Code after integration tests",
     )
 
 
@@ -55,6 +66,7 @@ def pytest_collection_modifyitems(config, items):
 
 class MockFile:
     """Minimal stand-in for Streamlit UploadedFile."""
+
     def __init__(self, name: str, content: bytes):
         self.name = name
         self._buf = BytesIO(content)
@@ -66,12 +78,35 @@ class MockFile:
         self._buf.seek(pos)
 
 
-def _load_job_manager(data_dir: Path):
+def _load_job_manager(data_dir: Path, suffix: str = ""):
     os.environ["DATA_DIR"] = str(data_dir)
     os.environ["HOST_DATA_DIR"] = str(data_dir)
-    import job_manager
-    importlib.reload(job_manager)
-    return job_manager
+    _setup_mcr_path()
+
+    import sys
+
+    mod_name = f"job_manager{suffix}"
+    if mod_name in sys.modules:
+        del sys.modules[mod_name]
+
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        mod_name, Path(__file__).parent.parent / "streamlit" / "job_manager.py"
+    )
+    jm_module = importlib.util.module_from_spec(spec)
+    sys.modules[mod_name] = jm_module
+    spec.loader.exec_module(jm_module)
+    return jm_module
+
+
+def _setup_mcr_path():
+    ld_path = os.environ.get("LD_LIBRARY_PATH", "")
+    paths = [p for p in MCR_RUNTIME_PATHS if Path(p).exists()]
+    if paths:
+        os.environ["LD_LIBRARY_PATH"] = ":".join(paths) + (
+            ":" + ld_path if ld_path else ""
+        )
 
 
 def _poll_until_done(jm, job_id: str, timeout: int = 600) -> dict:
@@ -87,7 +122,7 @@ def _poll_until_done(jm, job_id: str, timeout: int = 600) -> dict:
 def _tiff_pair(stem: str) -> list[MockFile]:
     return [
         MockFile(f"{stem}.tiff", (SYNTH_TIFF_DIR / f"{stem}.tiff").read_bytes()),
-        MockFile(f"{stem}.txt",  (SYNTH_TIFF_DIR / f"{stem}.txt").read_bytes()),
+        MockFile(f"{stem}.txt", (SYNTH_TIFF_DIR / f"{stem}.txt").read_bytes()),
     ]
 
 
@@ -99,11 +134,14 @@ def completed_job(tmp_path_factory):
     """Submits a real job and waits for completion. Shared across the session."""
     from config import DEFAULT_CONFIG
 
-    data_dir = tmp_path_factory.mktemp("jobs")
-    jm = _load_job_manager(data_dir)
+    data_dir = tmp_path_factory.mktemp("jobs_main")
+    jm = _load_job_manager(data_dir, suffix="_main")
 
     job_id = jm.submit_job(_tiff_pair(FIXTURE_STEM), DEFAULT_CONFIG)
     status = _poll_until_done(jm, job_id)
+    print(
+        f"\n[completed_job] data_dir={data_dir}, job_id={job_id}, status={status['status']}"
+    )
 
     return {
         "job_id": job_id,
@@ -119,10 +157,13 @@ def completed_job_cal_fail(tmp_path_factory):
     from config import DEFAULT_CONFIG
 
     data_dir = tmp_path_factory.mktemp("jobs_cal_fail")
-    jm = _load_job_manager(data_dir)
+    jm = _load_job_manager(data_dir, suffix="_calfail")
 
     job_id = jm.submit_job(_tiff_pair(FIXTURE_STEM_CAL_FAIL), DEFAULT_CONFIG)
     status = _poll_until_done(jm, job_id)
+    print(
+        f"\n[completed_job_cal_fail] data_dir={data_dir}, job_id={job_id}, status={status['status']}"
+    )
 
     return {
         "job_id": job_id,
@@ -176,12 +217,16 @@ def postprocessed_job(completed_job):
         return result
 
     (out / "collection_postprocessed.json").write_text(
-        json.dumps({
-            "collection": _filter(collection, keep_mask),
-            "calibration": None,
-            "n_kept": int(keep_mask.sum()),
-            "n_total": n,
-        }, indent=2, default=_default)
+        json.dumps(
+            {
+                "collection": _filter(collection, keep_mask),
+                "calibration": None,
+                "n_kept": int(keep_mask.sum()),
+                "n_total": n,
+            },
+            indent=2,
+            default=_default,
+        )
     )
 
     return {**completed_job, "collection": collection, "n_total": n}

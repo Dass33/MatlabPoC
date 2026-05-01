@@ -81,12 +81,9 @@ def test_clear_uploader_increments_key():
     at = _app()
     at.run()
     assert not at.exception
-    # uploader_clear starts at 0 so uploader key is "uploader_0"
-    assert "uploader_0" in [w.key for w in at.text_input] or True  # key exists in state
     at.button(key="Clear files button").click()
     at.run()
     assert not at.exception
-    # After clear, UPLOADER_CLEAR incremented → new key
     assert at.session_state["uploader_clear"] == 1
 
 
@@ -112,7 +109,7 @@ def test_submit_job_called_with_files(tmp_path, monkeypatch):
     with patch.object(jm, "launch_matlab_container", side_effect=fake_launch):
         job_id = jm.submit_job([tiff, txt], {"Dt": 0.007, "Dx": 0.066}, name="test")
 
-    assert job_id in captured["job_id"] or captured["job_id"] == job_id
+    assert captured["job_id"] == job_id
     job_dir = tmp_path / job_id
     assert (job_dir / "input" / "exp1.tiff").exists()
     assert (job_dir / "input" / "exp1.txt").exists()

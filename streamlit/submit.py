@@ -54,9 +54,7 @@ def page_submit(config: dict) -> None:
     }
 
     col_submit, col_wait = st.columns(2)
-    submit = col_submit.button(
-        "Submit job", type="primary", width="stretch"
-    )
+    submit = col_submit.button("Submit job", type="primary", width="stretch")
     wait_for_result = col_wait.toggle("Wait for result", value=False)
 
     if submit:

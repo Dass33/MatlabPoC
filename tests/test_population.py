@@ -99,8 +99,6 @@ def test_population_saves_json(postprocessed_job):
 @pytest.mark.integration
 def test_population_no_postprocessed_file(completed_job):
     """population.py should show a warning when no postprocessed file exists."""
-    from streamlit.testing.v1 import AppTest
-
     jm = completed_job["jm"]
     _, _, out = jm.job_dirs(completed_job["job_id"])
 
@@ -112,14 +110,23 @@ def test_population_no_postprocessed_file(completed_job):
         pp_path.unlink()
 
     try:
-        from population import page_population_analysis
-        at = AppTest.from_function(
-            lambda: page_population_analysis(completed_job["job_id"]),
-            default_timeout=15,
-        )
+        import sys
+        from pathlib import Path
+        from streamlit.testing.v1 import AppTest
+
+        test_file = Path("/tmp/test_population_page.py")
+        test_file.write_text(f"""
+import sys
+sys.path.insert(0, "{Path(__file__).parent.parent / "streamlit"}")
+from population import page_population_analysis
+page_population_analysis("{completed_job["job_id"]}")
+""")
+        at = AppTest.from_file(str(test_file), default_timeout=15)
         at.run()
         assert not at.exception
         assert any(at.warning) or any(at.info)
     finally:
         if backed_up is not None:
             pp_path.write_bytes(backed_up)
+        if test_file.exists():
+            test_file.unlink()

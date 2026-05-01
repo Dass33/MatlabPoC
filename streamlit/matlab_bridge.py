@@ -69,8 +69,6 @@ def find_outliers(
     collection: dict[str, object], matlab_setting: dict[str, object]
 ) -> np.ndarray:
     """
-    Call MATLAB findTrajectoryOutliers.
-
     matlab_setting must have:
         filterProperties   : list[str]
         thresholdDirection : list[str]   ('upper' | 'lower' | 'both')
