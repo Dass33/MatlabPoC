@@ -8,6 +8,7 @@ DemoData/
 __pycache__/
 *.py[cod]
 build/
+site/
 
 *venv*/
 env/
