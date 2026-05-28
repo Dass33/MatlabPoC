@@ -1,14 +1,12 @@
 matlab/Compiled/
 MATLAB_Runtime_*.zip
 *.zip
-local_machine_name
 
 data/
 DemoData/
 
 __pycache__/
 *.py[cod]
-dist/
 build/
 
 *venv*/
@@ -16,6 +14,3 @@ env/
 ENV/
 
 **/.env
-.claude/
-CLAUDE.md
-AGENTS.md

@@ -1,23 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-SCRIPT_DIR=$(dirname "$0")
-PROJECT_ROOT=$(realpath "$SCRIPT_DIR/..")
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-echo "==> Step 1/4: Compiling MATLAB source..."
-"$SCRIPT_DIR/compile_matlab.sh"
-
-echo "==> Step 2/4: Building MATLAB Docker image..."
-"$SCRIPT_DIR/build_matlab.sh"
-
-echo "==> Step 3/4: Building Streamlit Docker image..."
-"$SCRIPT_DIR/build_streamlit.sh"
-
-echo "==> Step 4/4: Restarting stack..."
 cd "$PROJECT_ROOT"
-docker compose down
-docker compose up -d
 
-echo ""
-echo "Done. Streamlit is available at http://localhost:8501"
-echo "Follow logs with: docker compose logs -f"
+MATLAB_ONLY=false
+STREAMLIT_ONLY=false
+
+for arg in "$@"; do
+  case $arg in
+    --matlab) MATLAB_ONLY=true ;;
+    --streamlit) STREAMLIT_ONLY=true ;;
+  esac
+done
+
+if $MATLAB_ONLY; then
+  docker build -t dass33/nsm-matlab:latest -f matlab/Dockerfile matlab/
+  docker push dass33/nsm-matlab:latest
+elif $STREAMLIT_ONLY; then
+  docker build -t dass33/nsm-streamlit:latest -f streamlit/Dockerfile .
+  docker push dass33/nsm-streamlit:latest
+else
+  docker build -t dass33/nsm-matlab:latest -f matlab/Dockerfile matlab/
+  docker build -t dass33/nsm-streamlit:latest -f streamlit/Dockerfile .
+  docker push dass33/nsm-matlab:latest && docker push dass33/nsm-streamlit:latest
+fi
+
+echo "Done. Watchtower will pick up changes within 5 minutes."

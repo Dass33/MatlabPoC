@@ -7,12 +7,12 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 echo "Project root resolved to: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 
-# ── Standalone app (used by the MATLAB Docker container for kymograph analysis) ──
+# Used by the MATLAB Docker container for kymograph analysis
 cd ./matlab/Compiled
 matlab -batch "mcc -m ../nsm-data-analysis/AnalyzeExperimentApp.m -a ../nsm-data-analysis/ -o AnalyzeExperimentApp"
 cd "$PROJECT_ROOT"
 
-# ── Python package (used by the Streamlit bridge for postprocessing) ──
+# Python package, used by the Streamlit bridge for postprocessing
 mkdir -p ./matlab/Compiled/PythonPackage
 cd ./matlab/Compiled/PythonPackage
 matlab -batch "mcc -W python:nsm_algorithms \

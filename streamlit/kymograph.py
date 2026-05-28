@@ -13,10 +13,17 @@ def page_kymograph_analysis(job_id: str | None) -> None:
         return
 
     _, _, out = job_dirs(job_id)
+
+    def list_kymographs(output_dir: Path) -> list[Path]:
+        kymo_dir = output_dir / "kymographs"
+        if not kymo_dir.exists():
+            return []
+        return sorted(kymo_dir.glob("*.png"))
+
     kymographs = list_kymographs(out)
 
     if not kymographs:
-        st.info("No kymograph images found — analysis may still be running.")
+        st.info("No kymograph images found, analysis may still be running.")
         return
 
     names = [p.name for p in kymographs]
@@ -25,8 +32,3 @@ def page_kymograph_analysis(job_id: str | None) -> None:
     st.image(str(path), width="stretch")
 
 
-def list_kymographs(output_dir: Path) -> list[Path]:
-    kymo_dir = output_dir / "kymographs"
-    if not kymo_dir.exists():
-        return []
-    return sorted(kymo_dir.glob("*.png"))
