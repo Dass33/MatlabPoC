@@ -1,8 +1,6 @@
-"""
-NSM Data Processing — Streamlit frontend.
+"""NSM Data Processing — Streamlit frontend.
 
-Environment variables (set in docker-compose / .env)
-─────────────────────────────────────────────────────
+Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   HOST_DATA_DIR     same path as seen by the host daemon (required)
   MATLAB_IMAGE      Docker image name                    (default: matlab-algorithm:latest)
@@ -36,6 +34,7 @@ logging.basicConfig(
 
 
 def main() -> None:
+    """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
     st.set_page_config(
         page_title="NSM Data Processing",
         page_icon="🔬",
@@ -90,6 +89,7 @@ def main() -> None:
 
 
 def render_experiment_selector() -> None:
+    """Dropdown at the top of the page to pick a completed experiment."""
     completed = list_completed_jobs()
     if not completed:
         return

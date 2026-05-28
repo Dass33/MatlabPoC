@@ -2,6 +2,7 @@ import streamlit as st
 
 
 def page_help() -> None:
+    """Help tab — static usage instructions and output file reference."""
     st.markdown("""
         ### How to use
 

@@ -32,6 +32,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def job_dirs(job_id: str) -> tuple[Path, Path, Path]:
+    """Return (base, input, output) paths for a given job."""
     base = DATA_DIR / job_id
     return base, base / "input", base / "output"
 
@@ -49,6 +50,7 @@ def read_status(job_id: str) -> dict:
 
 
 def list_all_jobs() -> list[dict]:
+    """Scan DATA_DIR for all jobs with meta.json, sorted by submission date descending."""
     jobs = []
     if not DATA_DIR.exists():
         return jobs
@@ -90,6 +92,7 @@ def _container_reaper(container, log_dest: Path) -> None:
 
 
 def launch_matlab_container(job_id: str) -> None:
+    """Start a Docker container running the compiled MATLAB algorithm."""
     _, _, out = job_dirs(job_id)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -122,6 +125,7 @@ def launch_matlab_container(job_id: str) -> None:
 
 
 def list_completed_jobs() -> list[dict]:
+    """Return only jobs with status 'completed'."""
     return [j for j in list_all_jobs() if j["status"] == "completed"]
 
 
@@ -131,6 +135,7 @@ def submit_job(
     dark_cal_bytes: bytes | None = None,
     name: str = "",
 ) -> str:
+    """Write uploaded files to disk, save config/meta, and launch a MATLAB container. Returns job_id."""
     job_id = datetime.now(_TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)

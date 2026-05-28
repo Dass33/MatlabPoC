@@ -26,6 +26,7 @@ AVAILABLE_PROPS = [
 
 
 def page_population_analysis(job_id: str | None) -> None:
+    """Population Analysis tab — compute population statistics on a postprocessed collection."""
     st.subheader("Population Analysis")
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")

@@ -108,6 +108,7 @@ def apply_config_to_session_state(built_config: dict[str, Any]) -> None:
 
 
 def render_config_sidebar() -> dict[str, Any]:
+    """Sidebar UI for algorithm parameters. Returns a complete config dict for submission."""
     DC = DEFAULT_CONFIG
 
     st.sidebar.header("Algorithm Parameters")

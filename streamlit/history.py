@@ -13,6 +13,7 @@ import streamlit as st
 
 
 def page_history() -> None:
+    """History tab — list all jobs, download completed results, admin-stuck-job recovery."""
     st.subheader("Experiment History")
 
     col_refresh, col_auto = st.columns([1, 3])

@@ -8,6 +8,7 @@ import streamlit as st
 
 
 def page_kymograph_analysis(job_id: str | None) -> None:
+    """Kymograph Analysis tab — browse rendered kymograph images from a completed job."""
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
         return

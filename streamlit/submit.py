@@ -16,6 +16,7 @@ UPLOADER = "uploader_"
 
 
 def page_submit(config: dict) -> None:
+    """Submit tab — upload TIFF/TXT files, configure job, and launch MATLAB analysis."""
     st.subheader("Submit Analysis")
 
     if toast_msg := st.session_state.pop("_submit_toast", None):

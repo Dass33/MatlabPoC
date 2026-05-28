@@ -1,0 +1,62 @@
+site_name: NSM Web App
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: red
+    accent: cyan
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  font:
+    text: Source Sans Pro
+  icon:
+    logo: material/microscope
+  favicon: favicon.png
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.snippets
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [streamlit]
+          options:
+            show_source: true
+            show_signature: true
+            docstring_style: google
+            members_order: source
+
+nav:
+  - Home: index.md
+  - Streamlit App:
+    - Overview: streamlit/index.md
+    - Submit: streamlit/submit.md
+    - Kymograph Analysis: streamlit/kymograph.md
+    - Post-processing: streamlit/postprocessing.md
+    - Population Analysis: streamlit/population.md
+    - History: streamlit/history.md
+    - Help: streamlit/help.md
+    - Configuration: streamlit/config.md
+    - Job Manager: streamlit/job_manager.md
+    - MATLAB Bridge: streamlit/matlab_bridge.md
+
+  - Deployment: deployment.md
+  - Testing: tests.md
+  - Docs: docs.md
+  - Maintenance Guide: maintenance.md
+  - Architectural Decisions: reasoning.md

@@ -57,6 +57,7 @@ SCALAR_PROPS = list(_FILTER_DEFAULTS)
 
 
 def page_postprocessing(job_id: str | None) -> None:
+    """Post-processing tab — review trajectories, adjust outlier thresholds, run iOC calibration."""
     st.subheader("Post-processing")
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
