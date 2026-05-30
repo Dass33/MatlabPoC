@@ -5,7 +5,7 @@ Upload raw kymograph TIFF files (+ paired `.txt` metadata),
 configure algorithm parameters, and retrieve results. The heavy computation is done in
 MATLAB; the "frontend" is in Streamlit.
 
-For more detail check out the documentation available [here]().
+For more detail check out the documentation available [here](https://dass33.github.io/MatlabPoC/).
 
 ## Two-Container Design
 

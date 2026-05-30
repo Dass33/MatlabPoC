@@ -52,6 +52,7 @@ nav:
     - History: streamlit/history.md
     - Help: streamlit/help.md
     - Configuration: streamlit/config.md
+    - Constants: streamlit/constants.md
     - Job Manager: streamlit/job_manager.md
     - MATLAB Bridge: streamlit/matlab_bridge.md
 
