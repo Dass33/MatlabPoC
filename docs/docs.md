@@ -14,21 +14,4 @@ mkdocs serve
 
 ## How to add
 
-To reference a Python function in a Markdown page, use the `:::` directive:
-
-```markdown
-::: submit.page_submit
-    options:
-      show_docstring: true
-      show_source: true
-```
-
-You can also write prose around the auto-generated block:
-
-```markdown
-# Submit
-
-This tab handles file uploads and job submission.
-
-::: submit.page_submit
-```
+To embed a source file, wrap a `<details>` block around a fenced Python code block containing the snippets directive (`--8<--`) pointing to the file path relative to the project root. See any page under `streamlit/` for a working example.

@@ -2,4 +2,11 @@
 
 Compute population statistics on a postprocessed collection.
 
-::: population
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/population.py"
+```
+
+</details>

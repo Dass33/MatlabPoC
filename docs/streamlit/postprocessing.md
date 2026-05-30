@@ -2,4 +2,11 @@
 
 Review trajectories, adjust outlier thresholds, run iOC calibration.
 
-::: postprocessing
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/postprocessing.py"
+```
+
+</details>

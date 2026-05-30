@@ -5,6 +5,8 @@ Upload raw kymograph TIFF files (+ paired `.txt` metadata),
 configure algorithm parameters, and retrieve results. The heavy computation is done in
 MATLAB; the "frontend" is in Streamlit.
 
+For more detail check out the documentation available [here]().
+
 ## Two-Container Design
 
 ### Streamlit container
@@ -34,7 +36,7 @@ MATLAB; the "frontend" is in Streamlit.
 
 2. Build and start:
    ```bash
-   ./scripts/deploy.sh
+   ./scripts/start.sh
    ```
    This compiles the MATLAB source, builds both Docker images, and starts the stack.
 
@@ -44,9 +46,9 @@ MATLAB; the "frontend" is in Streamlit.
 
 Push images to Docker registry (Watchtower will auto-update):
 ```bash
-./scripts/push.sh              # Push both MATLAB and Streamlit images
-./scripts/push.sh --matlab     # Push only MATLAB image (after recompiling)
-./scripts/push.sh --streamlit  # Push only Streamlit image
+./scripts/push.sh              # Push both images
+./scripts/push.sh --matlab     # only MATLAB (after recompiling)
+./scripts/push.sh --streamlit  # only Streamlit
 ```
 
 Changes will be deployed within 5 minutes via Watchtower.

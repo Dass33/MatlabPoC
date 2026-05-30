@@ -14,5 +14,13 @@ Being somewhat locked in Matlab ecosystem has some noticible downsides, like low
 
 ## Choosing Streamlit
 
+Streamlit lets you build nice web apps in plain Python with no frontend development experience required, and is also very fast to do so.
+The main tradeoff is that Streamlit is highly opionated and creating custom components is bit harder and every interaction triggers a full Python rerun, which can be done quite cheaply by having certain data cached in `st.session_state` and using `@st.cache_data` for file reads.
+
 ## Deployment decisions
+
+On-premise deployment on the lab's existing hardware avoids a recurring cost and takes advantage of hardware that is already available.
+Docker makes the setup portable as the containers can run on Windows locally, VPS, or a cluster with minimal changes.
+Watchtower (container monitoring pushed continers to [Docker hub](https://hub.docker.com/)) removes the need for manual updating on the production machine when deploying updates.
+(it is neccessary to config the correct Docker hub repo to monitor)
 

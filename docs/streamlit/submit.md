@@ -2,4 +2,11 @@
 
 Handles file uploads, experiment naming, and job submission.
 
-::: submit
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/submit.py"
+```
+
+</details>

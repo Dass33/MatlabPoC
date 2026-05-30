@@ -4,6 +4,11 @@ The frontend is a [Streamlit](https://streamlit.io) multi-tab app. Each tab is a
 
 ## Entry point
 
-::: main
-    options:
-      show_root_heading: false
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/main.py"
+```
+
+</details>

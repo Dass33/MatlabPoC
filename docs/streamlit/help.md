@@ -2,4 +2,11 @@
 
 Static usage instructions and output file reference.
 
-::: help
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/help.py"
+```
+
+</details>

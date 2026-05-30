@@ -8,17 +8,13 @@ The app consists of two main parts, the web app made with Streamlit and the Mata
 Below is a flow chart which represent how the high level architecture of the app looks like.
 ```mermaid
 flowchart TB
-    User(["👤 User (Browser)"])
+    User(["User"])
 
     subgraph StreamlitContainer["Streamlit Container (persistent)"]
         direction TB
         Streamlit["Streamlit App"]
-        JM["Job Manager"]
-        Bridge["Post-processing Bridge"]
         MCR1["MATLAB Runtime"]
-        Bridge --> MCR1
-        Streamlit --> JM
-        Streamlit --> Bridge
+        Streamlit -->|Post processing| MCR1
     end
 
     DataVol["Shared Volume"]
@@ -33,14 +29,24 @@ flowchart TB
     DockerHub(["🐳 Docker Hub"])
     DockerHub -.->|pulls images| Watchtower
 
-    User -->|HTTP :8501| Streamlit
-    JM -->|Docker SDK| AnalyzeApp
+    User -->|Connects using browser| Streamlit
+    Streamlit -->|Docker SDK| AnalyzeApp
 
-    JM <-->|read/write| DataVol
-    AnalyzeApp <-->|read/write| DataVol
-    Bridge <-->|JSON| DataVol
+    AnalyzeApp <-->|read/write JSON| DataVol
+    Streamlit <-->|read/write JSON| DataVol
 
     Watchtower -.->|updates| StreamlitContainer
     Watchtower -.->|updates| MatlabContainer
     StreamlitContainer ~~~ MatlabContainer
 ```
+
+### Streamlit container
+
+- Runs continuously, serves the UI on port 8501.
+- Spawns MATLAB containers on demand via the Docker Python SDK.
+- Reads/writes job data via a shared Docker volume.
+
+### MATLAB container
+
+- Spawned per job, runs the compiled `AnalyzeExperimentApp` binary, exits when done.
+- Does not require a MATLAB license — only the MATLAB Runtime (MCR).

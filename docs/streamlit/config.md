@@ -2,4 +2,11 @@
 
 Sidebar UI for algorithm parameters.
 
-::: config
+<details>
+<summary>Source</summary>
+
+```python
+--8<-- "streamlit/config.py"
+```
+
+</details>
