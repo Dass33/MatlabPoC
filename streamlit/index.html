@@ -569,6 +569,34 @@
   
   
     <li class="md-nav__item">
+      <a href="constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="job_manager/" class="md-nav__link">
         
   
@@ -833,6 +861,8 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">config</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_config_sidebar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">help</span><span class="w"> </span><span class="kn">import</span> <span class="n">page_help</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">history</span><span class="w"> </span><span class="kn">import</span> <span class="n">page_history</span>
@@ -841,8 +871,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">population</span><span class="w"> </span><span class="kn">import</span> <span class="n">page_population_analysis</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">page_postprocessing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">submit</span><span class="w"> </span><span class="kn">import</span> <span class="n">page_submit</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
     <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
@@ -917,7 +945,7 @@
         <span class="k">return</span>
 
     <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">]</span>
-    <span class="n">labels</span>  <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">}</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">}</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
         <span class="s2">&quot;Active experiment&quot;</span><span class="p">,</span>
