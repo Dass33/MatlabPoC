@@ -3,13 +3,13 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+import streamlit as st
+
 from job_manager import (
     POLL_INTERVAL_S,
     read_status,
     submit_job,
 )
-
-import streamlit as st
 
 UPLOADER_CLEAR = "uploader_clear"
 UPLOADER = "uploader_"

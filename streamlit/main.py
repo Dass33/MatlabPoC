@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import logging
 
+import streamlit as st
+
 from config import render_config_sidebar
 from help import page_help
 from history import page_history
@@ -19,8 +21,6 @@ from kymograph import page_kymograph_analysis
 from population import page_population_analysis
 from postprocessing import page_postprocessing
 from submit import page_submit
-
-import streamlit as st
 
 logging.basicConfig(
     level=logging.INFO,
@@ -95,7 +95,7 @@ def render_experiment_selector() -> None:
         return
 
     options = [j["job_id"] for j in completed]
-    labels  = {j["job_id"]: j.get("name") or j["job_id"] for j in completed}
+    labels = {j["job_id"]: j.get("name") or j["job_id"] for j in completed}
 
     st.selectbox(
         "Active experiment",

@@ -3,26 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import matlab_bridge
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.subplots as sp
-from job_manager import job_dirs
-
 import streamlit as st
 
-_MICRO_PROPS = {"iOC", "STDiOC"}
-
-AVAILABLE_PROPS = [
-    "iOC",
-    "D",
-    "STDiOC",
-    "velocity",
-    "N",
-    "positionStart",
-    "positionEnd",
-]
+import matlab_bridge
+from constants import AVAILABLE_PROPS, MICRO_PROPS
+from job_manager import job_dirs
 
 
 def page_population_analysis(job_id: str | None) -> None:
@@ -103,14 +92,14 @@ def page_population_analysis(job_id: str | None) -> None:
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]
 
     def _display_val(prop: str, key: str, val: float) -> float:
-        if prop in _MICRO_PROPS and key in scaled_keys:
+        if prop in MICRO_PROPS and key in scaled_keys:
             return val * 1e6
         return val
 
     st.dataframe(
         pd.DataFrame([
             {
-                "Property": f"{p} (µ)" if p in _MICRO_PROPS else p,
+                "Property": f"{p} (µ)" if p in MICRO_PROPS else p,
                 **{k: _display_val(p, k, result.get(p, {}).get(k, float("nan"))) for k in keys},
             }
             for p in props_used
@@ -126,11 +115,11 @@ def _render_histograms(
 ) -> None:
     if not props:
         return
-    titles = [f"{p} (µ)" if p in _MICRO_PROPS else p for p in props]
+    titles = [f"{p} (µ)" if p in MICRO_PROPS else p for p in props]
     fig = sp.make_subplots(rows=1, cols=len(props), subplot_titles=titles)
     for col, prop in enumerate(props, 1):
         r = result.get(prop, {})
-        scale = 1e6 if prop in _MICRO_PROPS else 1.0
+        scale = 1e6 if prop in MICRO_PROPS else 1.0
         Y = np.array(collection.get(prop, []), dtype=float) * scale
         Y = Y[~np.isnan(Y)]
         if not len(Y):

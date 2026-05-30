@@ -7,7 +7,8 @@ import zipfile
 from pathlib import Path
 
 import pandas as pd
-from job_manager import STATUS_ICON, job_dirs, list_all_jobs
+from constants import STATUS_ICON
+from job_manager import job_dirs, list_all_jobs
 
 import streamlit as st
 

@@ -14,13 +14,6 @@ import docker
 
 _TZ = ZoneInfo("Europe/Prague")
 
-STATUS_ICON = {
-    "processing": "⏳",
-    "completed": "✅",
-    "failed": "❌",
-    "unknown": "❓",
-}
-
 log = logging.getLogger(__name__)
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./data/jobs"))

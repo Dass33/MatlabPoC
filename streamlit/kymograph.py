@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from job_manager import job_dirs
-
 import streamlit as st
+
+from job_manager import job_dirs
 
 
 def page_kymograph_analysis(job_id: str | None) -> None:
@@ -31,5 +31,3 @@ def page_kymograph_analysis(job_id: str | None) -> None:
     sel = st.selectbox("Select kymograph", names, key=f"kymo_sel_{job_id}")
     path = next(p for p in kymographs if p.name == sel)
     st.image(str(path), width="stretch")
-
-
