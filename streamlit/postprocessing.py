@@ -5,55 +5,35 @@ Manual overrides always win over threshold-based classification.
 
 from __future__ import annotations
 
-import json
+from typing import TypedDict, cast
 
-import matlab_bridge
 import numpy as np
 import plotly.graph_objects as go
 import scipy.io
-from job_manager import job_dirs
-
 import streamlit as st
 
-_STATES = {
-    "auto-kept": ("#0072B2", "circle"),
-    "auto-excluded": ("#D55E00", "x"),
-    "manual-kept": ("#009E73", "diamond"),
-    "manual-excluded": ("#E69F00", "square"),
-}
+import matlab_bridge
+import utils as u
+from constants import (
+    DIR_OPTIONS,
+    FILTER_DEFAULTS,
+    MICRO_PROPS,
+    SCALAR_PROPS,
+    STATES,
+    TRACK_PALETTE,
+    TV_OPTIONS,
+)
+from job_manager import job_dirs
+from matlab_bridge import Collection, MatlabFilterSetting
 
-_TRACK_PALETTE = [
-    "#e6194B",
-    "#3cb44b",
-    "#ffe119",
-    "#4363d8",
-    "#f58231",
-    "#911eb4",
-    "#42d4f4",
-    "#f032e6",
-    "#bfef45",
-    "#469990",
-    "#dcbeff",
-    "#9A6324",
-    "#800000",
-    "#aaffc3",
-    "#000075",
-]
 
-_TV_OPTIONS = ["3std", "3std_conditional", "number"]
-_DIR_OPTIONS = ["upper", "lower", "both"]
-_MICRO_PROPS = {"iOC", "STDiOC"}
-_FILTER_DEFAULTS = {
-    "iOC": {"direction": "both", "tv": "3std"},
-    "STDiOC": {"direction": "upper", "tv": "3std"},
-    "D": {"direction": "both", "tv": "3std"},
-    "velocity": {"direction": "both", "tv": "3std"},
-    "N": {"direction": "lower", "tv": "3std"},
-    "positionStart": {"direction": "upper", "tv": "3std"},
-    "positionEnd": {"direction": "lower", "tv": "3std"},
-}
-
-SCALAR_PROPS = list(_FILTER_DEFAULTS)
+class ThresholdConfig(TypedDict):
+    enabled: bool
+    direction: str
+    tv: str
+    value: float
+    value_lo: float
+    value_hi: float
 
 
 def page_postprocessing(job_id: str | None) -> None:
@@ -72,7 +52,7 @@ def page_postprocessing(job_id: str | None) -> None:
     st.session_state.setdefault(f"pp_axes_{job_id}", ("iOC", "velocity"))
     st.session_state.setdefault(f"pp_dirty_{job_id}", True)
     stored = st.session_state.get(f"pp_thresholds_{job_id}", {})
-    if set(stored) != set(_FILTER_DEFAULTS):
+    if set(stored) != set(FILTER_DEFAULTS):
         st.session_state[f"pp_thresholds_{job_id}"] = {
             p: {
                 "enabled": True,
@@ -81,7 +61,7 @@ def page_postprocessing(job_id: str | None) -> None:
                 "value_hi": 0.0,
                 **defaults,
             }
-            for p, defaults in _FILTER_DEFAULTS.items()
+            for p, defaults in FILTER_DEFAULTS.items()
         }
 
     _render_postprocessing(job_id, collection)
@@ -90,10 +70,10 @@ def page_postprocessing(job_id: str | None) -> None:
 def _render_postprocessing(job_id: str, collection: dict) -> None:
     overrides: dict = st.session_state[f"overrides_{job_id}"]
     thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
-    filter_props = list(_FILTER_DEFAULTS)
+    filter_props = list(FILTER_DEFAULTS)
 
     cal_updates: dict = st.session_state.get(f"pp_cal_updates_{job_id}", {})
-    effective_collection = {**collection, **cal_updates}
+    effective_collection = cast(Collection, {**collection, **cal_updates})
 
     matlab_setting = _build_matlab_setting(thresholds)
     n_traj = len(effective_collection["iOC"])
@@ -180,20 +160,20 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
             key=f"pp_en_{job_id}_{prop}",
             label_visibility="collapsed",
         )
-        label = f"**{prop} (µ)**" if prop in _MICRO_PROPS else f"**{prop}**"
+        label = f"**{prop} (µ)**" if prop in MICRO_PROPS else f"**{prop}**"
         c0.markdown(label)
         new_tv = c1.selectbox(
             "tv",
-            _TV_OPTIONS,
-            index=_TV_OPTIONS.index(cfg["tv"]) if cfg["tv"] in _TV_OPTIONS else 0,
+            TV_OPTIONS,
+            index=TV_OPTIONS.index(cfg["tv"]) if cfg["tv"] in TV_OPTIONS else 0,
             key=f"pp_tv_{job_id}_{prop}",
             label_visibility="collapsed",
         )
         new_dir = c2.selectbox(
             "dir",
-            _DIR_OPTIONS,
-            index=_DIR_OPTIONS.index(cfg["direction"])
-            if cfg["direction"] in _DIR_OPTIONS
+            DIR_OPTIONS,
+            index=DIR_OPTIONS.index(cfg["direction"])
+            if cfg["direction"] in DIR_OPTIONS
             else 0,
             key=f"pp_dir_{job_id}_{prop}",
             label_visibility="collapsed",
@@ -204,7 +184,7 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
             cfg.get("value_hi", 0.0),
         )
         if new_tv == "number":
-            unit = " µ" if prop in _MICRO_PROPS else ""
+            unit = " µ" if prop in MICRO_PROPS else ""
             with c2:
                 if new_dir == "both":
                     ca, cb = st.columns(2)
@@ -272,7 +252,7 @@ def _render_postprocessing(job_id: str, collection: dict) -> None:
 
 
 @st.cache_data
-def _load_collection(job_id: str) -> dict[str, object] | None:
+def _load_collection(job_id: str) -> Collection | None:
     _, _, out = job_dirs(job_id)
     mat_path = out / "collection" / "collection.mat"
     if not mat_path.exists():
@@ -287,7 +267,7 @@ def _load_collection(job_id: str) -> dict[str, object] | None:
         data["positionStart"] = np.array([float(p.min()) for p in pos])
         data["positionEnd"] = np.array([float(p.max()) for p in pos])
 
-    return data
+    return cast(Collection, data)
 
 
 def _compute_states(
@@ -307,7 +287,7 @@ def _build_scatter(
     x = np.array(collection.get(x_prop, []), dtype=float)
     y = np.array(collection.get(y_prop, []), dtype=float)
     fig = go.Figure()
-    for state, (color, symbol) in _STATES.items():
+    for state, (color, symbol) in STATES.items():
         idx = [i for i, s in enumerate(states) if s == state]
         if not idx:
             continue
@@ -408,7 +388,7 @@ def _render_track_preview(collection: dict, states: list[str], job_id: str) -> N
             ax.plot(
                 frames,
                 pos,
-                color=_TRACK_PALETTE[i % len(_TRACK_PALETTE)],
+                color=TRACK_PALETTE[i % len(TRACK_PALETTE)],
                 linewidth=2,
                 label=f"#{i}",
             )
@@ -442,12 +422,14 @@ def _render_track_preview(collection: dict, states: list[str], job_id: str) -> N
     plt.close(fig)
 
 
-def _build_matlab_setting(thresholds: dict[str, object]) -> dict[str, object]:
+def _build_matlab_setting(
+    thresholds: dict[str, ThresholdConfig],
+) -> MatlabFilterSetting:
     active_props = []
     threshold_values = []
     directions = []
-    for prop in _FILTER_DEFAULTS:
-        cfg = thresholds.get(prop, {})
+    for prop in FILTER_DEFAULTS:
+        cfg = thresholds[prop]
         if not cfg.get("enabled", True):
             continue
         tv = cfg.get("tv", "3std")
@@ -455,7 +437,7 @@ def _build_matlab_setting(thresholds: dict[str, object]) -> dict[str, object]:
         active_props.append(prop)
         directions.append(direction)
         if tv == "number":
-            scale = 1e-6 if prop in _MICRO_PROPS else 1.0
+            scale = 1e-6 if prop in MICRO_PROPS else 1.0
             if direction == "both":
                 threshold_values.append([
                     cfg.get("value_lo", 0.0) * scale,
@@ -513,17 +495,15 @@ def _accept(
         effective_collection = {**collection, **cal_updates}
 
         final_mask = result["notOutlier"]
+
+        collection_postprocessed = {
+            "collection": _filter_collection(effective_collection, final_mask),
+            "calibration": calibration,
+            "n_kept": int(final_mask.sum()),
+            "n_total": len(final_mask),
+        }
         (out / "collection_postprocessed.json").write_text(
-            json.dumps(
-                {
-                    "collection": _filter_collection(effective_collection, final_mask),
-                    "calibration": calibration,
-                    "n_kept": int(final_mask.sum()),
-                    "n_total": len(final_mask),
-                },
-                indent=2,
-                default=_json_default,
-            )
+            u.to_json(collection_postprocessed)
         )
 
     st.session_state[f"pp_cal_updates_{job_id}"] = cal_updates
@@ -540,7 +520,7 @@ def _accept(
 
 
 def _filter_collection(
-    collection: dict[str, object], keep_mask: np.ndarray
+    collection: Collection, keep_mask: np.ndarray
 ) -> dict[str, object]:
     result = {}
     for k, v in collection.items():
@@ -549,16 +529,6 @@ def _filter_collection(
         elif isinstance(v, (list, tuple)) and len(v) == len(keep_mask):
             result[k] = [v[i] for i, m in enumerate(keep_mask) if m]
     return result
-
-
-def _json_default(obj):
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, np.integer):
-        return int(obj)
-    if isinstance(obj, np.floating):
-        return float(obj)
-    raise TypeError(type(obj))
 
 
 def _render_calibration(calibration: dict[str, object]) -> None:

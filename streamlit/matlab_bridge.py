@@ -10,9 +10,42 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 import numpy as np
+
+
+class Collection(TypedDict):
+    iOC: np.ndarray
+    STDiOC: np.ndarray
+    N: np.ndarray
+    D: np.ndarray
+    velocity: np.ndarray
+    positionRefined: np.ndarray
+    timeFrame: np.ndarray
+    iOCprofile: np.ndarray
+    positionStart: NotRequired[np.ndarray]
+    positionEnd: NotRequired[np.ndarray]
+    ExperimentTimeStamp: NotRequired[object]
+
+
+class MatlabFilterSetting(TypedDict):
+    filterProperties: list[str]
+    thresholdDirection: list[str]
+    thresholdValue: list[str | list[float]]
+    referenceProperty: str
+
+
+class PostprocessingResult(TypedDict):
+    notOutlier: np.ndarray
+    iOC: np.ndarray
+    STDiOC: np.ndarray
+    N: np.ndarray
+    threshold: object
+    calibration: dict[str, object] | None
+
+
+import utils as u
 
 log = logging.getLogger(__name__)
 
@@ -29,44 +62,11 @@ def _get_pkg() -> Any:
     return _pkg
 
 
-# ─── serialisation helpers ───────────────────────────────────────────────────
-
-
-def _to_json(obj: Any) -> str:
-    def _default(o):
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, np.integer):
-            return int(o)
-        if isinstance(o, np.floating):
-            return float(o)
-        raise TypeError(type(o))
-
-    return json.dumps(obj, default=_default)
-
-
-def _from_json(s: Any) -> Any:
-    return json.loads(str(s))
-
-
-def _prep_collection(collection: dict[str, object]) -> dict[str, object]:
-    """Convert numpy arrays to plain Python lists for JSON serialisation."""
-    out: dict = {}
-    for k, v in collection.items():
-        if isinstance(v, np.ndarray):
-            out[k] = v.tolist()
-        elif isinstance(v, (list, tuple)) and v and isinstance(v[0], np.ndarray):
-            out[k] = [a.tolist() for a in v]
-        else:
-            out[k] = v
-    return out
-
-
 # ─── public API ──────────────────────────────────────────────────────────────
 
 
 def find_outliers(
-    collection: dict[str, object], matlab_setting: dict[str, object]
+    collection: Collection, matlab_setting: MatlabFilterSetting
 ) -> np.ndarray:
     """
     matlab_setting must have:
@@ -76,22 +76,25 @@ def find_outliers(
 
     Returns a bool array of length N: True = not an outlier.
     """
+    preped_collection = u.to_json(u.prep_collection(collection))
+    matlab_setting_json = u.to_json(matlab_setting)
+
     result = _get_pkg().runOutlierFiltering(
-        _to_json(_prep_collection(collection)),
-        _to_json(matlab_setting),
+        preped_collection,
+        matlab_setting_json,
         nargout=1,
     )
-    return np.array(_from_json(result), dtype=bool)
+    return np.array(json.loads(str(result)), dtype=bool)
 
 
 def run_postprocessing(
-    collection: dict[str, object],
-    matlab_setting: dict[str, object],
+    collection: Collection,
+    matlab_setting: MatlabFilterSetting,
     keep_mask: np.ndarray,
     calibration_on: bool = True,
-) -> dict[str, object]:
+) -> PostprocessingResult:
     """
-    Call MATLAB runPostprocessing — filter↔calibrate fixed-point loop.
+    Call MATLAB runPostprocessing
 
     matlab_setting is the flat outlierFiltering dict (filterProperties, thresholdDirection,
     thresholdValue) as returned by _build_matlab_setting.
@@ -106,13 +109,17 @@ def run_postprocessing(
         "iOCcalibration": "on" if calibration_on else "off",
         "outlierFiltering": matlab_setting,
     }
+    preped_collection = u.to_json(u.prep_collection(collection))
+    settings_json = u.to_json(postprocessing_setting)
+    keep_mask_json = u.to_json(keep_mask.tolist())
+
     result_json = _get_pkg().runPostprocessing(
-        _to_json(_prep_collection(collection)),
-        _to_json(postprocessing_setting),
-        _to_json(keep_mask.tolist()),
+        preped_collection,
+        settings_json,
+        keep_mask_json,
         nargout=1,
     )
-    data = _from_json(result_json)
+    data = json.loads(str(result_json))
     data["notOutlier"] = np.array(data["notOutlier"], dtype=bool)
     for key in ("iOC", "STDiOC", "N"):
         if key in data:
@@ -133,18 +140,11 @@ def run_population_analysis(
         properties : list[str]
 
     Returns dict keyed by property name:
-        {prop: {MEAN, STD, FWHM, RESOLUTION, [_hist_centers, _hist_counts]}}
+        {prop: {MEAN, STD, FWHM, RESOLUTION, [histCenters, histCounts]}}
     """
     result_json = _get_pkg().runPopulationAnalysis(
-        _to_json(collection),
-        _to_json(setting),
+        u.to_json(collection),
+        u.to_json(setting),
         nargout=1,
     )
-    result = _from_json(result_json)
-    # rename histogram fields to the underscore-prefixed convention used in the UI
-    for prop_data in result.values():
-        if "histCenters" in prop_data:
-            prop_data["_hist_centers"] = prop_data.pop("histCenters")
-        if "histCounts" in prop_data:
-            prop_data["_hist_counts"] = prop_data.pop("histCounts")
-    return result
+    return json.loads(str(result_json))
