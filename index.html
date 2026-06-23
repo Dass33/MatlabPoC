@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#nsm-web-app" class="md-skip">
+        <a href="#nsm-web-application-documentation" class="md-skip">
           Skip to content
         </a>
       
@@ -264,33 +264,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
+  <a href="#high-level-architecture-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture
+        High-Level Architecture &amp; Lifecycle
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Architecture">
+    <nav class="md-nav" aria-label="High-Level Architecture &amp; Lifecycle">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#streamlit-container" class="md-nav__link">
+  <a href="#key-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streamlit container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#matlab-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MATLAB container
+        Key Components
       
     </span>
   </a>
@@ -299,6 +288,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigating-the-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigating the Documentation
+      
+    </span>
+  </a>
   
 </li>
       
@@ -711,33 +711,6 @@
   
   
     <li class="md-nav__item">
-      <a href="tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="docs/" class="md-nav__link">
         
   
@@ -839,33 +812,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
+  <a href="#high-level-architecture-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture
+        High-Level Architecture &amp; Lifecycle
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Architecture">
+    <nav class="md-nav" aria-label="High-Level Architecture &amp; Lifecycle">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#streamlit-container" class="md-nav__link">
+  <a href="#key-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streamlit container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#matlab-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MATLAB container
+        Key Components
       
     </span>
   </a>
@@ -874,6 +836,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigating-the-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigating the Documentation
+      
+    </span>
+  </a>
   
 </li>
       
@@ -894,52 +867,51 @@
 
 
 
-<h1 id="nsm-web-app">NSM Web App<a class="headerlink" href="#nsm-web-app" title="Permanent link">&para;</a></h1>
-<p>It's a web application which serves as an easy to use intefrace to operate the NSM algorithm to analyze epxeriments.</p>
-<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<p>The app consists of two main parts, the web app made with Streamlit and the Matalb algorithm which is present as <a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">Git submodule</a> (we have other repo inserted into the project and can pull new commits to it), they are bundled together using <a href="https://docs.docker.com/compose/">Docker compose</a>, using docker also let's us deploy to almost any environemnt, with great ease.</p>
-<p>Below is a flow chart which represent how the high level architecture of the app looks like.
+<h1 id="nsm-web-application-documentation">NSM Web Application Documentation<a class="headerlink" href="#nsm-web-application-documentation" title="Permanent link">&para;</a></h1>
+<p>Welcome to the documentation for the Nanofluidic Scattering Microscopy (NSM) Data Processing Web Application.</p>
+<p>This application provides a user-friendly interface for processing raw NSM kymograph data using high-performance MATLAB algorithms, visualising results, calibrating measurement instruments, and running population statistics.</p>
+<hr />
+<h2 id="high-level-architecture-lifecycle">High-Level Architecture &amp; Lifecycle<a class="headerlink" href="#high-level-architecture-lifecycle" title="Permanent link">&para;</a></h2>
+<p>The application is structured for easy cross-platform deployment and local development. It packages a <strong>Streamlit</strong> user interface and the compiled <strong>MATLAB Runtime (MCR)</strong> into a single, unified Docker container.</p>
 <pre class="mermaid"><code>flowchart TB
     User(["User"])
 
-    subgraph StreamlitContainer["Streamlit Container (persistent)"]
+    subgraph Container["Docker Container (persistent)"]
         direction TB
-        Streamlit["Streamlit App"]
-        MCR1["MATLAB Runtime"]
-        Streamlit --&gt;|Post processing| MCR1
+        Streamlit["Streamlit App (main.py)"]
+        MCR["MATLAB Runtime R2025b"]
+        Binary["AnalyzeExperimentApp (compiled binary)"]
+
+        Streamlit --&gt;|"Spawns subprocess"| Binary
+        Binary --&gt; MCR
+        Streamlit --&gt;|"Python Package bridge"| MCR
     end
 
-    DataVol["Shared Volume"]
+    DataVol[("Local data/ volume")]
+    DockerHub(["🐳 Docker Hub (dass33/nsm-streamlit)"])
+    Watchtower["Watchtower Service"]
 
-    subgraph MatlabContainer["MATLAB Container (per-job)"]
-        direction TB
-        AnalyzeApp["AnalyzeExperimentApp.m"]
-        MCR2["MATLAB Runtime"]
-        AnalyzeApp --&gt; MCR2
-    end
-
-    DockerHub(["🐳 Docker Hub"])
-    DockerHub -.-&gt;|pulls images| Watchtower
-
-    User --&gt;|Connects using browser| Streamlit
-    Streamlit --&gt;|Docker SDK| AnalyzeApp
-
-    AnalyzeApp &lt;--&gt;|read/write JSON| DataVol
-    Streamlit &lt;--&gt;|read/write JSON| DataVol
-
-    Watchtower -.-&gt;|updates| StreamlitContainer
-    Watchtower -.-&gt;|updates| MatlabContainer
-    StreamlitContainer ~~~ MatlabContainer</code></pre></p>
-<h3 id="streamlit-container">Streamlit container<a class="headerlink" href="#streamlit-container" title="Permanent link">&para;</a></h3>
+    User --&gt;|"HTTP Port 8501"| Streamlit
+    Binary &lt;--&gt;|"Write outputs / logs"| DataVol
+    Streamlit &lt;--&gt;|"Read results / status"| DataVol
+    DockerHub -.-&gt;|"Pull new image"| Watchtower
+    Watchtower -.-&gt;|"Auto-recreate"| Container</code></pre>
+<h3 id="key-components">Key Components<a class="headerlink" href="#key-components" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Runs continuously, serves the UI on port 8501.</li>
-<li>Spawns MATLAB containers on demand via the Docker Python SDK.</li>
-<li>Reads/writes job data via a shared Docker volume.</li>
+<li><strong>Streamlit UI</strong>: Serves as the user frontend. It allows users to upload files, view kymograph previews, override processing settings, run population analyses, and download data as ZIP archives.</li>
+<li><strong>MATLAB Subprocess</strong>: When a job is submitted, the Streamlit app spawns the compiled MATLAB executable (<code>AnalyzeExperimentApp</code>) as a background subprocess. This binary performs the heavy-duty kymograph detection and analysis.</li>
+<li><strong>MATLAB Python Package Bridge (<code>nsm_algorithms</code>)</strong>: For interactive post-processing and calibration runs, Streamlit imports a custom MATLAB compiled Python package, invoking algorithms in-memory for instant feedback.</li>
+<li><strong>Data Volume Mount</strong>: All files (raw uploads, intermediate variables, logs, and output metadata) are stored in the <code>data/jobs/&lt;uuid&gt;/</code> folder on the host machine to ensure persistent storage.</li>
+<li><strong>Watchtower Continuous Deployment</strong>: Watchtower monitors the Docker Hub repository and automatically updates the running stack when a new image is pushed.</li>
 </ul>
-<h3 id="matlab-container">MATLAB container<a class="headerlink" href="#matlab-container" title="Permanent link">&para;</a></h3>
+<hr />
+<h2 id="navigating-the-documentation">Navigating the Documentation<a class="headerlink" href="#navigating-the-documentation" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Spawned per job, runs the compiled <code>AnalyzeExperimentApp</code> binary, exits when done.</li>
-<li>Does not require a MATLAB license — only the MATLAB Runtime (MCR).</li>
+<li><strong><a href="streamlit/">Streamlit Overview</a></strong>: Explore the structure and modules of the frontend application.</li>
+<li><strong><a href="streamlit/matlab_bridge/">MATLAB Bridge &amp; Algorithms</a></strong>: Details on the integration between Python and the MATLAB engine.</li>
+<li><strong><a href="deployment/">Deployment Guide</a></strong>: Steps to run the system in local development, on-premise staging, or production VPS.</li>
+<li><strong><a href="maintenance/">Developer &amp; Maintenance Guide</a></strong>: Learn how to set up the developer workspace, recompile MATLAB binaries, and push releases.</li>
+<li><strong><a href="reasoning/">Architectural Decision Records (ADR)</a></strong>: Rationale behind technologies chosen for this project (Streamlit, MATLAB runtime integration, Docker).</li>
 </ul>
 
 

@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#maitenece" class="md-skip">
+        <a href="#maintenance" class="md-skip">
           Skip to content
         </a>
       
@@ -627,33 +627,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../docs/" class="md-nav__link">
         
   
@@ -840,15 +813,19 @@
 
 
 
-<h1 id="maitenece">Maitenece<a class="headerlink" href="#maitenece" title="Permanent link">&para;</a></h1>
-<p>For the app to be usable long term it has to be maintained, this site offers knowledge from authors of the app, to make it easier for new maintainer to start.</p>
+<h1 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h1>
+<p>For the app to be usable long term it has to be maintained. This page offers knowledge from the authors to make it easier for a new maintainer to start.</p>
 <h2 id="setting-up-project">Setting up project<a class="headerlink" href="#setting-up-project" title="Permanent link">&para;</a></h2>
-<p>To get the project running one only need to have <a href="https://docs.docker.com/compose/">docker</a>, for example there is <a href="https://docs.docker.com/desktop/">Docker desktop</a> app which is very user friendly, and using which the app is currently deployed on Windows machine locally.</p>
-<p>For maintaining the app one has to be able to also build the containers containing their changes. For Streamlit-only changes this only requires Docker. Recompiling the MATLAB binary requires MATLAB R2025b.</p>
-<div class="highlight"><pre><span></span><code>./scripts/deploy.sh<span class="w">            </span><span class="c1"># full build: compile MATLAB + build both images + start stack</span>
-./scripts/push.sh<span class="w">              </span><span class="c1"># push both images to Docker Hub</span>
-./scripts/push.sh<span class="w"> </span>--matlab<span class="w">     </span><span class="c1"># push only the MATLAB image</span>
-./scripts/push.sh<span class="w"> </span>--streamlit<span class="w">  </span><span class="c1"># push only the Streamlit image</span>
+<p>To set up the workspace for development, run the setup script:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>scripts/setup.py
+</code></pre></div>
+<p>To run the app you only need <a href="https://docs.docker.com/compose/">Docker</a>. <a href="https://docs.docker.com/desktop/">Docker Desktop</a> is a user-friendly option and is what the current Windows deployment uses.</p>
+<p>To build and deploy changes you also need Docker and push access to the Docker Hub repo. Recompiling the MATLAB binary additionally requires MATLAB R2025b.</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>scripts/deploy.py<span class="w">   </span><span class="c1"># build the Docker image and push it to Docker Hub</span>
+</code></pre></div>
+<p>Watchtower on the production machine will pick up the new image automatically within ~5 minutes — no action needed there.</p>
+<p>To start the full stack locally (build + run):</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
 
 

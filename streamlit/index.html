@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#streamlit-app" class="md-skip">
+        <a href="#streamlit-frontend-overview" class="md-skip">
           Skip to content
         </a>
       
@@ -347,10 +347,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#entry-point" class="md-nav__link">
+  <a href="#technical-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Entry point
+        Technical Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main.render_experiment_selector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_experiment_selector
       
     </span>
   </a>
@@ -687,33 +731,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../docs/" class="md-nav__link">
         
   
@@ -815,10 +832,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#entry-point" class="md-nav__link">
+  <a href="#technical-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Entry point
+        Technical Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main.render_experiment_selector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_experiment_selector
       
     </span>
   </a>
@@ -842,19 +903,253 @@
 
 
 
-<h1 id="streamlit-app">Streamlit App<a class="headerlink" href="#streamlit-app" title="Permanent link">&para;</a></h1>
-<p>The frontend is a <a href="https://streamlit.io">Streamlit</a> multi-tab app. Each tab is a separate module under <code>streamlit/</code>.</p>
-<h2 id="entry-point">Entry point<a class="headerlink" href="#entry-point" title="Permanent link">&para;</a></h2>
-<details>
-<summary>Source</summary>
+<h1 id="streamlit-frontend-overview">Streamlit Frontend Overview<a class="headerlink" href="#streamlit-frontend-overview" title="Permanent link">&para;</a></h1>
+<p>The application frontend is structured as a multi-tab Streamlit dashboard. The entry point of the app is <code>streamlit/main.py</code>.</p>
+<p>It imports page modules corresponding to each stage of the analysis workflow:
+1. <strong>Submit</strong>: For uploading files and launching background MATLAB jobs.
+2. <strong>Kymograph</strong>: To inspect raw uploaded kymograph images.
+3. <strong>Post-processing</strong>: For outlier filtering and IOC calibration.
+4. <strong>Population</strong>: For statistics.
+5. <strong>History</strong>: For managing and retrieving past jobs.
+6. <strong>Configuration</strong>: For editing global thresholds and parameters.
+7. <strong>Help</strong>: Instructions for researchers.</p>
+<hr />
+<h2 id="technical-architecture">Technical Architecture<a class="headerlink" href="#technical-architecture" title="Permanent link">&para;</a></h2>
+<p>Streamlit executes the script from top to bottom on every user interaction. To retain state across tabs, the app utilizes <code>st.session_state</code> to store job configurations, status info, overrides, and results in-memory.</p>
+<hr />
+<h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="main"></a>
+    <div class="doc doc-contents first">
+
+        <p>NSM Data Processing — Streamlit frontend.</p>
+<p>Environment variables (set in docker-compose / .env):
+  DATA_DIR          base path for jobs inside container  (default: /data/jobs)
+  POLL_INTERVAL_S   seconds between status polls         (default: 5)
+  MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
+  MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="main.main" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">main</span><span class="p">()</span></code>
+
+<a href="#main.main" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Application entry point. Renders sidebar config, experiment selector, and tabbed UI.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/main.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Application entry point. Renders sidebar config, experiment selector, and tabbed UI.&quot;&quot;&quot;</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">set_page_config</span><span class="p">(</span>
+        <span class="n">page_title</span><span class="o">=</span><span class="s2">&quot;NSM Data Processing&quot;</span><span class="p">,</span>
+        <span class="n">page_icon</span><span class="o">=</span><span class="s2">&quot;🔬&quot;</span><span class="p">,</span>
+        <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;wide&quot;</span><span class="p">,</span>
+        <span class="n">initial_sidebar_state</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">menu_items</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;About&quot;</span><span class="p">:</span> <span class="s2">&quot;NSM data processing — Streamlit frontend&quot;</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;last_job_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;waiting&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;active_experiment&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">render_config_sidebar</span><span class="p">()</span>
+
+    <span class="n">render_experiment_selector</span><span class="p">()</span>
+
+    <span class="p">(</span>
+        <span class="n">tab_submit</span><span class="p">,</span>
+        <span class="n">tab_kymograph</span><span class="p">,</span>
+        <span class="n">tab_postprocessing</span><span class="p">,</span>
+        <span class="n">tab_population</span><span class="p">,</span>
+        <span class="n">tab_history</span><span class="p">,</span>
+        <span class="n">tab_help</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span>
+        <span class="s2">&quot;Submit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Kymograph Analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Post-processing&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Population Analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;History&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Help&quot;</span><span class="p">,</span>
+    <span class="p">])</span>
+
+    <span class="n">active_job</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;active_experiment&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tab_submit</span><span class="p">:</span>
+        <span class="n">page_submit</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tab_kymograph</span><span class="p">:</span>
+        <span class="n">page_kymograph_analysis</span><span class="p">(</span><span class="n">active_job</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tab_postprocessing</span><span class="p">:</span>
+        <span class="n">page_postprocessing</span><span class="p">(</span><span class="n">active_job</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tab_population</span><span class="p">:</span>
+        <span class="n">page_population_analysis</span><span class="p">(</span><span class="n">active_job</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tab_history</span><span class="p">:</span>
+        <span class="n">page_history</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">tab_help</span><span class="p">:</span>
+        <span class="n">page_help</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="main.render_experiment_selector" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">render_experiment_selector</span><span class="p">()</span></code>
+
+<a href="#main.render_experiment_selector" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Dropdown at the top of the page to pick a completed experiment.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/main.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dropdown at the top of the page to pick a completed experiment.&quot;&quot;&quot;</span>
+    <span class="n">completed</span> <span class="o">=</span> <span class="n">list_completed_jobs</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">completed</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">j</span><span class="p">[</span><span class="s2">&quot;job_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">}</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+        <span class="s2">&quot;Active experiment&quot;</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">,</span>
+        <span class="n">format_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">labels</span><span class="p">[</span><span class="n">x</span><span class="p">],</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;active_experiment&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">divider</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><details>
+<summary>Source Code</summary>
 
 <div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;NSM Data Processing — Streamlit frontend.</span>
 
 <span class="sd">Environment variables (set in docker-compose / .env):</span>
 <span class="sd">  DATA_DIR          base path for jobs inside container  (default: /data/jobs)</span>
-<span class="sd">  HOST_DATA_DIR     same path as seen by the host daemon (required)</span>
-<span class="sd">  MATLAB_IMAGE      Docker image name                    (default: matlab-algorithm:latest)</span>
 <span class="sd">  POLL_INTERVAL_S   seconds between status polls         (default: 5)</span>
+<span class="sd">  MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)</span>
+<span class="sd">  MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>

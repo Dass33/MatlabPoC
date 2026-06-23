@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../tests/">
+        <link rel="prev" href="../deployment/">
       
       
         <link rel="next" href="../maintenance/">
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#docs" class="md-skip">
+        <a href="#documentation-system-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -624,33 +624,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -714,10 +687,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-install-and-run" class="md-nav__link">
+  <a href="#prerequisites-installation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to install and run
+        Prerequisites &amp; Installation
       
     </span>
   </a>
@@ -725,13 +698,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-add" class="md-nav__link">
+  <a href="#previewing-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to add
+        Previewing Locally
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-embedding-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing &amp; Embedding Documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Writing &amp; Embedding Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-documenting-python-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Documenting Python Modules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-embedding-raw-code-snippets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Embedding Raw Code snippets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -824,10 +836,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-install-and-run" class="md-nav__link">
+  <a href="#prerequisites-installation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to install and run
+        Prerequisites &amp; Installation
       
     </span>
   </a>
@@ -835,13 +847,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-add" class="md-nav__link">
+  <a href="#previewing-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to add
+        Previewing Locally
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-embedding-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing &amp; Embedding Documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Writing &amp; Embedding Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-documenting-python-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Documenting Python Modules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-embedding-raw-code-snippets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Embedding Raw Code snippets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -862,16 +913,194 @@
 
 
 
-<h1 id="docs">Docs<a class="headerlink" href="#docs" title="Permanent link">&para;</a></h1>
-<p><a href="https://www.mkdocs.org">MkDocs</a> with the <a href="https://squidfunk.github.io/mkdocs-material/">Material theme</a> and <a href="https://mkdocstrings.github.io/">mkdocstrings</a> plugin are used for documentation.</p>
-<p>The <strong>mkdocstrings</strong> plugin pulls Python function signatures and docstrings directly from source code, so the <a href="../streamlit/">Streamlit API docs</a> stay in sync automatically.</p>
-<h2 id="how-to-install-and-run">How to install and run<a class="headerlink" href="#how-to-install-and-run" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># from the streamlit venv</span>
-streamlit/venv/bin/pip<span class="w"> </span>install<span class="w"> </span>mkdocstrings<span class="o">[</span>python<span class="o">]</span>
-mkdocs<span class="w"> </span>serve
+<h1 id="documentation-system-guide">Documentation System Guide<a class="headerlink" href="#documentation-system-guide" title="Permanent link">&para;</a></h1>
+<p>This documentation site is generated using <a href="https://www.mkdocs.org">MkDocs</a> with the premium <a href="https://squidfunk.github.io/mkdocs-material/">Material theme</a> and the <a href="https://mkdocstrings.github.io/">mkdocstrings</a> plugin.</p>
+<p>The <strong>mkdocstrings</strong> plugin inspects Python source modules to dynamically extract classes, functions, signatures, and docstrings. This ensures the <a href="../streamlit/">Streamlit App docs</a> stay in sync with the source code automatically.</p>
+<hr />
+<h2 id="prerequisites-installation">Prerequisites &amp; Installation<a class="headerlink" href="#prerequisites-installation" title="Permanent link">&para;</a></h2>
+<p>Documentation packages are specified in <code>requirements-dev.txt</code> at the root of the project.</p>
+<p>When you run the repository setup script:
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>scripts/setup.py
 </code></pre></div>
-<h2 id="how-to-add">How to add<a class="headerlink" href="#how-to-add" title="Permanent link">&para;</a></h2>
-<p>To embed a source file, wrap a <code>&lt;details&gt;</code> block around a fenced Python code block containing the snippets directive (<code>--8&lt;--</code>) pointing to the file path relative to the project root. See any page under <code>streamlit/</code> for a working example.</p>
+It automatically creates the Python virtual environment (<code>streamlit/venv</code>) and installs the documentation packages (<code>mkdocs</code>, <code>mkdocs-material</code>, and <code>mkdocstrings[python]</code>).</p>
+<hr />
+<h2 id="previewing-locally">Previewing Locally<a class="headerlink" href="#previewing-locally" title="Permanent link">&para;</a></h2>
+<p>To run the local live-reloading preview server, activate the virtual environment and serve the website:</p>
+<p>=== "Linux &amp; macOS"
+    <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>streamlit/venv/bin/activate
+mkdocs<span class="w"> </span>serve
+</code></pre></div></p>
+<p>=== "Windows (CMD)"
+    <div class="highlight"><pre><span></span><code>streamlit\venv\Scripts\activate.bat
+mkdocs serve
+</code></pre></div></p>
+<p>=== "Windows (PowerShell)"
+    <div class="highlight"><pre><span></span><code><span class="p">.\</span><span class="n">streamlit</span><span class="p">\</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+<span class="n">mkdocs</span> <span class="n">serve</span>
+</code></pre></div></p>
+<p>After starting the server, open <strong><code>http://localhost:8000</code></strong> in your browser.</p>
+<hr />
+<h2 id="writing-embedding-documentation">Writing &amp; Embedding Documentation<a class="headerlink" href="#writing-embedding-documentation" title="Permanent link">&para;</a></h2>
+<h3 id="1-documenting-python-modules">1. Documenting Python Modules<a class="headerlink" href="#1-documenting-python-modules" title="Permanent link">&para;</a></h3>
+<p>To automatically document a Python file using <code>mkdocstrings</code>, add the module block in any markdown file:
+<div class="highlight"><pre><span></span><code>::: module_name
+</code></pre></div>
+<em>(For example, <code>::: job_manager</code> will parse <code>streamlit/job_manager.py</code> because the python path in <code>mkdocs.yml</code> is configured to look inside <code>streamlit/</code>)</em>.</p>
+<h3 id="2-embedding-raw-code-snippets">2. Embedding Raw Code snippets<a class="headerlink" href="#2-embedding-raw-code-snippets" title="Permanent link">&para;</a></h3>
+<p>To embed raw code blocks directly from project files, use the pymdownx snippets syntax:
+<div class="highlight"><pre><span></span><code>&lt;details&gt;
+&lt;summary&gt;Source Code&lt;/summary&gt;
+
+```python
+from <span class="gs">__future__</span> import annotations
+
+import json
+import logging
+import os
+import shutil
+import subprocess
+import threading
+import uuid
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+_TZ = ZoneInfo(&quot;Europe/Prague&quot;)
+
+log = logging.getLogger(__name__)
+
+DATA_DIR = Path(os.environ.get(&quot;DATA_DIR&quot;, &quot;./data/jobs&quot;))
+POLL_INTERVAL_S = int(os.environ.get(&quot;POLL_INTERVAL_S&quot;, &quot;5&quot;))
+MCR_ROOT = os.environ.get(&quot;MCR_ROOT&quot;, &quot;/opt/matlabruntime/R2025b&quot;)
+MATLAB_APP = os.environ.get(&quot;MATLAB_APP&quot;, &quot;/opt/matlab_app/run_AnalyzeExperimentApp.sh&quot;)
+
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def job_dirs(job_id: str) -&gt; tuple[Path, Path, Path]:
+    &quot;&quot;&quot;Return (base, input, output) paths for a given job.&quot;&quot;&quot;
+    base = DATA_DIR / job_id
+    return base, base / &quot;input&quot;, base / &quot;output&quot;
+
+
+def read_status(job_id: str) -&gt; dict:
+    <span class="ge">_, _</span>, out = job_dirs(job_id)
+    status_file = out / &quot;status.json&quot;
+    if not status_file.exists():
+        return {&quot;status&quot;: &quot;processing&quot;, &quot;error&quot;: None}
+    try:
+        return json.loads(status_file.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        log.error(&quot;[read_status] %s: %s&quot;, job_id, e)
+        return {&quot;status&quot;: &quot;unknown&quot;, &quot;error&quot;: &quot;Could not read status.json&quot;}
+
+
+def list_all_jobs() -&gt; list[dict]:
+    &quot;&quot;&quot;Scan DATA_DIR for all jobs with meta.json, sorted by submission date descending.&quot;&quot;&quot;
+    jobs = []
+    if not DATA_DIR.exists():
+        return jobs
+    for job_dir in DATA_DIR.iterdir():
+        if not job_dir.is_dir():
+            continue
+        meta_file = job_dir / &quot;meta.json&quot;
+        if not meta_file.exists():
+            continue
+        try:
+            meta = json.loads(meta_file.read_text())
+            status = read_status(job_dir.name)
+            meta[&quot;status&quot;] = status[&quot;status&quot;]
+            meta[&quot;error&quot;] = status.get(&quot;error&quot;)
+            jobs.append(meta)
+        except (json.JSONDecodeError, OSError, KeyError) as e:
+            log.warning(&quot;[list_all_jobs] skipping %s: %s&quot;, job_dir.name, e)
+            continue
+    return sorted(jobs, key=lambda j: j.get(&quot;submitted_at&quot;, &quot;&quot;), reverse=True)
+
+
+def <span class="ge">_process_</span>reaper(proc: subprocess.Popen, log_dest: Path) -&gt; None:
+    try:
+        stdout, _ = proc.communicate()
+        log_dest.write_bytes(stdout)
+        for p in [log_dest.parent, <span class="ge">*log_dest.parent.rglob(&quot;*</span>&quot;)]:
+            try:
+                p.chmod(0o777)
+            except OSError:
+                pass
+    except (OSError, ValueError) as e:
+        log.error(&quot;[reaper] %s&quot;, e)
+
+
+def launch_matlab_job(job_id: str) -&gt; None:
+    &quot;&quot;&quot;Run the compiled MATLAB algorithm as a subprocess.&quot;&quot;&quot;
+    <span class="ge">_, inp, out = job_</span>dirs(job_id)
+    out.mkdir(parents=True, exist_ok=True)
+
+    log.info(&quot;[launch] job=%s inp=%s out=%s&quot;, job_id, inp, out)
+
+    proc = subprocess.Popen(
+        [MATLAB_APP, MCR_ROOT, str(inp), str(out)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        cwd=str(Path(MATLAB_APP).parent),
+    )
+    log.info(&quot;[launch] pid=%s&quot;, proc.pid)
+
+    threading.Thread(
+        target=_process_reaper,
+        args=(proc, out / &quot;matlab.log&quot;),
+        daemon=True,
+    ).start()
+
+
+def list_completed_jobs() -&gt; list[dict]:
+    &quot;&quot;&quot;Return only jobs with status &#39;completed&#39;.&quot;&quot;&quot;
+    return [j for j in list_all_jobs() if j[&quot;status&quot;] == &quot;completed&quot;]
+
+
+def submit_job(
+    uploaded_files: list,
+    config: dict,
+    dark_cal_bytes: bytes | None = None,
+    name: str = &quot;&quot;,
+) -&gt; str:
+    &quot;&quot;&quot;Write uploaded files to disk, save config/meta, and launch MATLAB analysis. Returns job_id.&quot;&quot;&quot;
+    job_id = datetime.now(_TZ).strftime(&quot;%Y%m%d_%H%M%S&quot;) + &quot;_&quot; + uuid.uuid4().hex[:6]
+    base, inp, out = job_dirs(job_id)
+    inp.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
+
+    filenames = []
+    for uf in uploaded_files:
+        uf.seek(0)
+        with open(inp / uf.name, &quot;wb&quot;) as f:
+            shutil.copyfileobj(uf, f, length=8 * 1024 * 1024)
+        filenames.append(uf.name)
+
+    if dark_cal_bytes is not None:
+        (base / &quot;dark_cal.mat&quot;).write_bytes(dark_cal_bytes)
+
+    (base / &quot;config.json&quot;).write_text(json.dumps(config, indent=2))
+    now = datetime.now(_TZ).isoformat(timespec=&quot;seconds&quot;)
+    (base / &quot;meta.json&quot;).write_text(
+        json.dumps(
+            {
+                &quot;job_id&quot;: job_id,
+                &quot;name&quot;: name.strip() or None,
+                &quot;filenames&quot;: filenames,
+                &quot;submitted_at&quot;: now,
+                &quot;started_at&quot;: now,
+            },
+            indent=2,
+        )
+    )
+
+    launch_matlab_job(job_id)
+    return job_id
+</code></pre></div></p>
+<p></details>
+```
+The snippet path should be relative to the project root directory.</p>
 
 
 

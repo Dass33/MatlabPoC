@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#configuration" class="md-skip">
+        <a href="#configuration-tab" class="md-skip">
           Skip to content
         </a>
       
@@ -492,6 +492,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -508,6 +526,58 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.render_config_sidebar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_config_sidebar
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -639,33 +709,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../docs/" class="md-nav__link">
         
   
@@ -760,6 +803,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.render_config_sidebar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_config_sidebar
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -775,86 +859,232 @@
 
 
 
-<h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
-<p>Sidebar UI for algorithm parameters. Renders the sidebar widgets and returns a complete config dict for job submission.</p>
-<p>Default parameter values live in <a href="../constants/"><code>constants.py</code></a> under <code>DEFAULT_CONFIG</code>.</p>
-<details>
-<summary>Source</summary>
-
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CONFIG</span>
+<h1 id="configuration-tab">Configuration Tab<a class="headerlink" href="#configuration-tab" title="Permanent link">&para;</a></h1>
+<p>The <strong>Configuration</strong> tab handles the physical parameters of the Nanofluidic Scattering Microscopy (NSM) experiment.</p>
+<hr />
+<h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_pick</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">keys</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">src</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">src</span><span class="p">}</span>
+<div class="doc doc-object doc-module">
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_config_to_session_state</span><span class="p">(</span><span class="n">built_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">flat</span> <span class="o">=</span> <span class="n">_pick</span><span class="p">(</span>
-        <span class="n">built_config</span><span class="p">,</span>
-        <span class="s2">&quot;Dt&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Dx&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;flipIntensity&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;flowEstimate&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;tracker&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Tlength&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;thresholdLimit&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;TmaxNo&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
 
-    <span class="n">pp</span> <span class="o">=</span> <span class="n">built_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="k">if</span> <span class="s2">&quot;darkCalibration&quot;</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">:</span>
-        <span class="n">dc</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;dark_cal_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;File path&quot;</span><span class="p">,</span> <span class="s2">&quot;dark_cal_path&quot;</span><span class="p">:</span> <span class="n">dc</span><span class="p">})</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;dark_cal_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;Scalar&quot;</span><span class="p">,</span> <span class="s2">&quot;darkCalibration&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">dc</span><span class="p">)})</span>
-    <span class="k">if</span> <span class="s2">&quot;ws&quot;</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">:</span>
-        <span class="n">flat</span><span class="p">[</span><span class="s2">&quot;ws&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="s2">&quot;ws&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="s2">&quot;Wx&quot;</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">:</span>
-        <span class="n">wx</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="s2">&quot;Wx&quot;</span><span class="p">]</span>
-        <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;sweep_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;Wx_sweep&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wx</span><span class="p">)}</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wx</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;Wx_single&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">wx</span><span class="p">)}</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;Wt&quot;</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">:</span>
-        <span class="n">wt</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="s2">&quot;Wt&quot;</span><span class="p">]</span>
-        <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;sweep_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;Wt_sweep&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wt</span><span class="p">)}</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;Wt_single&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">wt</span><span class="p">)}</span>
-        <span class="p">)</span>
-
-    <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="n">_pick</span><span class="p">(</span><span class="n">built_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="s2">&quot;peakSign&quot;</span><span class="p">,</span> <span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="s2">&quot;localOptimumRange&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">flat</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="n">_pick</span><span class="p">(</span>
-            <span class="n">built_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Linking&quot;</span><span class="p">,</span> <span class="p">{}),</span>
-            <span class="s2">&quot;minTrackLength&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cut_off_distance&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>
+<a id="config"></a>
+    <div class="doc doc-contents first">
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">render_config_sidebar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sidebar UI for algorithm parameters. Returns a complete config dict for submission.&quot;&quot;&quot;</span>
-    <span class="n">DC</span> <span class="o">=</span> <span class="n">DEFAULT_CONFIG</span>
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="config.render_config_sidebar" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">render_config_sidebar</span><span class="p">()</span></code>
+
+<a href="#config.render_config_sidebar" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/config.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_config_sidebar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict.&quot;&quot;&quot;</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Algorithm Parameters&quot;</span><span class="p">)</span>
 
@@ -864,9 +1094,7 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">uploaded</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">loaded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">uploaded</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;_loaded_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loaded</span>
-                <span class="n">apply_config_to_session_state</span><span class="p">(</span><span class="n">loaded</span><span class="p">)</span>
+                <span class="n">_apply_config</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">uploaded</span><span class="p">))</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config loaded.&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid JSON in config file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -874,34 +1102,38 @@
                 <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config format error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Acquisition&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">Dt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Dt (frame duration, s)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Dt&quot;</span><span class="p">],</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dt&quot;</span><span class="p">,</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Dt (frame duration, s)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dt&quot;</span>
         <span class="p">)</span>
-        <span class="n">Dx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Dx (pixel size, μm)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Dx&quot;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dx&quot;</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Dx (pixel size, μm)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dx&quot;</span>
         <span class="p">)</span>
-        <span class="n">flipIntensity</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
-            <span class="s2">&quot;Flip intensity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;flipIntensity&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flipIntensity&quot;</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
+            <span class="s2">&quot;Flip intensity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flipIntensity&quot;</span>
         <span class="p">)</span>
-        <span class="n">flowEstimate</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
             <span class="s2">&quot;Flow estimate (px/frame)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;flowEstimate&quot;</span><span class="p">],</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span><span class="p">,</span>
             <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flowEstimate&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">kymographPreprocessing</span>
     <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Preprocessing&quot;</span><span class="p">):</span>
         <span class="n">dark_cal_mode</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
             <span class="s2">&quot;Dark calibration source&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Scalar&quot;</span><span class="p">,</span> <span class="s2">&quot;Template&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dark_cal_mode&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">dark_cal_mode</span> <span class="o">==</span> <span class="s2">&quot;Scalar&quot;</span><span class="p">:</span>
-            <span class="n">darkCalibration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Dark calibration value&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;darkCalibration&quot;</span>
+            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                    <span class="s2">&quot;Dark calibration value&quot;</span><span class="p">,</span>
+                    <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="mf">8.0</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dark_cal_template</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
@@ -914,178 +1146,419 @@
                 <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;templates&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dark_cal_template</span><span class="si">}</span><span class="s2">.mat&quot;</span>
             <span class="p">)</span>
             <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_bytes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dark_calibration_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
-            <span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dark_calibration_path</span><span class="p">)</span>
-        <span class="n">Wx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Wx (spatial window, px)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">][</span><span class="s2">&quot;Wx&quot;</span><span class="p">]),</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wx_single&quot;</span><span class="p">,</span>
+            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dark_calibration_path</span><span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">Wx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Wx (spatial window, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wx</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wx&quot;</span>
         <span class="p">)</span>
-        <span class="n">Wt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Wt (temporal window, frames)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">][</span><span class="s2">&quot;Wt&quot;</span><span class="p">]),</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wt_single&quot;</span><span class="p">,</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">Wt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Wt (temporal window, frames)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wt</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wt&quot;</span>
         <span class="p">)</span>
-        <span class="n">ws</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;ws (PSF width, px)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">][</span><span class="s2">&quot;ws&quot;</span><span class="p">],</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ws&quot;</span><span class="p">,</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">ws</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;ws (PSF width, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">ws</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ws&quot;</span>
         <span class="p">)</span>
-        <span class="n">remove_background_mode</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-            <span class="s2">&quot;Remove background mode&quot;</span><span class="p">,</span>
-            <span class="p">[</span><span class="s2">&quot;movmedian&quot;</span><span class="p">,</span> <span class="s2">&quot;movmean&quot;</span><span class="p">],</span>
-            <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;remove_background_mode&quot;</span><span class="p">,</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">removeBackground</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="s2">&quot;Remove background mode&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;movmedian&quot;</span><span class="p">,</span> <span class="s2">&quot;movmean&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;removeBackground&quot;</span>
         <span class="p">)</span>
 
+    <span class="n">det</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Detection</span>
     <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">):</span>
-        <span class="n">peakSign</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-            <span class="s2">&quot;Peak sign&quot;</span><span class="p">,</span>
-            <span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">,</span> <span class="s2">&quot;negative-positive&quot;</span><span class="p">],</span>
-            <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;peakSign&quot;</span><span class="p">,</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">peakSign</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="s2">&quot;Peak sign&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">,</span> <span class="s2">&quot;negative-positive&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;peakSign&quot;</span>
         <span class="p">)</span>
-        <span class="n">pfa</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Detection&quot;</span><span class="p">][</span><span class="s2">&quot;pfa&quot;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;pfa&quot;</span>
-        <span class="p">)</span>
-        <span class="n">localOptimumRange</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">pfa</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;pfa&quot;</span><span class="p">)</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
             <span class="s2">&quot;Local optimum range&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Detection&quot;</span><span class="p">][</span><span class="s2">&quot;localOptimumRange&quot;</span><span class="p">]),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;localOptimumRange&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="n">lnk</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Linking</span>
     <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Tracking&quot;</span><span class="p">):</span>
-        <span class="n">tracker</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
             <span class="s2">&quot;Tracker algorithm&quot;</span><span class="p">,</span>
             <span class="p">[</span><span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">,</span> <span class="s2">&quot;trackBeforeDetect&quot;</span><span class="p">],</span>
-            <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;tracker&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">minTrackLength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Min track length&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;minTrackLength&quot;</span><span class="p">]),</span>
-            <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;minTrackLength&quot;</span><span class="p">,</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Min track length&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;minTrackLength&quot;</span>
         <span class="p">)</span>
-        <span class="n">cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
             <span class="s2">&quot;Cut-off distance&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;cut_off_distance&quot;</span><span class="p">]),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cut_off_distance&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">unmatched_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
             <span class="s2">&quot;Unmatched penalty distance&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">]),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">tracker</span> <span class="o">==</span> <span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">:</span>
-            <span class="n">maxNegativeGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">==</span> <span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">:</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Max negative gap&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">maxPositiveGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Max positive gap&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">gab_closing_cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Gap closing cut-off distance&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">gab_closing_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Gap closing penalty distance&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">Tlength</span><span class="p">,</span> <span class="n">thresholdLimit</span><span class="p">,</span> <span class="n">TmaxNo</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Tlength&quot;</span><span class="p">],</span>
-                <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;thresholdLimit&quot;</span><span class="p">],</span>
-                <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;TmaxNo&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">maxNegativeGab</span> <span class="o">=</span> <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">]</span>
-            <span class="n">maxPositiveGab</span> <span class="o">=</span> <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">]</span>
-            <span class="n">gab_closing_cut_off_distance</span> <span class="o">=</span> <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">]</span>
-            <span class="n">gab_closing_penalty_distance</span> <span class="o">=</span> <span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">]</span>
             <span class="n">_tlengths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
-            <span class="n">Tlength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                 <span class="s2">&quot;Track length (Tlength)&quot;</span><span class="p">,</span>
                 <span class="n">_tlengths</span><span class="p">,</span>
-                <span class="n">index</span><span class="o">=</span><span class="n">_tlengths</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;Tlength&quot;</span><span class="p">]),</span>
+                <span class="n">index</span><span class="o">=</span><span class="n">_tlengths</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span><span class="p">),</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Tlength&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">thresholdLimit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Intensity threshold limit&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;thresholdLimit&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;thresholdLimit&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">TmaxNo</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Max associations per DIPS (TmaxNo)&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">DC</span><span class="p">[</span><span class="s2">&quot;TmaxNo&quot;</span><span class="p">]),</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span><span class="p">,</span>
                 <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;TmaxNo&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="n">exportOptionalFigures</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span><span class="s2">&quot;Export optional figures&quot;</span><span class="p">)</span>
+    <span class="n">cfg</span><span class="o">.</span><span class="n">exportOptionalFigures</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
+        <span class="s2">&quot;Export optional figures&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;exportOptionalFigures&quot;</span>
+    <span class="p">)</span>
 
-    <span class="n">config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_loaded_config&quot;</span><span class="p">,</span> <span class="n">DC</span><span class="p">))</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-        <span class="s2">&quot;exportOptionalFigures&quot;</span><span class="p">:</span> <span class="n">exportOptionalFigures</span><span class="p">,</span>
-        <span class="s2">&quot;Dt&quot;</span><span class="p">:</span> <span class="n">Dt</span><span class="p">,</span>
-        <span class="s2">&quot;Dx&quot;</span><span class="p">:</span> <span class="n">Dx</span><span class="p">,</span>
-        <span class="s2">&quot;flipIntensity&quot;</span><span class="p">:</span> <span class="n">flipIntensity</span><span class="p">,</span>
-        <span class="s2">&quot;flowEstimate&quot;</span><span class="p">:</span> <span class="n">flowEstimate</span><span class="p">,</span>
-        <span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;darkCalibration&quot;</span><span class="p">:</span> <span class="n">darkCalibration</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">darkCalibration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-            <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">darkCalibration</span><span class="p">),</span>
-            <span class="s2">&quot;Wx&quot;</span><span class="p">:</span> <span class="n">Wx</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Wx</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">Wx</span><span class="p">),</span>
-            <span class="s2">&quot;Wt&quot;</span><span class="p">:</span> <span class="n">Wt</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">Wt</span><span class="p">),</span>
-            <span class="s2">&quot;ws&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">ws</span><span class="p">),</span>
-            <span class="s2">&quot;removeBackground&quot;</span><span class="p">:</span> <span class="n">remove_background_mode</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;Detection&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;peakSign&quot;</span><span class="p">:</span> <span class="n">peakSign</span><span class="p">,</span>
-            <span class="s2">&quot;pfa&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">pfa</span><span class="p">),</span>
-            <span class="s2">&quot;localOptimumRange&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">localOptimumRange</span><span class="p">),</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;tracker&quot;</span><span class="p">:</span> <span class="n">tracker</span><span class="p">,</span>
-        <span class="s2">&quot;Linking&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;minTrackLength&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">minTrackLength</span><span class="p">),</span>
-            <span class="s2">&quot;cut_off_distance&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">cut_off_distance</span><span class="p">),</span>
-            <span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">unmatched_penalty_distance</span><span class="p">),</span>
-            <span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">maxNegativeGab</span><span class="p">),</span>
-            <span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">maxPositiveGab</span><span class="p">),</span>
-            <span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">gab_closing_cut_off_distance</span><span class="p">),</span>
-            <span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">gab_closing_penalty_distance</span><span class="p">),</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;Tlength&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">Tlength</span><span class="p">),</span>
-        <span class="s2">&quot;thresholdLimit&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">thresholdLimit</span><span class="p">),</span>
-        <span class="s2">&quot;TmaxNo&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">TmaxNo</span><span class="p">),</span>
-    <span class="p">})</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
         <span class="s2">&quot;Export current config&quot;</span><span class="p">,</span>
-        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
         <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.json&quot;</span><span class="p">,</span>
         <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
         <span class="n">width</span><span class="o">=</span><span class="s2">&quot;stretch&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">config</span>
+    <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><details>
+<summary>Source Code</summary>
+
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KymographPreprocessing</span><span class="p">:</span>
+    <span class="n">darkCalibration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">Wx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span>
+    <span class="n">Wt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span>
+    <span class="n">ws</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.36</span>
+    <span class="n">removeBackground</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;movmedian&quot;</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Detection</span><span class="p">:</span>
+    <span class="n">peakSign</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;negative&quot;</span>
+    <span class="n">pfa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span>
+    <span class="n">localOptimumRange</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Linking</span><span class="p">:</span>
+    <span class="n">minTrackLength</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">cut_off_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span>
+    <span class="n">unmatched_penalty_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span>
+    <span class="n">maxNegativeGab</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">maxPositiveGab</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">gab_closing_cut_off_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span>
+    <span class="n">gab_closing_penalty_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+    <span class="n">exportOptionalFigures</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">inputDataFormat</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tiff2&quot;</span>
+    <span class="n">Dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.007</span>
+    <span class="n">Dx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.066</span>
+    <span class="n">flipIntensity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">flowEstimate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.4</span>
+    <span class="n">kymographPreprocessing</span><span class="p">:</span> <span class="n">KymographPreprocessing</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">KymographPreprocessing</span>
+    <span class="p">)</span>
+    <span class="n">Detection</span><span class="p">:</span> <span class="n">Detection</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Detection</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gabClosingTracker&quot;</span>
+    <span class="n">Tlength</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">thresholdLimit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span>
+    <span class="n">TmaxNo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">Linking</span><span class="p">:</span> <span class="n">Linking</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Linking</span><span class="p">)</span>
+    <span class="n">trajectoryProperties</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;positionRefined&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;timeFrame&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iOCprofile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iOC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;STDiOC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;D&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">render_config_sidebar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict.&quot;&quot;&quot;</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Algorithm Parameters&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Save / Load config&quot;</span><span class="p">):</span>
+        <span class="n">uploaded</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span>
+            <span class="s2">&quot;Load config JSON&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;built_config_upload&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">uploaded</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_apply_config</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">uploaded</span><span class="p">))</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config loaded.&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid JSON in config file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config format error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Acquisition&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Dt (frame duration, s)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dt&quot;</span>
+        <span class="p">)</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Dx (pixel size, μm)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dx&quot;</span>
+        <span class="p">)</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
+            <span class="s2">&quot;Flip intensity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flipIntensity&quot;</span>
+        <span class="p">)</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Flow estimate (px/frame)&quot;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flowEstimate&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">kymographPreprocessing</span>
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Preprocessing&quot;</span><span class="p">):</span>
+        <span class="n">dark_cal_mode</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
+            <span class="s2">&quot;Dark calibration source&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Scalar&quot;</span><span class="p">,</span> <span class="s2">&quot;Template&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dark_cal_mode&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">dark_cal_mode</span> <span class="o">==</span> <span class="s2">&quot;Scalar&quot;</span><span class="p">:</span>
+            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                    <span class="s2">&quot;Dark calibration value&quot;</span><span class="p">,</span>
+                    <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="mf">8.0</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dark_cal_template</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="s2">&quot;Dark calibration .mat template&quot;</span><span class="p">,</span>
+                <span class="p">[</span><span class="s2">&quot;some&quot;</span><span class="p">,</span> <span class="s2">&quot;different&quot;</span><span class="p">,</span> <span class="s2">&quot;templates&quot;</span><span class="p">],</span>
+                <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dark_cal_template&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">dark_calibration_path</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;templates&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dark_cal_template</span><span class="si">}</span><span class="s2">.mat&quot;</span>
+            <span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_bytes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dark_calibration_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dark_calibration_path</span><span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">Wx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Wx (spatial window, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wx</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wx&quot;</span>
+        <span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">Wt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Wt (temporal window, frames)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wt</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wt&quot;</span>
+        <span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">ws</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;ws (PSF width, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">ws</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ws&quot;</span>
+        <span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">removeBackground</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="s2">&quot;Remove background mode&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;movmedian&quot;</span><span class="p">,</span> <span class="s2">&quot;movmean&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;removeBackground&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">det</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Detection</span>
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">):</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">peakSign</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="s2">&quot;Peak sign&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">,</span> <span class="s2">&quot;negative-positive&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;peakSign&quot;</span>
+        <span class="p">)</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">pfa</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;pfa&quot;</span><span class="p">)</span>
+        <span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Local optimum range&quot;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;localOptimumRange&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">lnk</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Linking</span>
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Tracking&quot;</span><span class="p">):</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="s2">&quot;Tracker algorithm&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">,</span> <span class="s2">&quot;trackBeforeDetect&quot;</span><span class="p">],</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;tracker&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Min track length&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;minTrackLength&quot;</span>
+        <span class="p">)</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Cut-off distance&quot;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cut_off_distance&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="s2">&quot;Unmatched penalty distance&quot;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">==</span> <span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">:</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Max negative gap&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Max positive gap&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Gap closing cut-off distance&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Gap closing penalty distance&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_tlengths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="s2">&quot;Track length (Tlength)&quot;</span><span class="p">,</span>
+                <span class="n">_tlengths</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=</span><span class="n">_tlengths</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Tlength&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Intensity threshold limit&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;thresholdLimit&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+                <span class="s2">&quot;Max associations per DIPS (TmaxNo)&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;TmaxNo&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">cfg</span><span class="o">.</span><span class="n">exportOptionalFigures</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
+        <span class="s2">&quot;Export optional figures&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;exportOptionalFigures&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+        <span class="s2">&quot;Export current config&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.json&quot;</span><span class="p">,</span>
+        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="s2">&quot;stretch&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_config</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span> <span class="n">KymographPreprocessing</span><span class="p">()</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;Dt&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Dx&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;flipIntensity&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;flowEstimate&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tracker&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Tlength&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;thresholdLimit&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;TmaxNo&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;exportOptionalFigures&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span>
+    <span class="p">})</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">pp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Wx&quot;</span><span class="p">,</span> <span class="s2">&quot;Wt&quot;</span><span class="p">,</span> <span class="s2">&quot;ws&quot;</span><span class="p">,</span> <span class="s2">&quot;removeBackground&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pp</span>
+    <span class="p">})</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Detection&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;peakSign&quot;</span><span class="p">,</span> <span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="s2">&quot;localOptimumRange&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="p">})</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Linking&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;minTrackLength&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cut_off_distance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Linking&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="p">})</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Template&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;Scalar&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dc</span><span class="p">)</span>
 </code></pre></div>
 
 </details>

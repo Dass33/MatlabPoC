@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#reusing-the-matlab-code" class="md-skip">
+        <a href="#architectural-decisions-rationale" class="md-skip">
           Skip to content
         </a>
       
@@ -625,33 +625,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../docs/" class="md-nav__link">
         
   
@@ -712,6 +685,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -754,6 +729,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -762,10 +739,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#reusing-the-matlab-code" class="md-nav__link">
+  <a href="#1-reusing-the-matlab-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing the Matlab code
+        1. Reusing the Matlab Code
       
     </span>
   </a>
@@ -773,10 +750,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#choosing-streamlit" class="md-nav__link">
+  <a href="#2-choosing-streamlit-for-the-web-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Choosing Streamlit
+        2. Choosing Streamlit for the Web UI
       
     </span>
   </a>
@@ -784,10 +761,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deployment-decisions" class="md-nav__link">
+  <a href="#3-using-docker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deployment decisions
+        3. Using docker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-using-file-system-instead-of-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Using file system instead of DB
       
     </span>
   </a>
@@ -819,6 +807,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -827,10 +817,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#reusing-the-matlab-code" class="md-nav__link">
+  <a href="#1-reusing-the-matlab-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing the Matlab code
+        1. Reusing the Matlab Code
       
     </span>
   </a>
@@ -838,10 +828,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#choosing-streamlit" class="md-nav__link">
+  <a href="#2-choosing-streamlit-for-the-web-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Choosing Streamlit
+        2. Choosing Streamlit for the Web UI
       
     </span>
   </a>
@@ -849,10 +839,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deployment-decisions" class="md-nav__link">
+  <a href="#3-using-docker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deployment decisions
+        3. Using docker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-using-file-system-instead-of-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Using file system instead of DB
       
     </span>
   </a>
@@ -876,27 +877,35 @@
 
 
 
-  <h1>Architectural Decisions</h1>
-
-<p>It may be quite helpful for maintainers and users of this app to know reasoning behind some architectural choices this app makes, this page contains just that.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This page has less of a documentation character to get more concreate information about the interals of the app visit the appropriate pages from the sidebar.</p>
-</div>
-<p>The main goal is to make the app very accesible to researchers, keep the app simple and easy to maintain.
-To fullfill these goals there were made some tradeoffs, bellow is written down the reasoning and architecture decisions for this app.</p>
-<h2 id="reusing-the-matlab-code">Reusing the Matlab code<a class="headerlink" href="#reusing-the-matlab-code" title="Permanent link">&para;</a></h2>
-<p>Creating new version of the algorithm, is quite a big task and maintaing two version of the algorithm has quite a big costs,
-so it was decided that the Matlab code should be reused.
-Being somewhat locked in Matlab ecosystem has some noticible downsides, like lower compatibility with other tools or licensing costs.</p>
-<h2 id="choosing-streamlit">Choosing Streamlit<a class="headerlink" href="#choosing-streamlit" title="Permanent link">&para;</a></h2>
-<p>Streamlit lets you build nice web apps in plain Python with no frontend development experience required, and is also very fast to do so.
-The main tradeoff is that Streamlit is highly opionated and creating custom components is bit harder and every interaction triggers a full Python rerun, which can be done quite cheaply by having certain data cached in <code>st.session_state</code> and using <code>@st.cache_data</code> for file reads.</p>
-<h2 id="deployment-decisions">Deployment decisions<a class="headerlink" href="#deployment-decisions" title="Permanent link">&para;</a></h2>
-<p>On-premise deployment on the lab's existing hardware avoids a recurring cost and takes advantage of hardware that is already available.
-Docker makes the setup portable as the containers can run on Windows locally, VPS, or a cluster with minimal changes.
-Watchtower (container monitoring pushed continers to <a href="https://hub.docker.com/">Docker hub</a>) removes the need for manual updating on the production machine when deploying updates.
-(it is neccessary to config the correct Docker hub repo to monitor)</p>
+<h1 id="architectural-decisions-rationale">Architectural Decisions &amp; Rationale<a class="headerlink" href="#architectural-decisions-rationale" title="Permanent link">&para;</a></h1>
+<p>This document tracks major design choices made throughout the development of the NSM Data Processing application, including their associated trade-offs.</p>
+<hr />
+<h2 id="1-reusing-the-matlab-code">1. Reusing the Matlab Code<a class="headerlink" href="#1-reusing-the-matlab-code" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision</strong>: Reuse the existing MATLAB algorithms directly via compilation, rather than rewriting them in Python/C++.</li>
+<li><strong>Rationale</strong>: The algorithm is complex and changes frequently. Maintaining dual implementations (one in MATLAB for research and one in another language for production) would double development overhead and risk code drift.</li>
+<li><strong>Trade-off</strong>: Spawning a MATLAB compiled binary requires the MATLAB Runtime (MCR) to be installed, which makes Docker image size about 10GB and introduces startup latency. However, it requires no runtime license fees.</li>
+</ul>
+<hr />
+<h2 id="2-choosing-streamlit-for-the-web-ui">2. Choosing Streamlit for the Web UI<a class="headerlink" href="#2-choosing-streamlit-for-the-web-ui" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision</strong>: Implement the user interface as a single-page Streamlit Python application.</li>
+<li><strong>Rationale</strong>: Streamlit makes it very easy and fast to create dashboard interfaces and is very friendly to newcomers to web dev.</li>
+<li><strong>Trade-off</strong>: Streamlit is heavily opinionated, and doing custom components in it requires more effort.</li>
+</ul>
+<hr />
+<h2 id="3-using-docker">3. Using docker<a class="headerlink" href="#3-using-docker" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision</strong>: TODO</li>
+<li><strong>Rationale</strong>: TODO
+    <strong>Trade-off</strong>: TODO</li>
+</ul>
+<h2 id="4-using-file-system-instead-of-db">4. Using file system instead of DB<a class="headerlink" href="#4-using-file-system-instead-of-db" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision</strong>: TODO</li>
+<li><strong>Rationale</strong>: TODO
+    <strong>Trade-off</strong>: TODO</li>
+</ul>
 
 
 

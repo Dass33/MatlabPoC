@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#constants" class="md-skip">
+        <a href="#constants-module" class="md-skip">
           Skip to content
         </a>
       
@@ -571,10 +571,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#algorithm-defaults" class="md-nav__link">
+  <a href="#technical-purpose" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Algorithm defaults
+        Technical Purpose
       
     </span>
   </a>
@@ -582,10 +582,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#outlier-filtering-defaults" class="md-nav__link">
+  <a href="#code-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Outlier filtering defaults
+        Code Reference
       
     </span>
   </a>
@@ -593,21 +593,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population-analysis" class="md-nav__link">
+  <a href="#constants" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Population analysis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ui-display" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UI display
+        constants
       
     </span>
   </a>
@@ -701,33 +690,6 @@
     
   
     Deployment
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
   
 
     
@@ -848,10 +810,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#algorithm-defaults" class="md-nav__link">
+  <a href="#technical-purpose" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Algorithm defaults
+        Technical Purpose
       
     </span>
   </a>
@@ -859,10 +821,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#outlier-filtering-defaults" class="md-nav__link">
+  <a href="#code-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Outlier filtering defaults
+        Code Reference
       
     </span>
   </a>
@@ -870,21 +832,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population-analysis" class="md-nav__link">
+  <a href="#constants" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Population analysis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ui-display" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UI display
+        constants
       
     </span>
   </a>
@@ -908,68 +859,53 @@
 
 
 
-<h1 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h1>
-<p>Single source of truth for all default values and shared constants in the app.
-This is the first place to look when tuning algorithm defaults or UI display settings.</p>
-<h2 id="algorithm-defaults">Algorithm defaults<a class="headerlink" href="#algorithm-defaults" title="Permanent link">&para;</a></h2>
-<p><code>DEFAULT_CONFIG</code> — default values for all algorithm parameters submitted with each job.</p>
-<h2 id="outlier-filtering-defaults">Outlier filtering defaults<a class="headerlink" href="#outlier-filtering-defaults" title="Permanent link">&para;</a></h2>
-<p><code>FILTER_DEFAULTS</code> — per-property default threshold direction and type (e.g. <code>iOC: both / 3std</code>).</p>
-<p><code>TV_OPTIONS</code> / <code>DIR_OPTIONS</code> — valid choices for threshold type and direction.</p>
-<p><code>SCALAR_PROPS</code> — ordered list of filterable scalar properties, derived from <code>FILTER_DEFAULTS</code>.</p>
-<p><code>MICRO_PROPS</code> — properties displayed in µ units (<code>iOC</code>, <code>STDiOC</code>).</p>
-<h2 id="population-analysis">Population analysis<a class="headerlink" href="#population-analysis" title="Permanent link">&para;</a></h2>
-<p><code>AVAILABLE_PROPS</code> — properties shown in the Population Analysis tab.</p>
-<h2 id="ui-display">UI display<a class="headerlink" href="#ui-display" title="Permanent link">&para;</a></h2>
-<p><code>STATES</code> — scatter plot marker colour and symbol per trajectory state (auto-kept, manual-excluded, …).</p>
-<p><code>TRACK_PALETTE</code> — colour cycle used in the track preview plot.</p>
-<p><code>STATUS_ICON</code> — emoji icons for job status labels used in the History tab.</p>
-<details>
-<summary>Source</summary>
+<h1 id="constants-module">Constants Module<a class="headerlink" href="#constants-module" title="Permanent link">&para;</a></h1>
+<p>The <code>streamlit/constants.py</code> file exposes default parameters, labels, and ranges used across the user interface.</p>
+<hr />
+<h2 id="technical-purpose">Technical Purpose<a class="headerlink" href="#technical-purpose" title="Permanent link">&para;</a></h2>
+<p>Centralising constants prevents magic numbers from spreading throughout individual tab modules, facilitating global configuration tweaks (e.g. updating default filter properties or standard ranges).
+(Note that currently there still are some magic numbers, especially in postprocessing.py)</p>
+<hr />
+<h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="constants"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div><details>
+<summary>Source Code</summary>
 
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-
-<span class="n">DEFAULT_CONFIG</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;exportOptionalFigures&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="s2">&quot;inputDataFormat&quot;</span><span class="p">:</span> <span class="s2">&quot;tiff2&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Dt&quot;</span><span class="p">:</span> <span class="mf">0.007</span><span class="p">,</span>
-    <span class="s2">&quot;Dx&quot;</span><span class="p">:</span> <span class="mf">0.066</span><span class="p">,</span>
-    <span class="s2">&quot;flipIntensity&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s2">&quot;flowEstimate&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">3.4</span><span class="p">,</span>
-    <span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;darkCalibration&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-        <span class="s2">&quot;Wx&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-        <span class="s2">&quot;Wt&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-        <span class="s2">&quot;ws&quot;</span><span class="p">:</span> <span class="mf">2.36</span><span class="p">,</span>
-        <span class="s2">&quot;removeBackground&quot;</span><span class="p">:</span> <span class="s2">&quot;movmedian&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Detection&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;peakSign&quot;</span><span class="p">:</span> <span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;pfa&quot;</span><span class="p">:</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="s2">&quot;localOptimumRange&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">},</span>
-    <span class="s2">&quot;tracker&quot;</span><span class="p">:</span> <span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Tlength&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-    <span class="s2">&quot;thresholdLimit&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
-    <span class="s2">&quot;TmaxNo&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-    <span class="s2">&quot;Linking&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;minTrackLength&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="s2">&quot;cut_off_distance&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-        <span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-        <span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
-        <span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;trajectoryProperties&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;positionRefined&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;timeFrame&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;iOCprofile&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;N&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;iOC&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;STDiOC&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;D&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-<span class="p">}</span>
 
 <span class="n">STATUS_ICON</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;processing&quot;</span><span class="p">:</span> <span class="s2">&quot;⏳&quot;</span><span class="p">,</span>

@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#help" class="md-skip">
+        <a href="#help-tab" class="md-skip">
           Skip to content
         </a>
       
@@ -464,6 +464,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -480,6 +498,58 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        help
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help.page_help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_help
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -639,33 +709,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../docs/" class="md-nav__link">
         
   
@@ -760,6 +803,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        help
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help.page_help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_help
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -775,10 +859,168 @@
 
 
 
-<h1 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h1>
-<p>Static usage instructions and output file reference.</p>
-<details>
-<summary>Source</summary>
+<h1 id="help-tab">Help Tab<a class="headerlink" href="#help-tab" title="Permanent link">&para;</a></h1>
+<p>The <strong>Help</strong> tab displays in-app user guide.</p>
+<hr />
+<h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="help"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="help.page_help" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">page_help</span><span class="p">()</span></code>
+
+<a href="#help.page_help" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Help tab — static usage instructions and output file reference.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/help.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_help</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Help tab — static usage instructions and output file reference.&quot;&quot;&quot;</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        ### How to use</span>
+
+<span class="s2">        1. Configure algorithm parameters in the sidebar.</span>
+<span class="s2">        2. Upload your `.tiff` files **and their paired `.txt` metadata files** in the **Submit** tab.</span>
+<span class="s2">           Each TIFF must have a matching TXT with the same base name (e.g. `data_001.tiff` + `data_001.txt`).</span>
+<span class="s2">        3. Click **Submit job**. Files are written to disk immediately and the container starts in the</span>
+<span class="s2">           background — your browser does not need to stay open.</span>
+<span class="s2">        4. Enable **Wait for result** if you prefer to watch progress on this page.</span>
+<span class="s2">        5. Once complete, select the experiment from the dropdown at the top of the page to load it.</span>
+
+<span class="s2">        ---</span>
+
+<span class="s2">        ### Tabs</span>
+
+<span class="s2">        | Tab | Description |</span>
+<span class="s2">        |-----|-------------|</span>
+<span class="s2">        | **Submit** | Upload files and start a new analysis job |</span>
+<span class="s2">        | **Kymograph Analysis** | Browse kymograph images produced by the algorithm |</span>
+<span class="s2">        | **Post-processing** | Filter trajectories by outlier thresholds, manually include/exclude points, run iOC calibration |</span>
+<span class="s2">        | **Population Analysis** | Compute population statistics (robustMean or Gaussian fit) on the filtered collection |</span>
+<span class="s2">        | **History** | View all submitted jobs and their status |</span>
+
+<span class="s2">        ---</span>
+
+<span class="s2">        ### Output files</span>
+
+<span class="s2">        | File | Contents |</span>
+<span class="s2">        |------|----------|</span>
+<span class="s2">        | `kymographs/*.png` | Kymograph images |</span>
+<span class="s2">        | `collection/collection.mat` | Raw trajectory collection |</span>
+<span class="s2">        | `collection_postprocessed.json` | Filtered collection after post-processing |</span>
+<span class="s2">        | `population.json` | Population statistics after population analysis |</span>
+<span class="s2">        | `status.json` | Job status and error message if failed |</span>
+
+<span class="s2">        ---</span>
+
+<span class="s2">        ### Post-processing</span>
+
+<span class="s2">        The scatter plot shows all trajectories coloured by state:</span>
+<span class="s2">        - **auto-kept** — passes the configured outlier thresholds</span>
+<span class="s2">        - **auto-excluded** — rejected by outlier thresholds</span>
+<span class="s2">        - **manual-kept / manual-excluded** — overridden by lasso/box selection</span>
+
+<span class="s2">        Use the threshold table to adjust per-property thresholds (`3std`, `3std_conditional`, or a fixed number).</span>
+<span class="s2">        Click **Accept &amp; Save** when satisfied — this writes `collection_postprocessed.json` and optionally</span>
+<span class="s2">        runs iOC calibration before handing off to Population Analysis.</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><details>
+<summary>Source Code</summary>
 
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 

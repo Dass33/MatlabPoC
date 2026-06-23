@@ -12,7 +12,7 @@
         <link rel="prev" href="../streamlit/matlab_bridge/">
       
       
-        <link rel="next" href="../tests/">
+        <link rel="next" href="../docs/">
       
       
         
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#deployment" class="md-skip">
+        <a href="#deployment-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -660,22 +660,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#on-premise-current-deployment" class="md-nav__link">
+  <a href="#1-on-premise-deployment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        On premise (current deployment)
+        1. On-Premise Deployment
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="On premise (current deployment)">
+    <nav class="md-nav" aria-label="1. On-Premise Deployment">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#how-to-deploy-locally-windows" class="md-nav__link">
+  <a href="#installation-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to deploy locally (windows)
+        Installation Steps
       
     </span>
   </a>
@@ -688,21 +688,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deploying-to-vps" class="md-nav__link">
+  <a href="#2-docker-compose-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploying to VPS
+        2. Docker Compose Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Docker Compose Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#deploying-to-cluster" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#volumes-port-mapping" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploying to cluster
+        Volumes &amp; Port Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-continuous-deployment-with-watchtower" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Continuous Deployment with Watchtower
       
     </span>
   </a>
@@ -713,33 +741,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Testing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -852,22 +853,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#on-premise-current-deployment" class="md-nav__link">
+  <a href="#1-on-premise-deployment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        On premise (current deployment)
+        1. On-Premise Deployment
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="On premise (current deployment)">
+    <nav class="md-nav" aria-label="1. On-Premise Deployment">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#how-to-deploy-locally-windows" class="md-nav__link">
+  <a href="#installation-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to deploy locally (windows)
+        Installation Steps
       
     </span>
   </a>
@@ -880,21 +881,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deploying-to-vps" class="md-nav__link">
+  <a href="#2-docker-compose-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploying to VPS
+        2. Docker Compose Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Docker Compose Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#deploying-to-cluster" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#volumes-port-mapping" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploying to cluster
+        Volumes &amp; Port Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-continuous-deployment-with-watchtower" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Continuous Deployment with Watchtower
       
     </span>
   </a>
@@ -918,27 +947,65 @@
 
 
 
-<h1 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h1>
-<p>Currently the app is deployed on premise, but it supports deployments in several other environemnts notably on virtual private server, cloud run, or with small modifications on a cluster.</p>
-<h2 id="on-premise-current-deployment">On premise (current deployment)<a class="headerlink" href="#on-premise-current-deployment" title="Permanent link">&para;</a></h2>
-<h3 id="how-to-deploy-locally-windows">How to deploy locally (windows)<a class="headerlink" href="#how-to-deploy-locally-windows" title="Permanent link">&para;</a></h3>
+<h1 id="deployment-guide">Deployment Guide<a class="headerlink" href="#deployment-guide" title="Permanent link">&para;</a></h1>
+<p>The NSM Web Application is containerised with Docker to make deployments predictable and portable. It can run on premise and on cloud hosting providers (<a href="https://en.wikipedia.org/wiki/Virtual_private_server">VPS</a>, like <a href="https://www.hetzner.com/">Hetzner</a>).</p>
+<hr />
+<h2 id="1-on-premise-deployment">1. On-Premise Deployment<a class="headerlink" href="#1-on-premise-deployment" title="Permanent link">&para;</a></h2>
+<p>The primary production deployment runs on the lab's dedicated local server using Docker Desktop on Windows.</p>
+<h3 id="installation-steps">Installation Steps<a class="headerlink" href="#installation-steps" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Install <a href="https://docs.docker.com/desktop/">Docker Desktop</a> and make sure it is running.</li>
-<li>Create a <code>.env</code> file in the project root:
-   <div class="highlight"><pre><span></span><code>HOST_DATA_DIR=C:\absolute\path\to\MatlabPoC\data
-</code></pre></div></li>
-<li>Start the stack:
+<li>Install <a href="https://docs.docker.com/desktop/">Docker Desktop</a> on the target host machine.</li>
+<li>Clone the repository or download the package files to the server.</li>
+<li>Configure the environment variables in <code>.env</code> (see below).</li>
+<li>Run the Docker Compose stack in detached mode:
    <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
 </code></pre></div></li>
-<li>Open <code>http://localhost:8501</code>.</li>
+<li>The application will be serving HTTP requests at <strong><code>http://localhost:8501</code></strong>.</li>
 </ol>
-<p>Updates are deployed by pushing new images from the development machine — Watchtower picks them up automatically within ~5 minutes, no action needed on the Windows machine.</p>
-<h2 id="deploying-to-vps">Deploying to VPS<a class="headerlink" href="#deploying-to-vps" title="Permanent link">&para;</a></h2>
-<p>The app was deployed in the past to Hetzner VPS, which is great solution for the ease of setup, reliable monthly fee, and reliability.
-The downsides are the presence of monthly fee and the fact that the lab is in possesion of strong hardware that can be utilized for the task.</p>
-<h2 id="deploying-to-cluster">Deploying to cluster<a class="headerlink" href="#deploying-to-cluster" title="Permanent link">&para;</a></h2>
-<p>Even though it is slightly trickier to pull off it could have great benefits, if the researchers need to scale the experiments up.
-For deploying to cluster there would have to be some changes made, but the architecture overall supports is well.</p>
+<hr />
+<h2 id="2-docker-compose-configuration">2. Docker Compose Configuration<a class="headerlink" href="#2-docker-compose-configuration" title="Permanent link">&para;</a></h2>
+<p>The application stack consists of two services defined in <code>docker-compose.yml</code>:
+1. <strong><code>streamlit</code></strong>: The core application serving the web interface and executing background MATLAB jobs.
+2. <strong><code>watchtower</code></strong>: An automation utility that checks for updated container images and restarts the stack seamlessly.</p>
+<h3 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
+<p>Customize runtime configurations by editing the <code>.env</code> file at the project root:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>DATA_DIR</code></td>
+<td style="text-align: left;">Folder path inside container where job data is written.</td>
+<td style="text-align: left;"><code>/data/jobs</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POLL_INTERVAL_S</code></td>
+<td style="text-align: left;">Tick rate (seconds) at which Streamlit polls for status updates.</td>
+<td style="text-align: left;"><code>5</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MATLAB_APP</code></td>
+<td style="text-align: left;">Path to the compiled executable shell runner script.</td>
+<td style="text-align: left;"><code>/opt/matlab_app/run_AnalyzeExperimentApp.sh</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="volumes-port-mapping">Volumes &amp; Port Mapping<a class="headerlink" href="#volumes-port-mapping" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Port <code>8501:8501</code></strong>: Map the internal Streamlit web server port to the host server.</li>
+<li><strong>Volume <code>./data:/data/jobs</code></strong>: Mounts a local database directory (<code>data/</code>) on the host machine to the container's internal data directory. This ensures raw TIFF files and output JSON results persist across container updates and restarts.</li>
+</ul>
+<hr />
+<h2 id="3-continuous-deployment-with-watchtower">3. Continuous Deployment with Watchtower<a class="headerlink" href="#3-continuous-deployment-with-watchtower" title="Permanent link">&para;</a></h2>
+<p>The production container is kept up-to-date automatically:
+1. When developers run <code>python scripts/deploy.py</code>, a new production-ready image is built and pushed to the Docker Hub repository (<code>dass33/nsm-streamlit:latest</code>).
+2. The <code>watchtower</code> service on the deployment server queries the Docker Hub registry every 5 minutes (300 seconds).
+3. If a new image digest is found, Watchtower pulls the latest container image, cleanly stops the existing <code>streamlit</code> container, and boots a new one with identical environment configurations. No manual SSH or intervention is required.</p>
 
 
 
