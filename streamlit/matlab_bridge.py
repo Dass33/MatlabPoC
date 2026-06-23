@@ -67,14 +67,7 @@ def _get_pkg() -> Any:
 def find_outliers(
     collection: Collection, matlab_setting: MatlabFilterSetting
 ) -> np.ndarray:
-    """
-    matlab_setting must have:
-        filterProperties   : list[str]
-        thresholdDirection : list[str]   ('upper' | 'lower' | 'both')
-        thresholdValue     : list        ('3std' | '3std_conditional' | [numeric])
-
-    Returns a bool array of length N: True = not an outlier.
-    """
+    """Returns a boolean mask of length N where True means the trajectory is not an outlier."""
     preped_collection = u.to_json(u.prep_collection(collection))
     matlab_setting_json = u.to_json(matlab_setting)
 
@@ -92,18 +85,7 @@ def run_postprocessing(
     keep_mask: np.ndarray,
     calibration_on: bool = True,
 ) -> PostprocessingResult:
-    """
-    Call MATLAB runPostprocessing
-
-    matlab_setting is the flat outlierFiltering dict (filterProperties, thresholdDirection,
-    thresholdValue) as returned by _build_matlab_setting.
-
-    Returns dict with:
-        notOutlier  : bool ndarray, full length
-        iOC, STDiOC, N : float ndarray, full length (calibrated if calibration_on)
-        threshold   : threshold info from MATLAB
-        calibration : calibration curve dict (x, A, Astd, AN), or None
-    """
+    """Runs outlier filtering and optional iOC calibration via MATLAB. Returns a PostprocessingResult."""
     postprocessing_setting = {
         "iOCcalibration": "on" if calibration_on else "off",
         "outlierFiltering": matlab_setting,
@@ -131,16 +113,7 @@ def run_postprocessing(
 def run_population_analysis(
     collection: dict[str, object], setting: dict[str, object]
 ) -> dict[str, object]:
-    """
-    Run population analysis.
-
-    setting must have:
-        Title      : 'robustMean' | 'gaussFit'
-        properties : list[str]
-
-    Returns dict keyed by property name:
-        {prop: {MEAN, STD, FWHM, RESOLUTION, [histCenters, histCounts]}}
-    """
+    """Runs population analysis via MATLAB. Returns statistics keyed by property name (MEAN, STD, FWHM, RESOLUTION, histogram bins/counts)."""
     result_json = _get_pkg().runPopulationAnalysis(
         u.to_json(collection),
         u.to_json(setting),
