@@ -1,9 +1,15 @@
-# Population Analysis
+# Population Analysis Tab
 
-Compute population statistics on a postprocessed collection.
+The **Population Analysis** tab aggregates data across all channels of an experiment to compute statistical fits and generate histograms.
+
+---
+
+## Code Reference
+
+::: population
 
 <details>
-<summary>Source</summary>
+<summary>Source Code</summary>
 
 ```python
 --8<-- "streamlit/population.py"

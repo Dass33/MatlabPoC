@@ -1,8 +1,15 @@
-# Kymograph Analysis
+# Kymograph Analysis Tab
 
-Browse rendered kymograph images from a completed job.
+The **Kymograph Analysis** tab allows researchers to visually inspect raw signals and detected molecular tracks in completed experiments.
+
+---
+
+## Code Reference
+
+::: kymograph
+
 <details>
-<summary>Source</summary>
+<summary>Source Code</summary>
 
 ```python
 --8<-- "streamlit/kymograph.py"

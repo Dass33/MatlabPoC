@@ -57,7 +57,6 @@ nav:
     - MATLAB Bridge: streamlit/matlab_bridge.md
 
   - Deployment: deployment.md
-  - Testing: tests.md
   - Docs: docs.md
   - Maintenance Guide: maintenance.md
   - Architectural Decisions: reasoning.md

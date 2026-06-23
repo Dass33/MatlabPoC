@@ -1,11 +1,15 @@
-# Configuration
+# Configuration Tab
 
-Sidebar UI for algorithm parameters. Renders the sidebar widgets and returns a complete config dict for job submission.
+The **Configuration** tab handles the physical parameters of the Nanofluidic Scattering Microscopy (NSM) experiment.
 
-Default parameter values live in [`constants.py`](constants.md) under `DEFAULT_CONFIG`.
+---
+
+## Code Reference
+
+::: config
 
 <details>
-<summary>Source</summary>
+<summary>Source Code</summary>
 
 ```python
 --8<-- "streamlit/config.py"

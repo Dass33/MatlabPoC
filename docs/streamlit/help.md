@@ -1,9 +1,15 @@
-# Help
+# Help Tab
 
-Static usage instructions and output file reference.
+The **Help** tab displays in-app user guide.
+
+---
+
+## Code Reference
+
+::: help
 
 <details>
-<summary>Source</summary>
+<summary>Source Code</summary>
 
 ```python
 --8<-- "streamlit/help.py"

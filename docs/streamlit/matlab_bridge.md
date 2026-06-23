@@ -1,47 +1,28 @@
 # MATLAB Bridge
 
-Interface to the compiled MATLAB algorithm via JSON serialisation.
+The **MATLAB Bridge** (`streamlit/matlab_bridge.py`) serves as the programmatic interface between Python and the compiled MATLAB functions for outlier filtering, post-processing, and population analysis.
 
-MCR is initialised once per process on first call. All functions communicate via JSON strings so no MATLAB-specific Python types leak into the rest of the codebase.
+---
 
-<details>
-<summary>Source</summary>
+## Technical Details
 
-```matlab
---8<-- "matlab/nsm-data-analysis/runIocCalibration.m"
-```
+### 1. In-Memory Initialization
+The Python module wraps the custom compiled `nsm_algorithms` library. The MATLAB Runtime (MCR) is initialized once per process on the first call using `nsm_algorithms.initialize()`.
 
-</details>
+### 2. JSON Serialization
+The bridge serialises all parameters to JSON string format before passing them to MATLAB. The MATLAB functions process the JSON payload, execute the mathematical routines, and return a JSON string, which is then parsed back into standard NumPy arrays and dictionaries in Python.
 
+---
 
-## Outlier Filtering
-<details>
-<summary>Source</summary>
+## Code Reference
 
-```matlab
---8<-- "matlab/nsm-data-analysis/runOutlierFiltering.m"
-```
-
-</details>
-
-## Population Analysis
+::: matlab_bridge
 
 <details>
-<summary>Source</summary>
+<summary>Source Code</summary>
 
-```matlab
---8<-- "matlab/nsm-data-analysis/runPopulationAnalysis.m"
-```
-
-</details>
-
-## Postprocessing
-
-<details>
-<summary>Source</summary>
-
-```matlab
---8<-- "matlab/nsm-data-analysis/runPostprocessing.m"
+```python
+--8<-- "streamlit/matlab_bridge.py"
 ```
 
 </details>
