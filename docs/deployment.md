@@ -7,15 +7,11 @@ Currently the app is deployed on premise, but it supports deployments in several
 ### How to deploy locally (windows)
 
 1. Install [Docker Desktop](https://docs.docker.com/desktop/) and make sure it is running.
-2. Create a `.env` file in the project root:
-   ```
-   HOST_DATA_DIR=C:\absolute\path\to\MatlabPoC\data
-   ```
-3. Start the stack:
+2. Start the stack:
    ```bash
    docker compose up -d
    ```
-4. Open `http://localhost:8501`.
+3. Open `http://localhost:8501`.
 
 Updates are deployed by pushing new images from the development machine — Watchtower picks them up automatically within ~5 minutes, no action needed on the Windows machine.
 

@@ -7,19 +7,11 @@ MATLAB; the "frontend" is in Streamlit.
 
 For more detail check out the documentation available [here](https://dass33.github.io/MatlabPoC/).
 
-## Two-Container Design
+## Architecture
 
-### Streamlit container
+A single Docker container serves the Streamlit UI and runs the compiled `AnalyzeExperimentApp`
+binary as a subprocess for each submitted job. Job data is stored in the mounted `data/` volume.
 
-- Runs continuously, serves the UI on port 8501.
-- Can spawn MATLAB containers on demand.
-- Reads/writes job data via a shared Docker volume.
-
-### MATLAB container
-
-- Spawned per job by Streamlit via the Docker Python SDK.
-- Runs the compiled `AnalyzeExperimentApp` binary, exits when done.
-  
 ## How to Run
 
 ### Prerequisites
@@ -29,26 +21,19 @@ For more detail check out the documentation available [here](https://dass33.gith
 
 ### Local Development
 
-1. Create `.env` file with `HOST_DATA_DIR` set to the absolute path of the `data/` directory:
-   ```
-   HOST_DATA_DIR=/absolute/path/to/MatlabPoC/data
-   ```
-
-2. Build and start:
+1. Build and start:
    ```bash
    ./scripts/start.sh
    ```
-   This compiles the MATLAB source, builds both Docker images, and starts the stack.
+   This compiles the MATLAB source, builds the Docker image, and starts the stack.
 
-3. Open http://localhost:8501
+2. Open http://localhost:8501
 
 ### Production Deployment
 
-Push images to Docker registry (Watchtower will auto-update):
+Push image to Docker registry (Watchtower will auto-update):
 ```bash
-./scripts/push.sh              # Push both images
-./scripts/push.sh --matlab     # only MATLAB (after recompiling)
-./scripts/push.sh --streamlit  # only Streamlit
+./scripts/deploy.sh
 ```
 
 Changes will be deployed within 5 minutes via Watchtower.
