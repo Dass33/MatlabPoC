@@ -4,22 +4,21 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import threading
 import uuid
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import docker
-
 _TZ = ZoneInfo("Europe/Prague")
 
 log = logging.getLogger(__name__)
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./data/jobs"))
-HOST_DATA_DIR = Path(os.environ.get("HOST_DATA_DIR", str(DATA_DIR)))
-MATLAB_IMAGE = os.environ.get("MATLAB_IMAGE", "matlab-algorithm:latest")
 POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "5"))
+MCR_ROOT = os.environ.get("MCR_ROOT", "/opt/matlabruntime/R2025b")
+MATLAB_APP = os.environ.get("MATLAB_APP", "/opt/matlab_app/run_AnalyzeExperimentApp.sh")
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -71,48 +70,37 @@ def stream_upload_to_disk(uploaded_file, dest_path: Path) -> None:
         shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)
 
 
-def _container_reaper(container, log_dest: Path) -> None:
+def _process_reaper(proc: subprocess.Popen, log_dest: Path) -> None:
     try:
-        container.wait()
-        log_dest.write_bytes(container.logs(stdout=True, stderr=True))
+        stdout, _ = proc.communicate()
+        log_dest.write_bytes(stdout)
         for p in [log_dest.parent, *log_dest.parent.rglob("*")]:
             try:
                 p.chmod(0o777)
             except OSError:
                 pass
-    finally:
-        container.remove(force=True)
+    except Exception as e:
+        log.error("[reaper] %s", e)
 
 
-def launch_matlab_container(job_id: str) -> None:
-    """Start a Docker container running the compiled MATLAB algorithm."""
-    _, _, out = job_dirs(job_id)
+def launch_matlab_job(job_id: str) -> None:
+    """Run the compiled MATLAB algorithm as a subprocess."""
+    _, inp, out = job_dirs(job_id)
     out.mkdir(parents=True, exist_ok=True)
 
-    host_job_base = HOST_DATA_DIR / job_id
+    log.info("[launch] job=%s inp=%s out=%s", job_id, inp, out)
 
-    log.info("[launch] image=%s host_job=%s", MATLAB_IMAGE, host_job_base)
-
-    client = docker.from_env()
-    try:
-        container = client.containers.run(
-            MATLAB_IMAGE,
-            command=["/opt/matlabruntime/R2025b", "/job/input", "/job/output"],
-            volumes={str(host_job_base): {"bind": "/job", "mode": "rw"}},
-            detach=True,
-            remove=False,
-        )
-        log.info("[launch] container started: %s", container.short_id)
-    except docker.errors.ImageNotFound as e:
-        log.error("[launch] image not found: %s", MATLAB_IMAGE)
-        raise
-    except docker.errors.APIError as e:
-        log.error("[launch] docker API error: %s", e)
-        raise
+    proc = subprocess.Popen(
+        [MATLAB_APP, MCR_ROOT, str(inp), str(out)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        cwd=str(Path(MATLAB_APP).parent),
+    )
+    log.info("[launch] pid=%s", proc.pid)
 
     threading.Thread(
-        target=_container_reaper,
-        args=(container, out / "matlab.log"),
+        target=_process_reaper,
+        args=(proc, out / "matlab.log"),
         daemon=True,
     ).start()
 
@@ -128,7 +116,7 @@ def submit_job(
     dark_cal_bytes: bytes | None = None,
     name: str = "",
 ) -> str:
-    """Write uploaded files to disk, save config/meta, and launch a MATLAB container. Returns job_id."""
+    """Write uploaded files to disk, save config/meta, and launch MATLAB analysis. Returns job_id."""
     job_id = datetime.now(_TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
@@ -157,5 +145,5 @@ def submit_job(
         )
     )
 
-    launch_matlab_container(job_id)
+    launch_matlab_job(job_id)
     return job_id

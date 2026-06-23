@@ -2,9 +2,9 @@
 
 Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
-  HOST_DATA_DIR     same path as seen by the host daemon (required)
-  MATLAB_IMAGE      Docker image name                    (default: matlab-algorithm:latest)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
+  MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
+  MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)
 """
 
 from __future__ import annotations
