@@ -1,26 +1,33 @@
-It may be quite helpful for maintainers and users of this app to know reasoning behind some architectural choices this app makes, this page contains just that.
+# Architectural Decisions & Rationale
 
-!!! note
-    This page has less of a documentation character to get more concreate information about the interals of the app visit the appropriate pages from the sidebar.
+This document tracks major design choices made throughout the development of the NSM Data Processing application, including their associated trade-offs.
 
-The main goal is to make the app very accesible to researchers, keep the app simple and easy to maintain.
-To fullfill these goals there were made some tradeoffs, bellow is written down the reasoning and architecture decisions for this app.
+---
 
+## 1. Reusing the Matlab Code
 
-## Reusing the Matlab code
-Creating new version of the algorithm, is quite a big task and maintaing two version of the algorithm has quite a big costs,
-so it was decided that the Matlab code should be reused.
-Being somewhat locked in Matlab ecosystem has some noticible downsides, like lower compatibility with other tools or licensing costs.
+*   **Decision**: Reuse the existing MATLAB algorithms directly via compilation, rather than rewriting them in Python/C++.
+*   **Rationale**: The algorithm is complex and changes frequently. Maintaining dual implementations (one in MATLAB for research and one in another language for production) would double development overhead and risk code drift.
+*   **Trade-off**: Spawning a MATLAB compiled binary requires the MATLAB Runtime (MCR) to be installed, which makes Docker image size about 10GB and introduces startup latency. However, it requires no runtime license fees.
 
-## Choosing Streamlit
+---
 
-Streamlit lets you build nice web apps in plain Python with no frontend development experience required, and is also very fast to do so.
-The main tradeoff is that Streamlit is highly opionated and creating custom components is bit harder and every interaction triggers a full Python rerun, which can be done quite cheaply by having certain data cached in `st.session_state` and using `@st.cache_data` for file reads.
+## 2. Choosing Streamlit for the Web UI
 
-## Deployment decisions
+*   **Decision**: Implement the user interface as a single-page Streamlit Python application.
+*   **Rationale**: Streamlit makes it very easy and fast to create dashboard interfaces and is very friendly to newcomers to web dev.
+*   **Trade-off**: Streamlit is heavily opinionated, and doing custom components in it requires more effort.
 
-On-premise deployment on the lab's existing hardware avoids a recurring cost and takes advantage of hardware that is already available.
-Docker makes the setup portable as the containers can run on Windows locally, VPS, or a cluster with minimal changes.
-Watchtower (container monitoring pushed continers to [Docker hub](https://hub.docker.com/)) removes the need for manual updating on the production machine when deploying updates.
-(it is neccessary to config the correct Docker hub repo to monitor)
+---
 
+## 3. Using docker
+
+*   **Decision**: TODO
+*   **Rationale**: TODO
+    **Trade-off**: TODO
+
+## 4. Using file system instead of DB
+
+*   **Decision**: TODO
+*   **Rationale**: TODO
+    **Trade-off**: TODO
