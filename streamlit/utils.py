@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
@@ -20,7 +21,7 @@ def to_json(obj: Any) -> str:
     return json.dumps(obj, default=_default)
 
 
-def prep_collection(collection: dict[str, object]) -> dict[str, object]:
+def prep_collection(collection: Mapping[str, Any]) -> dict[str, Any]:
     """Convert numpy arrays to plain Python lists for JSON serialisation."""
     out: dict = {}
     for k, v in collection.items():

@@ -67,11 +67,8 @@ def page_submit(config: dict) -> None:
                     dark_cal_bytes=st.session_state.get("dark_cal_bytes"),
                     name=name,
                 )
-            except (OSError, IOError) as e:
+            except OSError as e:
                 st.error(f"Failed to write files: {e}")
-                return
-            except Exception as e:
-                st.error(f"Failed to submit job: {e}")
                 return
         st.session_state["last_job_id"] = job_id
         st.session_state["waiting"] = wait_for_result

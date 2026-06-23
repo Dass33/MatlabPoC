@@ -1,47 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
-DEFAULT_CONFIG: dict[str, Any] = {
-    "exportOptionalFigures": False,
-    "inputDataFormat": "tiff2",
-    "Dt": 0.007,
-    "Dx": 0.066,
-    "flipIntensity": True,
-    "flowEstimate": -3.4,
-    "kymographPreprocessing": {
-        "darkCalibration": 8,
-        "Wx": 15,
-        "Wt": 50,
-        "ws": 2.36,
-        "removeBackground": "movmedian",
-    },
-    "Detection": {"peakSign": "negative", "pfa": 1e-5, "localOptimumRange": 6},
-    "tracker": "gabClosingTracker",
-    "Tlength": 4,
-    "thresholdLimit": -2.0,
-    "TmaxNo": 8,
-    "Linking": {
-        "minTrackLength": 10,
-        "cut_off_distance": 20,
-        "unmatched_penalty_distance": 15,
-        "maxNegativeGab": 2,
-        "maxPositiveGab": 3,
-        "gab_closing_cut_off_distance": 40,
-        "gab_closing_penalty_distance": 30,
-    },
-    "trajectoryProperties": [
-        "positionRefined",
-        "timeFrame",
-        "iOCprofile",
-        "N",
-        "iOC",
-        "STDiOC",
-        "D",
-        "velocity",
-    ],
-}
-
 STATUS_ICON: dict[str, str] = {
     "processing": "⏳",
     "completed": "✅",

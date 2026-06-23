@@ -64,12 +64,6 @@ def list_all_jobs() -> list[dict]:
     return sorted(jobs, key=lambda j: j.get("submitted_at", ""), reverse=True)
 
 
-def stream_upload_to_disk(uploaded_file, dest_path: Path) -> None:
-    uploaded_file.seek(0)
-    with open(dest_path, "wb") as f:
-        shutil.copyfileobj(uploaded_file, f, length=8 * 1024 * 1024)
-
-
 def _process_reaper(proc: subprocess.Popen, log_dest: Path) -> None:
     try:
         stdout, _ = proc.communicate()
@@ -79,7 +73,7 @@ def _process_reaper(proc: subprocess.Popen, log_dest: Path) -> None:
                 p.chmod(0o777)
             except OSError:
                 pass
-    except Exception as e:
+    except (OSError, ValueError) as e:
         log.error("[reaper] %s", e)
 
 
@@ -124,7 +118,9 @@ def submit_job(
 
     filenames = []
     for uf in uploaded_files:
-        stream_upload_to_disk(uf, inp / uf.name)
+        uf.seek(0)
+        with open(inp / uf.name, "wb") as f:
+            shutil.copyfileobj(uf, f, length=8 * 1024 * 1024)
         filenames.append(uf.name)
 
     if dark_cal_bytes is not None:

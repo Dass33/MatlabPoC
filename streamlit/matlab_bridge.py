@@ -2,8 +2,7 @@
 Bridge to the compiled MATLAB nsm_algorithms package.
 
 MCR is initialised once per process on first call. All functions communicate
-via JSON strings so no MATLAB-specific Python types leak into the rest of
-the codebase.
+via JSON strings.
 """
 
 from __future__ import annotations
@@ -26,7 +25,7 @@ class Collection(TypedDict):
     iOCprofile: np.ndarray
     positionStart: NotRequired[np.ndarray]
     positionEnd: NotRequired[np.ndarray]
-    ExperimentTimeStamp: NotRequired[object]
+    ExperimentTimeStamp: NotRequired[np.ndarray]
 
 
 class MatlabFilterSetting(TypedDict):

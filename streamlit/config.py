@@ -1,77 +1,73 @@
 from __future__ import annotations
 
-import copy
 import json
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
 
 import streamlit as st
 
-from constants import DEFAULT_CONFIG
+
+@dataclass
+class KymographPreprocessing:
+    darkCalibration: float | str = 8
+    Wx: float = 15.0
+    Wt: float = 50.0
+    ws: float = 2.36
+    removeBackground: str = "movmedian"
 
 
-def _pick(src: dict[str, Any], *keys: str) -> dict[str, Any]:
-    return {k: src[k] for k in keys if k in src}
+@dataclass
+class Detection:
+    peakSign: str = "negative"
+    pfa: float = 1e-5
+    localOptimumRange: int = 6
 
 
-def apply_config_to_session_state(built_config: dict[str, Any]) -> None:
-    flat = _pick(
-        built_config,
-        "Dt",
-        "Dx",
-        "flipIntensity",
-        "flowEstimate",
-        "tracker",
-        "Tlength",
-        "thresholdLimit",
-        "TmaxNo",
+@dataclass
+class Linking:
+    minTrackLength: int = 10
+    cut_off_distance: float = 20.0
+    unmatched_penalty_distance: float = 15.0
+    maxNegativeGab: int = 2
+    maxPositiveGab: int = 3
+    gab_closing_cut_off_distance: float = 40.0
+    gab_closing_penalty_distance: float = 30.0
+
+
+@dataclass
+class Config:
+    exportOptionalFigures: bool = False
+    inputDataFormat: str = "tiff2"
+    Dt: float = 0.007
+    Dx: float = 0.066
+    flipIntensity: bool = True
+    flowEstimate: float = -3.4
+    kymographPreprocessing: KymographPreprocessing = field(
+        default_factory=KymographPreprocessing
+    )
+    Detection: Detection = field(default_factory=Detection)
+    tracker: str = "gabClosingTracker"
+    Tlength: int = 4
+    thresholdLimit: float = -2.0
+    TmaxNo: int = 8
+    Linking: Linking = field(default_factory=Linking)
+    trajectoryProperties: list[str] = field(
+        default_factory=lambda: [
+            "positionRefined",
+            "timeFrame",
+            "iOCprofile",
+            "N",
+            "iOC",
+            "STDiOC",
+            "D",
+            "velocity",
+        ]
     )
 
-    pp = built_config.get("kymographPreprocessing", {})
-    if "darkCalibration" in pp:
-        dc = pp["darkCalibration"]
-        if isinstance(dc, str):
-            flat.update({"dark_cal_mode": "File path", "dark_cal_path": dc})
-        else:
-            flat.update({"dark_cal_mode": "Scalar", "darkCalibration": int(dc)})
-    if "ws" in pp:
-        flat["ws"] = pp["ws"]
-    if "Wx" in pp:
-        wx = pp["Wx"]
-        flat.update(
-            {"sweep_enabled": True, "Wx_sweep": ", ".join(str(v) for v in wx)}
-            if isinstance(wx, list)
-            else {"Wx_single": float(wx)}
-        )
-    if "Wt" in pp:
-        wt = pp["Wt"]
-        flat.update(
-            {"sweep_enabled": True, "Wt_sweep": ", ".join(str(v) for v in wt)}
-            if isinstance(wt, list)
-            else {"Wt_single": float(wt)}
-        )
 
-    flat.update(
-        _pick(built_config.get("Detection", {}), "peakSign", "pfa", "localOptimumRange")
-    )
-    flat.update(
-        _pick(
-            built_config.get("Linking", {}),
-            "minTrackLength",
-            "cut_off_distance",
-            "unmatched_penalty_distance",
-            "maxNegativeGab",
-            "maxPositiveGab",
-            "gab_closing_cut_off_distance",
-            "gab_closing_penalty_distance",
-        )
-    )
-    st.session_state.update(flat)
-
-
-def render_config_sidebar() -> dict[str, Any]:
-    """Sidebar UI for algorithm parameters. Returns a complete config dict for submission."""
-    DC = DEFAULT_CONFIG
+def render_config_sidebar() -> dict:
+    """Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict."""
+    cfg = Config()
 
     st.sidebar.header("Algorithm Parameters")
 
@@ -81,9 +77,7 @@ def render_config_sidebar() -> dict[str, Any]:
         )
         if uploaded:
             try:
-                loaded = json.load(uploaded)
-                st.session_state["_loaded_config"] = loaded
-                apply_config_to_session_state(loaded)
+                _apply_config(json.load(uploaded))
                 st.success("Config loaded.")
             except json.JSONDecodeError as e:
                 st.error(f"Invalid JSON in config file: {e}")
@@ -91,34 +85,38 @@ def render_config_sidebar() -> dict[str, Any]:
                 st.error(f"Config format error: {e}")
 
     with st.sidebar.expander("Acquisition", expanded=False):
-        Dt = st.number_input(
-            "Dt (frame duration, s)",
-            value=DC["Dt"],
-            format="%.4f",
-            step=0.001,
-            key="Dt",
+        cfg.Dt = st.number_input(
+            "Dt (frame duration, s)", value=cfg.Dt, format="%.4f", step=0.001, key="Dt"
         )
-        Dx = st.number_input(
-            "Dx (pixel size, μm)", value=DC["Dx"], format="%.4f", step=0.001, key="Dx"
+        cfg.Dx = st.number_input(
+            "Dx (pixel size, μm)", value=cfg.Dx, format="%.4f", step=0.001, key="Dx"
         )
-        flipIntensity = st.checkbox(
-            "Flip intensity", value=DC["flipIntensity"], key="flipIntensity"
+        cfg.flipIntensity = st.checkbox(
+            "Flip intensity", value=cfg.flipIntensity, key="flipIntensity"
         )
-        flowEstimate = st.number_input(
+        cfg.flowEstimate = st.number_input(
             "Flow estimate (px/frame)",
-            value=DC["flowEstimate"],
+            value=cfg.flowEstimate,
             format="%.2f",
             step=0.1,
             key="flowEstimate",
         )
 
+    pp = cfg.kymographPreprocessing
     with st.sidebar.expander("Preprocessing"):
         dark_cal_mode = st.radio(
             "Dark calibration source", ["Scalar", "Template"], key="dark_cal_mode"
         )
         if dark_cal_mode == "Scalar":
-            darkCalibration: int | str = st.number_input(
-                "Dark calibration value", value=8, step=1, key="darkCalibration"
+            pp.darkCalibration = int(
+                st.number_input(
+                    "Dark calibration value",
+                    value=float(pp.darkCalibration)
+                    if not isinstance(pp.darkCalibration, str)
+                    else 8.0,
+                    step=1.0,
+                    key="darkCalibration",
+                )
             )
         else:
             dark_cal_template = st.selectbox(
@@ -131,175 +129,159 @@ def render_config_sidebar() -> dict[str, Any]:
                 Path(__file__).parent / "templates" / f"{dark_cal_template}.mat"
             )
             st.session_state["dark_cal_bytes"] = dark_calibration_path.read_bytes()
-            darkCalibration = str(dark_calibration_path)
-        Wx = st.number_input(
-            "Wx (spatial window, px)",
-            value=float(DC["kymographPreprocessing"]["Wx"]),
-            step=1.0,
-            key="Wx_single",
+            pp.darkCalibration = str(dark_calibration_path)
+        pp.Wx = st.number_input(
+            "Wx (spatial window, px)", value=pp.Wx, step=1.0, key="Wx"
         )
-        Wt = st.number_input(
-            "Wt (temporal window, frames)",
-            value=float(DC["kymographPreprocessing"]["Wt"]),
-            step=1.0,
-            key="Wt_single",
+        pp.Wt = st.number_input(
+            "Wt (temporal window, frames)", value=pp.Wt, step=1.0, key="Wt"
         )
-        ws = st.number_input(
-            "ws (PSF width, px)",
-            value=DC["kymographPreprocessing"]["ws"],
-            format="%.2f",
-            step=0.01,
-            key="ws",
+        pp.ws = st.number_input(
+            "ws (PSF width, px)", value=pp.ws, format="%.2f", step=0.01, key="ws"
         )
-        remove_background_mode = st.selectbox(
-            "Remove background mode",
-            ["movmedian", "movmean"],
-            index=0,
-            key="remove_background_mode",
+        pp.removeBackground = st.selectbox(
+            "Remove background mode", ["movmedian", "movmean"], key="removeBackground"
         )
 
+    det = cfg.Detection
     with st.sidebar.expander("Detection"):
-        peakSign = st.selectbox(
-            "Peak sign",
-            ["negative", "positive", "negative-positive"],
-            index=0,
-            key="peakSign",
+        det.peakSign = st.selectbox(
+            "Peak sign", ["negative", "positive", "negative-positive"], key="peakSign"
         )
-        pfa = st.number_input(
-            "pfa", value=DC["Detection"]["pfa"], format="%.e", key="pfa"
-        )
-        localOptimumRange = st.number_input(
+        det.pfa = st.number_input("pfa", value=det.pfa, format="%.e", key="pfa")
+        det.localOptimumRange = st.number_input(
             "Local optimum range",
-            value=int(DC["Detection"]["localOptimumRange"]),
+            value=det.localOptimumRange,
             step=1,
             key="localOptimumRange",
         )
 
+    lnk = cfg.Linking
     with st.sidebar.expander("Tracking"):
-        tracker = st.selectbox(
+        cfg.tracker = st.selectbox(
             "Tracker algorithm",
             ["gabClosingTracker", "trackBeforeDetect"],
-            index=0,
             key="tracker",
         )
-        minTrackLength = st.number_input(
-            "Min track length",
-            value=int(DC["Linking"]["minTrackLength"]),
-            step=1,
-            key="minTrackLength",
+        lnk.minTrackLength = st.number_input(
+            "Min track length", value=lnk.minTrackLength, step=1, key="minTrackLength"
         )
-        cut_off_distance = st.number_input(
+        lnk.cut_off_distance = st.number_input(
             "Cut-off distance",
-            value=float(DC["Linking"]["cut_off_distance"]),
+            value=lnk.cut_off_distance,
             step=1.0,
             key="cut_off_distance",
         )
-        unmatched_penalty_distance = st.number_input(
+        lnk.unmatched_penalty_distance = st.number_input(
             "Unmatched penalty distance",
-            value=float(DC["Linking"]["unmatched_penalty_distance"]),
+            value=lnk.unmatched_penalty_distance,
             step=1.0,
             key="unmatched_penalty_distance",
         )
 
-        if tracker == "gabClosingTracker":
-            maxNegativeGab = st.number_input(
+        if cfg.tracker == "gabClosingTracker":
+            lnk.maxNegativeGab = st.number_input(
                 "Max negative gap",
-                value=int(DC["Linking"]["maxNegativeGab"]),
+                value=lnk.maxNegativeGab,
                 step=1,
                 key="maxNegativeGab",
             )
-            maxPositiveGab = st.number_input(
+            lnk.maxPositiveGab = st.number_input(
                 "Max positive gap",
-                value=int(DC["Linking"]["maxPositiveGab"]),
+                value=lnk.maxPositiveGab,
                 step=1,
                 key="maxPositiveGab",
             )
-            gab_closing_cut_off_distance = st.number_input(
+            lnk.gab_closing_cut_off_distance = st.number_input(
                 "Gap closing cut-off distance",
-                value=float(DC["Linking"]["gab_closing_cut_off_distance"]),
+                value=lnk.gab_closing_cut_off_distance,
                 step=1.0,
                 key="gab_closing_cut_off_distance",
             )
-            gab_closing_penalty_distance = st.number_input(
+            lnk.gab_closing_penalty_distance = st.number_input(
                 "Gap closing penalty distance",
-                value=float(DC["Linking"]["gab_closing_penalty_distance"]),
+                value=lnk.gab_closing_penalty_distance,
                 step=1.0,
                 key="gab_closing_penalty_distance",
             )
-            Tlength, thresholdLimit, TmaxNo = (
-                DC["Tlength"],
-                DC["thresholdLimit"],
-                DC["TmaxNo"],
-            )
         else:
-            maxNegativeGab = DC["Linking"]["maxNegativeGab"]
-            maxPositiveGab = DC["Linking"]["maxPositiveGab"]
-            gab_closing_cut_off_distance = DC["Linking"]["gab_closing_cut_off_distance"]
-            gab_closing_penalty_distance = DC["Linking"]["gab_closing_penalty_distance"]
             _tlengths = [2, 4, 8, 16, 32, 64]
-            Tlength = st.selectbox(
+            cfg.Tlength = st.selectbox(
                 "Track length (Tlength)",
                 _tlengths,
-                index=_tlengths.index(DC["Tlength"]),
+                index=_tlengths.index(cfg.Tlength),
                 key="Tlength",
             )
-            thresholdLimit = st.number_input(
+            cfg.thresholdLimit = st.number_input(
                 "Intensity threshold limit",
-                value=float(DC["thresholdLimit"]),
+                value=cfg.thresholdLimit,
                 step=0.5,
                 key="thresholdLimit",
             )
-            TmaxNo = st.number_input(
+            cfg.TmaxNo = st.number_input(
                 "Max associations per DIPS (TmaxNo)",
-                value=int(DC["TmaxNo"]),
+                value=cfg.TmaxNo,
                 step=1,
                 key="TmaxNo",
             )
 
-    exportOptionalFigures = st.sidebar.checkbox("Export optional figures")
+    cfg.exportOptionalFigures = st.sidebar.checkbox(
+        "Export optional figures", key="exportOptionalFigures"
+    )
 
-    config = copy.deepcopy(st.session_state.get("_loaded_config", DC))
-    config.update({
-        "exportOptionalFigures": exportOptionalFigures,
-        "Dt": Dt,
-        "Dx": Dx,
-        "flipIntensity": flipIntensity,
-        "flowEstimate": flowEstimate,
-        "kymographPreprocessing": {
-            "darkCalibration": darkCalibration
-            if isinstance(darkCalibration, str)
-            else int(darkCalibration),
-            "Wx": Wx if isinstance(Wx, list) else float(Wx),
-            "Wt": Wt if isinstance(Wt, list) else float(Wt),
-            "ws": float(ws),
-            "removeBackground": remove_background_mode,
-        },
-        "Detection": {
-            "peakSign": peakSign,
-            "pfa": float(pfa),
-            "localOptimumRange": int(localOptimumRange),
-        },
-        "tracker": tracker,
-        "Linking": {
-            "minTrackLength": int(minTrackLength),
-            "cut_off_distance": float(cut_off_distance),
-            "unmatched_penalty_distance": float(unmatched_penalty_distance),
-            "maxNegativeGab": int(maxNegativeGab),
-            "maxPositiveGab": int(maxPositiveGab),
-            "gab_closing_cut_off_distance": float(gab_closing_cut_off_distance),
-            "gab_closing_penalty_distance": float(gab_closing_penalty_distance),
-        },
-        "Tlength": int(Tlength),
-        "thresholdLimit": float(thresholdLimit),
-        "TmaxNo": int(TmaxNo),
-    })
+    result = asdict(cfg)
 
     st.sidebar.download_button(
         "Export current config",
-        data=json.dumps(config, indent=2),
+        data=json.dumps(result, indent=2),
         file_name="config.json",
         mime="application/json",
         width="stretch",
     )
 
-    return config
+    return result
+
+
+def _apply_config(d: dict) -> None:
+    pp = d.get("kymographPreprocessing", {})
+    dc = pp.get("darkCalibration", KymographPreprocessing().darkCalibration)
+
+    st.session_state.update({
+        k: d[k]
+        for k in (
+            "Dt",
+            "Dx",
+            "flipIntensity",
+            "flowEstimate",
+            "tracker",
+            "Tlength",
+            "thresholdLimit",
+            "TmaxNo",
+            "exportOptionalFigures",
+        )
+        if k in d
+    })
+    st.session_state.update({
+        k: pp[k] for k in ("Wx", "Wt", "ws", "removeBackground") if k in pp
+    })
+    st.session_state.update({
+        k: d["Detection"][k]
+        for k in ("peakSign", "pfa", "localOptimumRange")
+        if k in d.get("Detection", {})
+    })
+    st.session_state.update({
+        k: d["Linking"][k]
+        for k in (
+            "minTrackLength",
+            "cut_off_distance",
+            "unmatched_penalty_distance",
+            "maxNegativeGab",
+            "maxPositiveGab",
+            "gab_closing_cut_off_distance",
+            "gab_closing_penalty_distance",
+        )
+        if k in d.get("Linking", {})
+    })
+    st.session_state["dark_cal_mode"] = "Template" if isinstance(dc, str) else "Scalar"
+    if not isinstance(dc, str):
+        st.session_state["darkCalibration"] = float(dc)

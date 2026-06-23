@@ -67,7 +67,7 @@ def page_postprocessing(job_id: str | None) -> None:
     _render_postprocessing(job_id, collection)
 
 
-def _render_postprocessing(job_id: str, collection: dict) -> None:
+def _render_postprocessing(job_id: str, collection: Collection) -> None:
     overrides: dict = st.session_state[f"overrides_{job_id}"]
     thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
     filter_props = list(FILTER_DEFAULTS)
@@ -282,7 +282,7 @@ def _compute_states(
 
 
 def _build_scatter(
-    collection: dict, states: list[str], x_prop: str, y_prop: str
+    collection: Collection, states: list[str], x_prop: str, y_prop: str
 ) -> go.Figure:
     x = np.array(collection.get(x_prop, []), dtype=float)
     y = np.array(collection.get(y_prop, []), dtype=float)
@@ -341,7 +341,7 @@ def _parse_selection(event) -> list[int]:
     return result
 
 
-def _render_track_preview(collection: dict, states: list[str], job_id: str) -> None:
+def _render_track_preview(collection: Collection, states: list[str], job_id: str) -> None:
     import matplotlib.pyplot as plt
 
     pos_refined = collection.get("positionRefined")
@@ -457,9 +457,9 @@ def _build_matlab_setting(
 
 def _accept(
     job_id: str,
-    collection: dict,
+    collection: Collection,
     states: list[str],
-    matlab_setting: dict,
+    matlab_setting: MatlabFilterSetting,
     calibration_on: bool,
 ) -> None:
     if calibration_on and (
@@ -486,13 +486,13 @@ def _accept(
             result = matlab_bridge.run_postprocessing(
                 collection, matlab_setting, keep_mask, calibration_on
             )
-        except Exception as e:
+        except (RuntimeError, ValueError) as e:
             st.error(f"Postprocessing failed: {e}")
             return
 
         cal_updates = {k: result[k] for k in ("iOC", "STDiOC", "N") if k in result}
         calibration = result.get("calibration")
-        effective_collection = {**collection, **cal_updates}
+        effective_collection = cast(Collection, {**collection, **cal_updates})
 
         final_mask = result["notOutlier"]
 
