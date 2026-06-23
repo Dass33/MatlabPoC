@@ -22,12 +22,3 @@ Streamlit executes the script from top to bottom on every user interaction. To r
 ## Code Reference
 
 ::: main
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/main.py"
-```
-
-</details>

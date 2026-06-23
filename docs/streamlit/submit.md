@@ -19,12 +19,3 @@ The **Submit** tab provides the user interface for initiating new analysis jobs.
 ## Code Reference
 
 ::: submit
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/submit.py"
-```
-
-</details>

@@ -17,12 +17,3 @@ The bridge serialises all parameters to JSON string format before passing them t
 ## Code Reference
 
 ::: matlab_bridge
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/matlab_bridge.py"
-```
-
-</details>

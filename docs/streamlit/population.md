@@ -7,12 +7,3 @@ The **Population Analysis** tab aggregates data across all channels of an experi
 ## Code Reference
 
 ::: population
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/population.py"
-```
-
-</details>

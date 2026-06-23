@@ -7,12 +7,3 @@ The **Configuration** tab handles the physical parameters of the Nanofluidic Sca
 ## Code Reference
 
 ::: config
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/config.py"
-```
-
-</details>

@@ -14,12 +14,3 @@ Centralising constants prevents magic numbers from spreading throughout individu
 ## Code Reference
 
 ::: constants
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/constants.py"
-```
-
-</details>

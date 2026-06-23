@@ -31,12 +31,3 @@ To process a job, the manager:
 ## Code Reference
 
 ::: job_manager
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/job_manager.py"
-```
-
-</details>

@@ -25,12 +25,3 @@ Interferometric Scattering Microscopy detects signal contrast ($iOC$). To map th
 ## Code Reference
 
 ::: postprocessing
-
-<details>
-<summary>Source Code</summary>
-
-```python
---8<-- "streamlit/postprocessing.py"
-```
-
-</details>
