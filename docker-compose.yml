@@ -10,12 +10,8 @@ services:
       - "8501:8501"
     volumes:
       - ./data:/data/jobs
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       DATA_DIR: /data/jobs
-      HOST_DATA_DIR: ${HOST_DATA_DIR:?HOST_DATA_DIR must be set in .env}
-      MATLAB_IMAGE: dass33/nsm-matlab:latest
-      MAX_WORKERS: 2
       POLL_INTERVAL_S: 5
     restart: unless-stopped
     healthcheck:

@@ -17,6 +17,11 @@ RUN pip3 install  --break-system-packages --no-cache-dir -r requirements.txt
 
 COPY matlab/Compiled/PythonPackage/nsm_algorithms/ ./nsm_algorithms/
 
+RUN mkdir -p /opt/matlab_app
+COPY matlab/Compiled/AnalyzeExperimentApp /opt/matlab_app/
+COPY matlab/Compiled/run_AnalyzeExperimentApp.sh /opt/matlab_app/
+RUN chmod +x /opt/matlab_app/run_AnalyzeExperimentApp.sh /opt/matlab_app/AnalyzeExperimentApp
+
 COPY streamlit/ .
 
 EXPOSE 8501
