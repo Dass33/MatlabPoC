@@ -902,72 +902,7 @@
 
     </div>
 
-</div><details>
-<summary>Source Code</summary>
-
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="n">STATUS_ICON</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;processing&quot;</span><span class="p">:</span> <span class="s2">&quot;⏳&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;completed&quot;</span><span class="p">:</span> <span class="s2">&quot;✅&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;failed&quot;</span><span class="p">:</span> <span class="s2">&quot;❌&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;unknown&quot;</span><span class="p">:</span> <span class="s2">&quot;❓&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="n">MICRO_PROPS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;iOC&quot;</span><span class="p">,</span> <span class="s2">&quot;STDiOC&quot;</span><span class="p">})</span>
-
-<span class="n">AVAILABLE_PROPS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;iOC&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;D&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;STDiOC&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;N&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;positionStart&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;positionEnd&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">FILTER_DEFAULTS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;iOC&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;STDiOC&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;upper&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;D&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;velocity&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;positionStart&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;upper&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;positionEnd&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="s2">&quot;tv&quot;</span><span class="p">:</span> <span class="s2">&quot;3std&quot;</span><span class="p">},</span>
-<span class="p">}</span>
-
-<span class="n">SCALAR_PROPS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">FILTER_DEFAULTS</span><span class="p">)</span>
-
-<span class="n">TV_OPTIONS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;3std&quot;</span><span class="p">,</span> <span class="s2">&quot;3std_conditional&quot;</span><span class="p">,</span> <span class="s2">&quot;number&quot;</span><span class="p">]</span>
-<span class="n">DIR_OPTIONS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span> <span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">]</span>
-
-<span class="n">STATES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;auto-kept&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;#0072B2&quot;</span><span class="p">,</span> <span class="s2">&quot;circle&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;auto-excluded&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;#D55E00&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;manual-kept&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;#009E73&quot;</span><span class="p">,</span> <span class="s2">&quot;diamond&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;manual-excluded&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;#E69F00&quot;</span><span class="p">,</span> <span class="s2">&quot;square&quot;</span><span class="p">),</span>
-<span class="p">}</span>
-
-<span class="n">TRACK_PALETTE</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;#e6194B&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#3cb44b&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#ffe119&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#4363d8&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#f58231&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#911eb4&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#42d4f4&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#f032e6&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#bfef45&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#469990&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#dcbeff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#9A6324&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#800000&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#aaffc3&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;#000075&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-</code></pre></div>
-
-</details>
+</div>
 
 
 
