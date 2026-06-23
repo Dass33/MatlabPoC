@@ -1,15 +1,26 @@
-# Maitenece
+# Maintenance
 
-For the app to be usable long term it has to be maintained, this site offers knowledge from authors of the app, to make it easier for new maintainer to start.
+For the app to be usable long term it has to be maintained. This page offers knowledge from the authors to make it easier for a new maintainer to start.
 
 ## Setting up project
-To get the project running one only need to have [docker](https://docs.docker.com/compose/), for example there is [Docker desktop](https://docs.docker.com/desktop/) app which is very user friendly, and using which the app is currently deployed on Windows machine locally.
-
-For maintaining the app one has to be able to also build the containers containing their changes. For Streamlit-only changes this only requires Docker. Recompiling the MATLAB binary requires MATLAB R2025b.
+To set up the workspace for development, run the setup script:
 
 ```bash
-./scripts/deploy.sh            # full build: compile MATLAB + build both images + start stack
-./scripts/push.sh              # push both images to Docker Hub
-./scripts/push.sh --matlab     # push only the MATLAB image
-./scripts/push.sh --streamlit  # push only the Streamlit image
+python scripts/setup.py
+```
+
+To run the app you only need [Docker](https://docs.docker.com/compose/). [Docker Desktop](https://docs.docker.com/desktop/) is a user-friendly option and is what the current Windows deployment uses.
+
+To build and deploy changes you also need Docker and push access to the Docker Hub repo. Recompiling the MATLAB binary additionally requires MATLAB R2025b.
+
+```bash
+python scripts/deploy.py   # build the Docker image and push it to Docker Hub
+```
+
+Watchtower on the production machine will pick up the new image automatically within ~5 minutes — no action needed there.
+
+To start the full stack locally (build + run):
+
+```bash
+docker compose up --build
 ```

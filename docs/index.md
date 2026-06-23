@@ -1,52 +1,39 @@
 # NSM Web App
 
-It's a web application which serves as an easy to use intefrace to operate the NSM algorithm to analyze epxeriments.
+A web application providing an easy-to-use interface for running the NSM algorithm to analyze experiments.
 
 ## Architecture
-The app consists of two main parts, the web app made with Streamlit and the Matalb algorithm which is present as [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) (we have other repo inserted into the project and can pull new commits to it), they are bundled together using [Docker compose](https://docs.docker.com/compose/), using docker also let's us deploy to almost any environemnt, with great ease.
+The app consists of two main parts: the web UI built with Streamlit, and the MATLAB algorithm present as a [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Both are bundled into a single Docker image, which makes deployment straightforward across environments.
 
-Below is a flow chart which represent how the high level architecture of the app looks like.
+Below is a flow chart showing the high-level architecture.
 ```mermaid
 flowchart TB
     User(["User"])
 
-    subgraph StreamlitContainer["Streamlit Container (persistent)"]
+    subgraph Container["Docker Container (persistent)"]
         direction TB
         Streamlit["Streamlit App"]
-        MCR1["MATLAB Runtime"]
-        Streamlit -->|Post processing| MCR1
+        MCR["MATLAB Runtime"]
+        Binary["AnalyzeExperimentApp (binary)"]
+        Streamlit -->|"subprocess per job"| Binary
+        Binary --> MCR
+        Streamlit -->|"post-processing"| MCR
     end
 
-    DataVol["Shared Volume"]
-
-    subgraph MatlabContainer["MATLAB Container (per-job)"]
-        direction TB
-        AnalyzeApp["AnalyzeExperimentApp.m"]
-        MCR2["MATLAB Runtime"]
-        AnalyzeApp --> MCR2
-    end
-
+    DataVol[("data/ volume")]
     DockerHub(["🐳 Docker Hub"])
-    DockerHub -.->|pulls images| Watchtower
+    Watchtower["Watchtower"]
 
-    User -->|Connects using browser| Streamlit
-    Streamlit -->|Docker SDK| AnalyzeApp
-
-    AnalyzeApp <-->|read/write JSON| DataVol
-    Streamlit <-->|read/write JSON| DataVol
-
-    Watchtower -.->|updates| StreamlitContainer
-    Watchtower -.->|updates| MatlabContainer
-    StreamlitContainer ~~~ MatlabContainer
+    User -->|"browser :8501"| Streamlit
+    Binary <-->|"read/write"| DataVol
+    Streamlit <-->|"read/write"| DataVol
+    DockerHub -.->|"pulls image"| Watchtower
+    Watchtower -.->|"updates"| Container
 ```
 
-### Streamlit container
+### Container
 
 - Runs continuously, serves the UI on port 8501.
-- Spawns MATLAB containers on demand via the Docker Python SDK.
-- Reads/writes job data via a shared Docker volume.
-
-### MATLAB container
-
-- Spawned per job, runs the compiled `AnalyzeExperimentApp` binary, exits when done.
-- Does not require a MATLAB license — only the MATLAB Runtime (MCR).
+- Spawns the compiled `AnalyzeExperimentApp` binary as a subprocess for each submitted job.
+- Includes the MATLAB Runtime (MCR) — no MATLAB license required at runtime.
+- Job data is persisted in the mounted `data/` volume.

@@ -14,26 +14,31 @@ binary as a subprocess for each submitted job. Job data is stored in the mounted
 
 ## How to Run
 
-### Prerequisites
+### Setup and Prerequisites
 
 - Docker and Docker Compose
-- MATLAB R2025b (only needed to recompile; not needed at runtime)
+- Python 3
 
-### Local Development
+Before running or developing, run the cross-platform setup script to initialize/update git submodules, copy configuration templates, create the python virtual environment, install requirements, and clean up obsolete residues:
 
-1. Build and start:
-   ```bash
-   ./scripts/start.sh
-   ```
-   This compiles the MATLAB source, builds the Docker image, and starts the stack.
-
-2. Open http://localhost:8501
-
-### Production Deployment
-
-Push image to Docker registry (Watchtower will auto-update):
 ```bash
-./scripts/deploy.sh
+python scripts/setup.py
 ```
 
-Changes will be deployed within 5 minutes via Watchtower.
+MATLAB R2025b is only needed to recompile the binary; it is not required at runtime.
+
+### Running locally
+
+```bash
+docker compose up
+```
+
+Open http://localhost:8501.
+
+### Deploying
+
+Build and push to Docker Hub (Watchtower on the production machine picks it up within ~5 minutes):
+
+```bash
+python scripts/deploy.py
+```
