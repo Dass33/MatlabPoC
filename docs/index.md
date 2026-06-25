@@ -52,4 +52,5 @@ flowchart TB
 *   **[MATLAB Bridge & Algorithms](streamlit/matlab_bridge.md)**: Details on the integration between Python and the MATLAB engine.
 *   **[Deployment Guide](deployment.md)**: Steps to run the system in local development, on-premise staging, or production VPS.
 *   **[Developer & Maintenance Guide](maintenance.md)**: Learn how to set up the developer workspace, recompile MATLAB binaries, and push releases.
+*   **[Developer Scripts](scripts.md)**: Quick reference and summaries of the Python helper scripts in the repository.
 *   **[Architectural Decision Records (ADR)](reasoning.md)**: Rationale behind technologies chosen for this project (Streamlit, MATLAB runtime integration, Docker).

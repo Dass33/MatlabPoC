@@ -56,6 +56,7 @@ nav:
     - Job Manager: streamlit/job_manager.md
     - MATLAB Bridge: streamlit/matlab_bridge.md
 
+  - Developer Scripts: scripts.md
   - Deployment: deployment.md
   - Docs: docs.md
   - Maintenance Guide: maintenance.md
