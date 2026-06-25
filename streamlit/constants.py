@@ -21,7 +21,7 @@ AVAILABLE_PROPS: list[str] = [
 
 FILTER_DEFAULTS: dict[str, dict[str, str]] = {
     "iOC": {"direction": "both", "tv": "3std"},
-    "STDiOC": {"direction": "upper", "tv": "3std"},
+    "STDiOC": {"direction": "upper", "tv": "3std_conditional"},
     "D": {"direction": "both", "tv": "3std"},
     "velocity": {"direction": "both", "tv": "3std"},
     "N": {"direction": "lower", "tv": "3std"},

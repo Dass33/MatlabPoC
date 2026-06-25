@@ -15,7 +15,7 @@ from job_manager import job_dirs
 
 
 def page_population_analysis(job_id: str | None) -> None:
-    """Population Analysis tab — compute population statistics on a postprocessed collection."""
+    """Population Analysis tab - compute population statistics on a postprocessed collection."""
     st.subheader("Population Analysis")
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
@@ -71,9 +71,11 @@ def page_population_analysis(job_id: str | None) -> None:
                     {"Title": method, "properties": selected_props},
                 )
             except (ValueError, KeyError, TypeError) as e:
-                st.error(f"Population analysis failed: invalid data or parameter error: {e}")
+                st.error(
+                    f"Population analysis failed: invalid data or parameter error: {e}"
+                )
                 return
-            except Exception as e:
+            except RuntimeError as e:
                 st.error(f"Population analysis failed: {e}")
                 return
         _save_population(out, result, method, selected_props, data.get("n_kept"))
@@ -100,7 +102,10 @@ def page_population_analysis(job_id: str | None) -> None:
         pd.DataFrame([
             {
                 "Property": f"{p} (µ)" if p in MICRO_PROPS else p,
-                **{k: _display_val(p, k, result.get(p, {}).get(k, float("nan"))) for k in keys},
+                **{
+                    k: _display_val(p, k, result.get(p, {}).get(k, float("nan")))
+                    for k in keys
+                },
             }
             for p in props_used
         ]),
