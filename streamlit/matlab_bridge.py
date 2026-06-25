@@ -54,7 +54,7 @@ _pkg = None
 def _get_pkg() -> Any:
     global _pkg
     if _pkg is None:
-        import nsm_algorithms  # installed from matlab/Compiled/PythonPackage/nsm_algorithms
+        import nsm_algorithms  # type: ignore[import]  # installed from matlab/Compiled/PythonPackage/nsm_algorithms
 
         _pkg = nsm_algorithms.initialize()
         log.info("MATLAB MCR initialised")
@@ -83,6 +83,7 @@ def run_postprocessing(
     collection: Collection,
     matlab_setting: MatlabFilterSetting,
     keep_mask: np.ndarray,
+    force_keep: np.ndarray,
     calibration_on: bool = True,
 ) -> PostprocessingResult:
     """Runs outlier filtering and optional iOC calibration via MATLAB. Returns a PostprocessingResult."""
@@ -93,11 +94,13 @@ def run_postprocessing(
     preped_collection = u.to_json(u.prep_collection(collection))
     settings_json = u.to_json(postprocessing_setting)
     keep_mask_json = u.to_json(keep_mask.tolist())
+    force_keep_json = u.to_json(force_keep.tolist())
 
     result_json = _get_pkg().runPostprocessing(
         preped_collection,
         settings_json,
         keep_mask_json,
+        force_keep_json,
         nargout=1,
     )
     data = json.loads(str(result_json))

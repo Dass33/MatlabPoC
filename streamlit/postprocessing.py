@@ -261,12 +261,6 @@ def _load_collection(job_id: str) -> Collection | None:
     m = scipy.io.loadmat(str(mat_path), squeeze_me=True)
     c = m["collection"]
     data = {f: c[f].item() for f in c.dtype.names}
-
-    pos = data.get("positionRefined")
-    if pos is not None:
-        data["positionStart"] = np.array([float(p.min()) for p in pos])
-        data["positionEnd"] = np.array([float(p.max()) for p in pos])
-
     return cast(Collection, data)
 
 
@@ -477,6 +471,9 @@ def _accept(
     keep_mask = np.array(
         [overrides.get(i) != "excluded" for i in range(n_traj)], dtype=bool
     )
+    force_keep = np.array(
+        [overrides.get(i) == "kept" for i in range(n_traj)], dtype=bool
+    )
 
     calibration = None
     effective_collection = collection
@@ -484,7 +481,7 @@ def _accept(
     with st.spinner("Running postprocessing..."):
         try:
             result = matlab_bridge.run_postprocessing(
-                collection, matlab_setting, keep_mask, calibration_on
+                collection, matlab_setting, keep_mask, force_keep, calibration_on
             )
         except (RuntimeError, ValueError) as e:
             st.error(f"Postprocessing failed: {e}")
