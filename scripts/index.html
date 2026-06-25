@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../docs/">
+        <link rel="prev" href="../streamlit/matlab_bridge/">
       
       
-        <link rel="next" href="../reasoning/">
+        <link rel="next" href="../deployment/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Maintenance Guide - NSM Docs</title>
+        <title>Developer Scripts - NSM Docs</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#maintenance" class="md-skip">
+        <a href="#developer-scripts" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Maintenance Guide
+              Developer Scripts
             
           </span>
         </div>
@@ -597,10 +597,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../scripts/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Scripts
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -616,6 +643,120 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-script-descriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Script Descriptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Script Descriptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setuppy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_streamlitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_streamlit.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compile_matlabpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compile_matlab.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build_streamlitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_streamlit.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploypy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deploy.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -678,37 +819,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Maintenance Guide
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../maintenance/" class="md-nav__link">
         
   
   
@@ -724,37 +838,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#setting-up-project" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Setting up project
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -813,13 +896,96 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#setting-up-project" class="md-nav__link">
+  <a href="#quick-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setting up project
+        Quick Reference Table
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-script-descriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Script Descriptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Script Descriptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setuppy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_streamlitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_streamlit.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compile_matlabpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compile_matlab.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build_streamlitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_streamlit.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploypy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deploy.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -840,20 +1006,113 @@
 
 
 
-<h1 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h1>
-<p>For the app to be usable long term it has to be maintained. This page offers knowledge from the authors to make it easier for a new maintainer to start.</p>
-<h2 id="setting-up-project">Setting up project<a class="headerlink" href="#setting-up-project" title="Permanent link">&para;</a></h2>
-<p>To set up the workspace for development, run the setup script:</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>scripts/setup.py
-</code></pre></div>
-<p>To run the app you only need <a href="https://docs.docker.com/compose/">Docker</a>. <a href="https://docs.docker.com/desktop/">Docker Desktop</a> is a user-friendly option and is what the current Windows deployment uses.</p>
-<p>To build and deploy changes you also need Docker and push access to the Docker Hub repo. Recompiling the MATLAB binary additionally requires MATLAB R2025b.</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>scripts/deploy.py<span class="w">   </span><span class="c1"># build the Docker image and push it to Docker Hub</span>
-</code></pre></div>
-<p>Watchtower on the production machine will pick up the new image automatically within ~5 minutes — no action needed there.</p>
-<p>To start the full stack locally (build + run):</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
-</code></pre></div>
+<h1 id="developer-scripts">Developer Scripts<a class="headerlink" href="#developer-scripts" title="Permanent link">&para;</a></h1>
+<p>This project includes a set of Python helper scripts in the <code>scripts/</code> directory to automate common development, building, compilation, and deployment tasks.</p>
+<h2 id="quick-reference-table">Quick Reference Table<a class="headerlink" href="#quick-reference-table" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Script Name</th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>setup.py</code></td>
+<td style="text-align: left;">Initial repository setup, submodules update, virtual environment, and dependency installation.</td>
+<td style="text-align: left;"><code>python scripts/setup.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>run_streamlit.py</code></td>
+<td style="text-align: left;">Runs the Streamlit web application locally in development mode.</td>
+<td style="text-align: left;"><code>python scripts/run_streamlit.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compile_matlab.py</code></td>
+<td style="text-align: left;">Compiles MATLAB source code into a standalone binary and a Python package.</td>
+<td style="text-align: left;"><code>python scripts/compile_matlab.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>build_streamlit.py</code></td>
+<td style="text-align: left;">Builds and tags the local Streamlit Docker image.</td>
+<td style="text-align: left;"><code>python scripts/build_streamlit.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>start.py</code></td>
+<td style="text-align: left;">Performs compilation, builds the Docker image, and restarts the docker-compose stack.</td>
+<td style="text-align: left;"><code>python scripts/start.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>deploy.py</code></td>
+<td style="text-align: left;">Builds and pushes the production Docker image to Docker Hub.</td>
+<td style="text-align: left;"><code>python scripts/deploy.py</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="detailed-script-descriptions">Detailed Script Descriptions<a class="headerlink" href="#detailed-script-descriptions" title="Permanent link">&para;</a></h2>
+<h3 id="setuppy">setup.py<a class="headerlink" href="#setuppy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this once after cloning the repository, or when dependencies change.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Initializes and updates git submodules recursively.</li>
+<li>Copies <code>.env.example</code> to <code>.env</code> if not already present.</li>
+<li>Creates a Python virtual environment in <code>streamlit/venv</code>.</li>
+<li>Installs Python dependencies from <code>streamlit/requirements.txt</code> and <code>requirements-dev.txt</code>.</li>
+</ol>
+</li>
+</ul>
+<h3 id="run_streamlitpy">run_streamlit.py<a class="headerlink" href="#run_streamlitpy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this to launch the Streamlit frontend locally without Docker.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Loads environment variables from <code>.env</code>.</li>
+<li>Launches the Streamlit app using the virtual environment's executable.</li>
+</ol>
+</li>
+</ul>
+<h3 id="compile_matlabpy">compile_matlab.py<a class="headerlink" href="#compile_matlabpy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this when modifying the MATLAB code under <code>matlab/</code>.</li>
+<li><strong>Prerequisites</strong>: Requires MATLAB R2025b with the <code>mcc</code> compiler installed and available in the system PATH.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Compiles the standalone analysis application to <code>matlab/Compiled/AnalyzeExperimentApp</code>.</li>
+<li>Generates the Python package bridge <code>nsm_algorithms</code> in <code>matlab/Compiled/PythonPackage/</code>.</li>
+</ol>
+</li>
+</ul>
+<h3 id="build_streamlitpy">build_streamlit.py<a class="headerlink" href="#build_streamlitpy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this to build the local Streamlit Docker image.</li>
+<li><strong>Prerequisites</strong>: Docker daemon running.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Builds the Docker image locally from <code>streamlit/Dockerfile</code>.</li>
+<li>Tags the image as <code>dass33/nsm-streamlit:latest</code>.</li>
+</ol>
+</li>
+</ul>
+<h3 id="startpy">start.py<a class="headerlink" href="#startpy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this to perform a full local rebuild and container restart.</li>
+<li><strong>Prerequisites</strong>: MATLAB (for compilation) and Docker/Docker Compose installed.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Compiles the latest MATLAB code (<code>compile_matlab.py</code>).</li>
+<li>Builds the latest Streamlit Docker image (<code>build_streamlit.py</code>).</li>
+<li>Restarts the docker-compose services using <code>docker compose down</code> and <code>docker compose up -d</code>.</li>
+</ol>
+</li>
+</ul>
+<h3 id="deploypy">deploy.py<a class="headerlink" href="#deploypy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>When to run</strong>: Run this to publish a new release to Docker Hub.</li>
+<li><strong>Prerequisites</strong>: Docker daemon running and push permissions to the <code>dass33/nsm-streamlit</code> repository.</li>
+<li><strong>Key Tasks</strong>:<ol>
+<li>Builds the Docker image.</li>
+<li>Pushes the image to Docker Hub, where Watchtower will automatically deploy it on the production server.</li>
+</ol>
+</li>
+</ul>
 
 
 
