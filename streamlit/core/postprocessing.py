@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
 
 import numpy as np
-
-from connectors.matlab_bridge import Collection, MatlabFilterSetting
+from connectors.algorithms import Collection, MatlabFilterSetting
 
 MICRO_PROPS: frozenset[str] = frozenset({"iOC", "STDiOC"})
 
@@ -32,14 +31,24 @@ SCALAR_PROPS: list[str] = list(FILTER_DEFAULTS)
 TV_OPTIONS: list[str] = ["3std", "3std_conditional", "number"]
 DIR_OPTIONS: list[str] = ["upper", "lower", "both"]
 
+_REFERENCE_PROP = "iOC"
 
-class ThresholdConfig(TypedDict):
+
+@dataclass
+class ThresholdConfig:
     enabled: bool
     direction: str
     tv: str
-    value: float
-    value_lo: float
-    value_hi: float
+    value: float = 0.0
+    value_lo: float = 0.0
+    value_hi: float = 0.0
+
+
+def default_thresholds() -> dict[str, ThresholdConfig]:
+    return {
+        p: ThresholdConfig(enabled=True, direction=d["direction"], tv=d["tv"])
+        for p, d in FILTER_DEFAULTS.items()
+    }
 
 
 def compute_states(
@@ -61,28 +70,23 @@ def build_matlab_setting(
     directions = []
     for prop in FILTER_DEFAULTS:
         cfg = thresholds[prop]
-        if not cfg.get("enabled", True):
+        if not cfg.enabled:
             continue
-        tv = cfg.get("tv", "3std")
-        direction = cfg.get("direction", "upper")
         active_props.append(prop)
-        directions.append(direction)
-        if tv == "number":
+        directions.append(cfg.direction)
+        if cfg.tv == "number":
             scale = 1e-6 if prop in MICRO_PROPS else 1.0
-            if direction == "both":
-                threshold_values.append([
-                    cfg.get("value_lo", 0.0) * scale,
-                    cfg.get("value_hi", 0.0) * scale,
-                ])
+            if cfg.direction == "both":
+                threshold_values.append([cfg.value_lo * scale, cfg.value_hi * scale])
             else:
-                threshold_values.append([cfg.get("value", 0.0) * scale])
+                threshold_values.append([cfg.value * scale])
         else:
-            threshold_values.append(tv)
+            threshold_values.append(cfg.tv)
     return {
         "filterProperties": active_props,
         "thresholdDirection": directions,
         "thresholdValue": threshold_values,
-        "referenceProperty": "iOC",
+        "referenceProperty": _REFERENCE_PROP,
     }
 
 

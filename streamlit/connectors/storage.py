@@ -6,7 +6,7 @@ import shutil
 import uuid
 from datetime import datetime
 
-from paths import DATA_DIR, TZ, job_dirs
+from env import DATA_DIR, TZ, job_dirs
 
 log = logging.getLogger(__name__)
 

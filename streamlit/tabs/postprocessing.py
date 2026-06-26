@@ -1,27 +1,29 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import cast
 
+import connectors.algorithms as algorithms
 import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import scipy.io
 import streamlit as st
-
-import connectors.matlab_bridge as matlab_bridge
 import utils as u
-from connectors.matlab_bridge import Collection, MatlabFilterSetting
+from connectors.algorithms import Collection, MatlabFilterSetting
 from core.postprocessing import (
     DIR_OPTIONS,
     FILTER_DEFAULTS,
     MICRO_PROPS,
     SCALAR_PROPS,
     TV_OPTIONS,
+    ThresholdConfig,
     build_matlab_setting,
     compute_states,
+    default_thresholds,
     filter_collection,
 )
-from paths import job_dirs
+from env import job_dirs
 
 _STATES: dict[str, tuple[str, str]] = {
     "auto-kept": ("#0072B2", "circle"),
@@ -31,10 +33,38 @@ _STATES: dict[str, tuple[str, str]] = {
 }
 
 _TRACK_PALETTE: list[str] = [
-    "#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4",
-    "#42d4f4", "#f032e6", "#bfef45", "#469990", "#dcbeff", "#9A6324",
-    "#800000", "#aaffc3", "#000075",
+    "#e6194B",
+    "#3cb44b",
+    "#ffe119",
+    "#4363d8",
+    "#f58231",
+    "#911eb4",
+    "#42d4f4",
+    "#f032e6",
+    "#bfef45",
+    "#469990",
+    "#dcbeff",
+    "#9A6324",
+    "#800000",
+    "#aaffc3",
+    "#000075",
 ]
+
+
+@dataclass
+class _PostprocessingState:
+    thresholds: dict[str, ThresholdConfig]
+    overrides: dict[int, str] = field(default_factory=dict)
+    dirty: bool = True
+    cal_updates: dict[str, np.ndarray] = field(default_factory=dict)
+    calibration: dict[str, object] | None = None
+
+
+def _get_state(job_id: str) -> _PostprocessingState:
+    key = f"pp_{job_id}"
+    if key not in st.session_state:
+        st.session_state[key] = _PostprocessingState(thresholds=default_thresholds())
+    return st.session_state[key]
 
 
 def page_postprocessing(job_id: str | None) -> None:
@@ -49,62 +79,53 @@ def page_postprocessing(job_id: str | None) -> None:
         st.warning("collection.mat not found for this job.")
         return
 
-    st.session_state.setdefault(f"overrides_{job_id}", {})
-    st.session_state.setdefault(f"pp_axes_{job_id}", ("iOC", "velocity"))
-    st.session_state.setdefault(f"pp_dirty_{job_id}", True)
-    stored = st.session_state.get(f"pp_thresholds_{job_id}", {})
-    if set(stored) != set(FILTER_DEFAULTS):
-        st.session_state[f"pp_thresholds_{job_id}"] = {
-            p: {
-                "enabled": True,
-                "value": 0.0,
-                "value_lo": 0.0,
-                "value_hi": 0.0,
-                **defaults,
-            }
-            for p, defaults in FILTER_DEFAULTS.items()
-        }
-
-    _render_postprocessing(job_id, collection)
+    state = _get_state(job_id)
+    _render_postprocessing(job_id, collection, state)
 
 
-def _render_postprocessing(job_id: str, collection: Collection) -> None:
-    overrides: dict = st.session_state[f"overrides_{job_id}"]
-    thresholds: dict = st.session_state[f"pp_thresholds_{job_id}"]
+def _render_postprocessing(
+    job_id: str, collection: Collection, state: _PostprocessingState
+) -> None:
     filter_props = list(FILTER_DEFAULTS)
+    effective_collection = cast(Collection, {**collection, **state.cal_updates})
 
-    cal_updates: dict = st.session_state.get(f"pp_cal_updates_{job_id}", {})
-    effective_collection = cast(Collection, {**collection, **cal_updates})
-
-    matlab_setting = build_matlab_setting(thresholds)
+    matlab_setting = build_matlab_setting(state.thresholds)
     n_traj = len(effective_collection["iOC"])
     if matlab_setting["filterProperties"]:
-        not_outlier = matlab_bridge.find_outliers(effective_collection, matlab_setting)
+        not_outlier = algorithms.find_outliers(effective_collection, matlab_setting)
     else:
         not_outlier = np.ones(n_traj, dtype=bool)
-    states = compute_states(n_traj, not_outlier, overrides)
+    states = compute_states(n_traj, not_outlier, state.overrides)
     scalar_props = [p for p in SCALAR_PROPS if p in effective_collection]
     if not scalar_props:
         st.warning("No scalar properties found in collection.")
         return
 
-    ax_x, ax_y = st.session_state[f"pp_axes_{job_id}"]
+    default_ax_x = st.session_state.get(f"pp_ax_x_{job_id}", "iOC")
+    default_ax_y = st.session_state.get(f"pp_ax_y_{job_id}", "velocity")
     cx, cy, _ = st.columns([1, 1, 3])
-    ax_x = cx.selectbox(
-        "X axis",
-        scalar_props,
-        index=scalar_props.index(ax_x) if ax_x in scalar_props else 0,
-        key=f"pp_ax_x_{job_id}",
+    ax_x: str = (
+        cx.selectbox(
+            "X axis",
+            scalar_props,
+            index=scalar_props.index(default_ax_x)
+            if default_ax_x in scalar_props
+            else 0,
+            key=f"pp_ax_x_{job_id}",
+        )
+        or scalar_props[0]
     )
-    ax_y = cy.selectbox(
-        "Y axis",
-        scalar_props,
-        index=scalar_props.index(ax_y) if ax_y in scalar_props else 1,
-        key=f"pp_ax_y_{job_id}",
+    ax_y: str = (
+        cy.selectbox(
+            "Y axis",
+            scalar_props,
+            index=scalar_props.index(default_ax_y)
+            if default_ax_y in scalar_props
+            else min(1, len(scalar_props) - 1),
+            key=f"pp_ax_y_{job_id}",
+        )
+        or scalar_props[0]
     )
-    if ax_x is None or ax_y is None:
-        return
-    st.session_state[f"pp_axes_{job_id}"] = (ax_x, ax_y)
 
     event = st.plotly_chart(
         _build_scatter(effective_collection, states, ax_x, ax_y),
@@ -118,26 +139,26 @@ def _render_postprocessing(job_id: str, collection: Collection) -> None:
     c1, c2, c3, c4 = st.columns(4)
     if c1.button("Exclude selected", key=f"pp_exclude_{job_id}", disabled=not sel):
         for i in sel:
-            overrides[i] = "excluded"
-        st.session_state[f"pp_dirty_{job_id}"] = True
+            state.overrides[i] = "excluded"
+        state.dirty = True
         st.rerun()
     if c2.button("Include selected", key=f"pp_include_{job_id}", disabled=not sel):
         for i in sel:
-            overrides[i] = "kept"
-        st.session_state[f"pp_dirty_{job_id}"] = True
+            state.overrides[i] = "kept"
+        state.dirty = True
         st.rerun()
     if c3.button(
         "Clear selection overrides", key=f"pp_clear_{job_id}", disabled=not sel
     ):
         for i in sel:
-            overrides.pop(i, None)
-        st.session_state[f"pp_dirty_{job_id}"] = True
+            state.overrides.pop(i, None)
+        state.dirty = True
         st.rerun()
     if c4.button(
-        "Reset all overrides", key=f"pp_reset_{job_id}", disabled=not overrides
+        "Reset all overrides", key=f"pp_reset_{job_id}", disabled=not state.overrides
     ):
-        st.session_state[f"overrides_{job_id}"] = {}
-        st.session_state[f"pp_dirty_{job_id}"] = True
+        state.overrides = {}
+        state.dirty = True
         st.rerun()
 
     kept = states.count("auto-kept") + states.count("manual-kept")
@@ -156,102 +177,105 @@ def _render_postprocessing(job_id: str, collection: Collection) -> None:
 
     changed = False
     for prop in filter_props:
-        cfg = thresholds.get(
-            prop, {"enabled": True, "direction": "upper", "tv": "3std"}
-        )
+        cfg = state.thresholds[prop]
         c_en, c0, c1, c2 = st.columns([0.4, 1, 1, 2])
-        new_enabled = c_en.checkbox(
+        new_enabled: bool = c_en.checkbox(
             "enabled",
-            value=cfg.get("enabled", True),
+            value=cfg.enabled,
             key=f"pp_en_{job_id}_{prop}",
             label_visibility="collapsed",
         )
-        label = f"**{prop} (µ)**" if prop in MICRO_PROPS else f"**{prop}**"
-        c0.markdown(label)
-        new_tv = c1.selectbox(
-            "tv",
-            TV_OPTIONS,
-            index=TV_OPTIONS.index(cfg["tv"]) if cfg["tv"] in TV_OPTIONS else 0,
-            key=f"pp_tv_{job_id}_{prop}",
-            label_visibility="collapsed",
+        c0.markdown(f"**{prop} (µ)**" if prop in MICRO_PROPS else f"**{prop}**")
+        new_tv: str = (
+            c1.selectbox(
+                "tv",
+                TV_OPTIONS,
+                index=TV_OPTIONS.index(cfg.tv) if cfg.tv in TV_OPTIONS else 0,
+                key=f"pp_tv_{job_id}_{prop}",
+                label_visibility="collapsed",
+            )
+            or cfg.tv
         )
-        new_dir = c2.selectbox(
-            "dir",
-            DIR_OPTIONS,
-            index=DIR_OPTIONS.index(cfg["direction"])
-            if cfg["direction"] in DIR_OPTIONS
-            else 0,
-            key=f"pp_dir_{job_id}_{prop}",
-            label_visibility="collapsed",
+        new_dir: str = (
+            c2.selectbox(
+                "dir",
+                DIR_OPTIONS,
+                index=DIR_OPTIONS.index(cfg.direction)
+                if cfg.direction in DIR_OPTIONS
+                else 0,
+                key=f"pp_dir_{job_id}_{prop}",
+                label_visibility="collapsed",
+            )
+            or cfg.direction
         )
-        new_val, new_lo, new_hi = (
-            cfg.get("value", 0.0),
-            cfg.get("value_lo", 0.0),
-            cfg.get("value_hi", 0.0),
-        )
+        new_val, new_lo, new_hi = cfg.value, cfg.value_lo, cfg.value_hi
         if new_tv == "number":
             unit = " µ" if prop in MICRO_PROPS else ""
             with c2:
                 if new_dir == "both":
                     ca, cb = st.columns(2)
-                    new_lo = ca.number_input(
-                        f"lo{unit}",
-                        value=float(cfg.get("value_lo", 0.0)),
-                        key=f"pp_vlo_{job_id}_{prop}",
-                        label_visibility="visible",
+                    new_lo = float(
+                        ca.number_input(
+                            f"lo{unit}",
+                            value=cfg.value_lo,
+                            key=f"pp_vlo_{job_id}_{prop}",
+                            label_visibility="visible",
+                        )
                     )
-                    new_hi = cb.number_input(
-                        f"hi{unit}",
-                        value=float(cfg.get("value_hi", 0.0)),
-                        key=f"pp_vhi_{job_id}_{prop}",
-                        label_visibility="visible",
+                    new_hi = float(
+                        cb.number_input(
+                            f"hi{unit}",
+                            value=cfg.value_hi,
+                            key=f"pp_vhi_{job_id}_{prop}",
+                            label_visibility="visible",
+                        )
                     )
                 else:
-                    new_val = st.number_input(
-                        f"threshold{unit}",
-                        value=float(cfg.get("value", 0.0)),
-                        key=f"pp_val_{job_id}_{prop}",
-                        label_visibility="visible",
+                    new_val = float(
+                        st.number_input(
+                            f"threshold{unit}",
+                            value=cfg.value,
+                            key=f"pp_val_{job_id}_{prop}",
+                            label_visibility="visible",
+                        )
                     )
-        new_cfg = {
-            "enabled": new_enabled,
-            "direction": new_dir,
-            "tv": new_tv,
-            "value": new_val,
-            "value_lo": new_lo,
-            "value_hi": new_hi,
-        }
+        new_cfg = ThresholdConfig(
+            enabled=new_enabled,
+            direction=new_dir,
+            tv=new_tv,
+            value=new_val,
+            value_lo=new_lo,
+            value_hi=new_hi,
+        )
         if new_cfg != cfg:
-            thresholds[prop] = new_cfg
+            state.thresholds[prop] = new_cfg
             changed = True
 
     if changed:
-        st.session_state[f"pp_dirty_{job_id}"] = True
+        state.dirty = True
         st.rerun()
 
-    stored_calibration = st.session_state.get(f"pp_calibration_{job_id}")
-    if stored_calibration:
-        _render_calibration(stored_calibration)
+    if state.calibration:
+        _render_calibration(state.calibration)
 
     st.divider()
     with st.expander("Track preview (excluded highlighted)", expanded=True):
         _render_track_preview(effective_collection, states, job_id)
 
-    calibration_on = st.toggle(
+    calibration_on: bool = st.toggle(
         "Run iOC calibration",
-        value=st.session_state.get(f"pp_ioc_cal_{job_id}", True),
+        value=True,
         key=f"pp_ioc_cal_{job_id}",
     )
 
-    dirty = st.session_state.get(f"pp_dirty_{job_id}", True)
     c_apply, c_hint = st.columns([1, 4])
     if c_apply.button(
         "Accept & Save",
-        type="primary" if dirty else "secondary",
+        type="primary" if state.dirty else "secondary",
         key=f"pp_apply_{job_id}",
     ):
-        _accept(job_id, collection, states, matlab_setting, calibration_on)
-    if dirty:
+        _accept(job_id, collection, states, matlab_setting, calibration_on, state)
+    if state.dirty:
         c_hint.caption(
             "Thresholds or selection changed — Accept & Save to recalibrate."
         )
@@ -329,7 +353,9 @@ def _parse_selection(event) -> list[int]:
     return result
 
 
-def _render_track_preview(collection: Collection, states: list[str], job_id: str) -> None:
+def _render_track_preview(
+    collection: Collection, states: list[str], job_id: str
+) -> None:
     import matplotlib.pyplot as plt
 
     pos_refined = collection.get("positionRefined")
@@ -437,6 +463,7 @@ def _accept(
     states: list[str],
     matlab_setting: MatlabFilterSetting,
     calibration_on: bool,
+    state: _PostprocessingState,
 ) -> None:
     if calibration_on and (
         collection.get("iOCprofile") is None
@@ -449,19 +476,16 @@ def _accept(
 
     _, _, out = job_dirs(job_id)
     n_traj = len(states)
-    overrides: dict = st.session_state.get(f"overrides_{job_id}", {})
     keep_mask = np.array(
-        [overrides.get(i) != "excluded" for i in range(n_traj)], dtype=bool
+        [state.overrides.get(i) != "excluded" for i in range(n_traj)], dtype=bool
     )
     force_keep = np.array(
-        [overrides.get(i) == "kept" for i in range(n_traj)], dtype=bool
+        [state.overrides.get(i) == "kept" for i in range(n_traj)], dtype=bool
     )
-
-    effective_collection = collection
 
     with st.spinner("Running postprocessing..."):
         try:
-            result = matlab_bridge.run_postprocessing(
+            result = algorithms.run_postprocessing(
                 collection, matlab_setting, keep_mask, force_keep, calibration_on
             )
         except (RuntimeError, ValueError) as e:
@@ -484,10 +508,9 @@ def _accept(
             u.to_json(collection_postprocessed)
         )
 
-    st.session_state[f"pp_cal_updates_{job_id}"] = cal_updates
-    st.session_state[f"pp_calibration_{job_id}"] = calibration
-    st.session_state[f"pp_keep_mask_{job_id}"] = keep_mask
-    st.session_state[f"pp_dirty_{job_id}"] = False
+    state.cal_updates = cal_updates
+    state.calibration = calibration
+    state.dirty = False
 
     st.success(
         f"Saved {final_mask.sum()} / {len(final_mask)} trajectories to `collection_postprocessed.json`."

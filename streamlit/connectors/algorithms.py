@@ -9,11 +9,24 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 
-import utils as u
+from utils import to_json
+
+
+def _prep_collection(collection: Mapping[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for k, v in collection.items():
+        if isinstance(v, np.ndarray):
+            out[k] = v.tolist()
+        elif isinstance(v, (list, tuple)) and v and isinstance(v[0], np.ndarray):
+            out[k] = [a.tolist() for a in v]
+        else:
+            out[k] = v
+    return out
 
 
 class Collection(TypedDict):
@@ -61,15 +74,12 @@ def _get_pkg() -> Any:
     return _pkg
 
 
-# ─── public API ──────────────────────────────────────────────────────────────
-
-
 def find_outliers(
     collection: Collection, matlab_setting: MatlabFilterSetting
 ) -> np.ndarray:
     """Returns a boolean mask of length N where True means the trajectory is not an outlier."""
-    preped_collection = u.to_json(u.prep_collection(collection))
-    matlab_setting_json = u.to_json(matlab_setting)
+    preped_collection = to_json(_prep_collection(collection))
+    matlab_setting_json = to_json(matlab_setting)
 
     result = _get_pkg().runOutlierFiltering(
         preped_collection,
@@ -91,10 +101,10 @@ def run_postprocessing(
         "iOCcalibration": "on" if calibration_on else "off",
         "outlierFiltering": matlab_setting,
     }
-    preped_collection = u.to_json(u.prep_collection(collection))
-    settings_json = u.to_json(postprocessing_setting)
-    keep_mask_json = u.to_json(keep_mask.tolist())
-    force_keep_json = u.to_json(force_keep.tolist())
+    preped_collection = to_json(_prep_collection(collection))
+    settings_json = to_json(postprocessing_setting)
+    keep_mask_json = to_json(keep_mask.tolist())
+    force_keep_json = to_json(force_keep.tolist())
 
     result_json = _get_pkg().runPostprocessing(
         preped_collection,
@@ -118,8 +128,8 @@ def run_population_analysis(
 ) -> dict[str, object]:
     """Runs population analysis via MATLAB. Returns statistics keyed by property name (MEAN, STD, FWHM, RESOLUTION, histogram bins/counts)."""
     result_json = _get_pkg().runPopulationAnalysis(
-        u.to_json(collection),
-        u.to_json(setting),
+        to_json(collection),
+        to_json(setting),
         nargout=1,
     )
     return json.loads(str(result_json))

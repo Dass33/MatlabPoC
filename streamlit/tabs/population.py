@@ -1,17 +1,25 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import streamlit as st
-
-import connectors.matlab_bridge as matlab_bridge
+import connectors.algorithms as algorithms
 from core.postprocessing import AVAILABLE_PROPS, MICRO_PROPS
-from paths import job_dirs
+from env import job_dirs
+
+
+@dataclass
+class _PopResult:
+    result: dict[str, Any]
+    method: str
+    props: list[str]
 
 
 def page_population_analysis(job_id: str | None) -> None:
@@ -66,7 +74,7 @@ def page_population_analysis(job_id: str | None) -> None:
     if st.button("Run Population Analysis", type="primary", key=f"pop_run_{job_id}"):
         with st.spinner("Computing..."):
             try:
-                result = matlab_bridge.run_population_analysis(
+                result = algorithms.run_population_analysis(
                     collection,
                     {"Title": method, "properties": selected_props},
                 )
@@ -79,16 +87,17 @@ def page_population_analysis(job_id: str | None) -> None:
                 st.error(f"Population analysis failed: {e}")
                 return
         _save_population(out, result, method, selected_props, data.get("n_kept"))
-        st.session_state[f"pop_result_{job_id}"] = result
-        st.session_state[f"pop_method_used_{job_id}"] = method
-        st.session_state[f"pop_props_used_{job_id}"] = selected_props
+        st.session_state[f"pop_{job_id}"] = _PopResult(
+            result=result, method=method, props=selected_props
+        )
 
-    result = st.session_state.get(f"pop_result_{job_id}")
-    if result is None:
+    pop: _PopResult | None = st.session_state.get(f"pop_{job_id}")
+    if pop is None:
         return
 
-    method_used = st.session_state.get(f"pop_method_used_{job_id}", method)
-    props_used = st.session_state.get(f"pop_props_used_{job_id}", selected_props)
+    result = pop.result
+    method_used = pop.method
+    props_used = pop.props
 
     scaled_keys = {"MEAN", "STD", "FWHM"}
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]

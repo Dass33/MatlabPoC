@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import streamlit as st
-
-from paths import job_dirs
+from env import job_dirs
 
 
 def page_kymograph_analysis(job_id: str | None) -> None:

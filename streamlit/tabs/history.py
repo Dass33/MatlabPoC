@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-
 from connectors.storage import list_all_jobs
-from paths import job_dirs
+from env import job_dirs
 
 _STATUS_ICON: dict[str, str] = {
     "processing": "⏳",

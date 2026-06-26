@@ -5,7 +5,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from paths import MATLAB_APP, MCR_ROOT, job_dirs
+from env import MATLAB_APP, MCR_ROOT, job_dirs
 
 log = logging.getLogger(__name__)
 
