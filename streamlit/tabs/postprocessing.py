@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import cast
 
-import connectors.algorithms as algorithms
 import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import scipy.io
 import streamlit as st
+
+import connectors.algorithms as algorithms
 import utils as u
 from connectors.algorithms import Collection, MatlabFilterSetting
 from core.postprocessing import (
