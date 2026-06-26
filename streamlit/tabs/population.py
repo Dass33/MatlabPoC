@@ -12,6 +12,7 @@ import plotly.subplots as sp
 import streamlit as st
 
 import connectors.algorithms as algorithms
+import utils as u
 from core.postprocessing import AVAILABLE_PROPS, MICRO_PROPS
 from env import job_dirs
 
@@ -190,17 +191,8 @@ def _render_histograms(
 def _save_population(
     out: Path, result: dict, method: str, props: list[str], n_kept: int | None
 ) -> None:
-    def _default(obj: object) -> int | float | list:
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        raise TypeError(type(obj))
-
     (out / "population.json").write_text(
-        json.dumps(
+        u.to_json(
             {
                 "method": method,
                 "properties": props,
@@ -211,6 +203,5 @@ def _save_population(
                 },
             },
             indent=2,
-            default=_default,
         )
     )

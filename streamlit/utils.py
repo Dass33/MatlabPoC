@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 
 
-def to_json(obj: Any) -> str:
+def to_json(obj: Any, indent: int | None = None) -> str:
     def _default(o):
         if isinstance(o, np.ndarray):
             return o.tolist()
@@ -16,4 +16,4 @@ def to_json(obj: Any) -> str:
             return float(o)
         raise TypeError(type(o))
 
-    return json.dumps(obj, default=_default)
+    return json.dumps(obj, default=_default, indent=indent)
