@@ -13,6 +13,8 @@ from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 
+import utils as u
+
 
 class Collection(TypedDict):
     iOC: np.ndarray
@@ -43,8 +45,6 @@ class PostprocessingResult(TypedDict):
     threshold: object
     calibration: dict[str, object] | None
 
-
-import utils as u
 
 log = logging.getLogger(__name__)
 

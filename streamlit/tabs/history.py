@@ -9,8 +9,15 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from constants import STATUS_ICON
-from job_manager import job_dirs, list_all_jobs
+from connectors.storage import list_all_jobs
+from paths import job_dirs
+
+_STATUS_ICON: dict[str, str] = {
+    "processing": "⏳",
+    "completed": "✅",
+    "failed": "❌",
+    "unknown": "❓",
+}
 
 
 def page_history() -> None:
@@ -38,7 +45,7 @@ def page_history() -> None:
                 "Name": j.get("name") or j["job_id"],
                 "Submitted": j.get("submitted_at", "—"),
                 "Files": tiff_stems(j),
-                "Status": f"{STATUS_ICON.get(j['status'], '❓')} {j['status']}",
+                "Status": f"{_STATUS_ICON.get(j['status'], '❓')} {j['status']}",
             }
             for j in jobs
         ]),

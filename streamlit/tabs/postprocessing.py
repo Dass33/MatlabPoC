@@ -1,39 +1,40 @@
-"""
-Per property threshold configuration: each property gets its own σ value and direction.
-Manual overrides always win over threshold-based classification.
-"""
-
 from __future__ import annotations
 
-from typing import TypedDict, cast
+from typing import cast
 
 import numpy as np
 import plotly.graph_objects as go
+import plotly.subplots as sp
 import scipy.io
 import streamlit as st
 
-import matlab_bridge
+import connectors.matlab_bridge as matlab_bridge
 import utils as u
-from constants import (
+from connectors.matlab_bridge import Collection, MatlabFilterSetting
+from core.postprocessing import (
     DIR_OPTIONS,
     FILTER_DEFAULTS,
     MICRO_PROPS,
     SCALAR_PROPS,
-    STATES,
-    TRACK_PALETTE,
     TV_OPTIONS,
+    build_matlab_setting,
+    compute_states,
+    filter_collection,
 )
-from job_manager import job_dirs
-from matlab_bridge import Collection, MatlabFilterSetting
+from paths import job_dirs
 
+_STATES: dict[str, tuple[str, str]] = {
+    "auto-kept": ("#0072B2", "circle"),
+    "auto-excluded": ("#D55E00", "x"),
+    "manual-kept": ("#009E73", "diamond"),
+    "manual-excluded": ("#E69F00", "square"),
+}
 
-class ThresholdConfig(TypedDict):
-    enabled: bool
-    direction: str
-    tv: str
-    value: float
-    value_lo: float
-    value_hi: float
+_TRACK_PALETTE: list[str] = [
+    "#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4",
+    "#42d4f4", "#f032e6", "#bfef45", "#469990", "#dcbeff", "#9A6324",
+    "#800000", "#aaffc3", "#000075",
+]
 
 
 def page_postprocessing(job_id: str | None) -> None:
@@ -75,14 +76,17 @@ def _render_postprocessing(job_id: str, collection: Collection) -> None:
     cal_updates: dict = st.session_state.get(f"pp_cal_updates_{job_id}", {})
     effective_collection = cast(Collection, {**collection, **cal_updates})
 
-    matlab_setting = _build_matlab_setting(thresholds)
+    matlab_setting = build_matlab_setting(thresholds)
     n_traj = len(effective_collection["iOC"])
     if matlab_setting["filterProperties"]:
         not_outlier = matlab_bridge.find_outliers(effective_collection, matlab_setting)
     else:
         not_outlier = np.ones(n_traj, dtype=bool)
-    states = _compute_states(n_traj, not_outlier, overrides)
+    states = compute_states(n_traj, not_outlier, overrides)
     scalar_props = [p for p in SCALAR_PROPS if p in effective_collection]
+    if not scalar_props:
+        st.warning("No scalar properties found in collection.")
+        return
 
     ax_x, ax_y = st.session_state[f"pp_axes_{job_id}"]
     cx, cy, _ = st.columns([1, 1, 3])
@@ -98,6 +102,8 @@ def _render_postprocessing(job_id: str, collection: Collection) -> None:
         index=scalar_props.index(ax_y) if ax_y in scalar_props else 1,
         key=f"pp_ax_y_{job_id}",
     )
+    if ax_x is None or ax_y is None:
+        return
     st.session_state[f"pp_axes_{job_id}"] = (ax_x, ax_y)
 
     event = st.plotly_chart(
@@ -257,22 +263,10 @@ def _load_collection(job_id: str) -> Collection | None:
     mat_path = out / "collection" / "collection.mat"
     if not mat_path.exists():
         return None
-
     m = scipy.io.loadmat(str(mat_path), squeeze_me=True)
     c = m["collection"]
     data = {f: c[f].item() for f in c.dtype.names}
     return cast(Collection, data)
-
-
-def _compute_states(
-    n: int, not_outlier: np.ndarray, overrides: dict[str, bool]
-) -> list[str]:
-    return [
-        ("manual-kept" if overrides[i] == "kept" else "manual-excluded")
-        if i in overrides
-        else ("auto-kept" if not_outlier[i] else "auto-excluded")
-        for i in range(n)
-    ]
 
 
 def _build_scatter(
@@ -281,7 +275,7 @@ def _build_scatter(
     x = np.array(collection.get(x_prop, []), dtype=float)
     y = np.array(collection.get(y_prop, []), dtype=float)
     fig = go.Figure()
-    for state, (color, symbol) in STATES.items():
+    for state, (color, symbol) in _STATES.items():
         idx = [i for i, s in enumerate(states) if s == state]
         if not idx:
             continue
@@ -382,7 +376,7 @@ def _render_track_preview(collection: Collection, states: list[str], job_id: str
             ax.plot(
                 frames,
                 pos,
-                color=TRACK_PALETTE[i % len(TRACK_PALETTE)],
+                color=_TRACK_PALETTE[i % len(_TRACK_PALETTE)],
                 linewidth=2,
                 label=f"#{i}",
             )
@@ -416,37 +410,25 @@ def _render_track_preview(collection: Collection, states: list[str], job_id: str
     plt.close(fig)
 
 
-def _build_matlab_setting(
-    thresholds: dict[str, ThresholdConfig],
-) -> MatlabFilterSetting:
-    active_props = []
-    threshold_values = []
-    directions = []
-    for prop in FILTER_DEFAULTS:
-        cfg = thresholds[prop]
-        if not cfg.get("enabled", True):
-            continue
-        tv = cfg.get("tv", "3std")
-        direction = cfg.get("direction", "upper")
-        active_props.append(prop)
-        directions.append(direction)
-        if tv == "number":
-            scale = 1e-6 if prop in MICRO_PROPS else 1.0
-            if direction == "both":
-                threshold_values.append([
-                    cfg.get("value_lo", 0.0) * scale,
-                    cfg.get("value_hi", 0.0) * scale,
-                ])
-            else:
-                threshold_values.append([cfg.get("value", 0.0) * scale])
-        else:
-            threshold_values.append(tv)
-    return {
-        "filterProperties": active_props,
-        "thresholdDirection": directions,
-        "thresholdValue": threshold_values,
-        "referenceProperty": "iOC",
-    }
+def _render_calibration(calibration: dict[str, object]) -> None:
+    x = calibration["x"]
+    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=["A(x)", "Astd(x)", "AN(x)"])
+    fig.add_trace(
+        go.Scatter(x=x, y=calibration["A"], mode="lines+markers"), row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(x=x, y=calibration["Astd"], mode="lines+markers"), row=1, col=2
+    )
+    fig.add_trace(
+        go.Scatter(x=x, y=calibration["AN"], mode="lines+markers"), row=1, col=3
+    )
+    fig.update_layout(
+        height=300,
+        showlegend=False,
+        margin={"l": 40, "r": 20, "t": 40, "b": 40},
+        title_text="iOC Calibration",
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def _accept(
@@ -475,7 +457,6 @@ def _accept(
         [overrides.get(i) == "kept" for i in range(n_traj)], dtype=bool
     )
 
-    calibration = None
     effective_collection = collection
 
     with st.spinner("Running postprocessing..."):
@@ -494,7 +475,7 @@ def _accept(
         final_mask = result["notOutlier"]
 
         collection_postprocessed = {
-            "collection": _filter_collection(effective_collection, final_mask),
+            "collection": filter_collection(effective_collection, final_mask),
             "calibration": calibration,
             "n_kept": int(final_mask.sum()),
             "n_total": len(final_mask),
@@ -514,38 +495,3 @@ def _accept(
     if calibration:
         _render_calibration(calibration)
     st.info("Head to the **Population Analysis** tab to compute population statistics.")
-
-
-def _filter_collection(
-    collection: Collection, keep_mask: np.ndarray
-) -> dict[str, object]:
-    result = {}
-    for k, v in collection.items():
-        if isinstance(v, np.ndarray) and len(v) == len(keep_mask):
-            result[k] = v[keep_mask].tolist()
-        elif isinstance(v, (list, tuple)) and len(v) == len(keep_mask):
-            result[k] = [v[i] for i, m in enumerate(keep_mask) if m]
-    return result
-
-
-def _render_calibration(calibration: dict[str, object]) -> None:
-    import plotly.subplots as sp
-
-    x = calibration["x"]
-    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=["A(x)", "Astd(x)", "AN(x)"])
-    fig.add_trace(
-        go.Scatter(x=x, y=calibration["A"], mode="lines+markers"), row=1, col=1
-    )
-    fig.add_trace(
-        go.Scatter(x=x, y=calibration["Astd"], mode="lines+markers"), row=1, col=2
-    )
-    fig.add_trace(
-        go.Scatter(x=x, y=calibration["AN"], mode="lines+markers"), row=1, col=3
-    )
-    fig.update_layout(
-        height=300,
-        showlegend=False,
-        margin={"l": 40, "r": 20, "t": 40, "b": 40},
-        title_text="iOC Calibration",
-    )
-    st.plotly_chart(fig, use_container_width=True)

@@ -9,9 +9,9 @@ import plotly.graph_objects as go
 import plotly.subplots as sp
 import streamlit as st
 
-import matlab_bridge
-from constants import AVAILABLE_PROPS, MICRO_PROPS
-from job_manager import job_dirs
+import connectors.matlab_bridge as matlab_bridge
+from core.postprocessing import AVAILABLE_PROPS, MICRO_PROPS
+from paths import job_dirs
 
 
 def page_population_analysis(job_id: str | None) -> None:
@@ -175,9 +175,6 @@ def _render_histograms(
         height=300, margin={"l": 40, "r": 20, "t": 40, "b": 40}, bargap=0.05
     )
     st.plotly_chart(fig, use_container_width=True)
-
-
-# ─── Save ───
 
 
 def _save_population(

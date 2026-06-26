@@ -5,11 +5,9 @@ from pathlib import Path
 
 import streamlit as st
 
-from job_manager import (
-    POLL_INTERVAL_S,
-    read_status,
-    submit_job,
-)
+from connectors.runner import launch_matlab_job
+from connectors.storage import create_job, read_status
+from paths import POLL_INTERVAL_S
 
 UPLOADER_CLEAR = "uploader_clear"
 UPLOADER = "uploader_"
@@ -61,7 +59,7 @@ def page_submit(config: dict) -> None:
     if submit:
         with st.spinner("Writing files to disk..."):
             try:
-                job_id = submit_job(
+                job_id = create_job(
                     uploaded_files,
                     config,
                     dark_cal_bytes=st.session_state.get("dark_cal_bytes"),
@@ -70,6 +68,7 @@ def page_submit(config: dict) -> None:
             except OSError as e:
                 st.error(f"Failed to write files: {e}")
                 return
+        launch_matlab_job(job_id)
         st.session_state["last_job_id"] = job_id
         st.session_state["waiting"] = wait_for_result
         if not wait_for_result:

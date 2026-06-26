@@ -2,5 +2,6 @@
   "venvPath": "streamlit",
   "venv": "venv",
   "pythonVersion": "3.12",
-  "include": ["streamlit"]
+  "include": ["streamlit"],
+  "extraPaths": ["streamlit"]
 }

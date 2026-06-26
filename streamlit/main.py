@@ -14,23 +14,19 @@ import logging
 import streamlit as st
 
 from config import render_config_sidebar
-from help import page_help
-from history import page_history
-from job_manager import list_completed_jobs
-from kymograph import page_kymograph_analysis
-from population import page_population_analysis
-from postprocessing import page_postprocessing
-from submit import page_submit
+from connectors.storage import list_completed_jobs
+from tabs.help import page_help
+from tabs.history import page_history
+from tabs.kymograph import page_kymograph_analysis
+from tabs.population import page_population_analysis
+from tabs.postprocessing import page_postprocessing
+from tabs.submit import page_submit
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
-
-# ─────────────────────────────────────────────
-# Entry point
-# ─────────────────────────────────────────────
 
 
 def main() -> None:

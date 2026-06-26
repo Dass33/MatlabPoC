@@ -4,7 +4,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from job_manager import job_dirs
+from paths import job_dirs
 
 
 def page_kymograph_analysis(job_id: str | None) -> None:
