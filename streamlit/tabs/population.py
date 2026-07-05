@@ -24,6 +24,7 @@ class _PopResult:
     props: list[str]
 
 
+@st.fragment
 def page_population_analysis(job_id: str | None) -> None:
     """Population Analysis tab - compute population statistics on a postprocessed collection."""
     st.subheader("Population Analysis")
@@ -80,12 +81,7 @@ def page_population_analysis(job_id: str | None) -> None:
                     collection,
                     {"Title": method, "properties": selected_props},
                 )
-            except (ValueError, KeyError, TypeError) as e:
-                st.error(
-                    f"Population analysis failed: invalid data or parameter error: {e}"
-                )
-                return
-            except RuntimeError as e:
+            except Exception as e:  # includes opaque MatlabRuntimeError
                 st.error(f"Population analysis failed: {e}")
                 return
         _save_population(out, result, method, selected_props, data.get("n_kept"))
