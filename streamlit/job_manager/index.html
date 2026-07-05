@@ -660,10 +660,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager" class="md-nav__link">
+  <a href="#connectors.storage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        job_manager
+        storage
       
     </span>
   </a>
@@ -671,10 +671,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager.job_dirs" class="md-nav__link">
+  <a href="#connectors.storage.create_job" class="md-nav__link">
     <span class="md-ellipsis">
       
-        job_dirs
+        create_job
       
     </span>
   </a>
@@ -682,43 +682,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager.list_all_jobs" class="md-nav__link">
+  <a href="#connectors.launcher" class="md-nav__link">
     <span class="md-ellipsis">
       
-        list_all_jobs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.launch_matlab_job" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        launch_matlab_job
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.list_completed_jobs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        list_completed_jobs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.submit_job" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        submit_job
+        launcher
       
     </span>
   </a>
@@ -992,10 +959,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager" class="md-nav__link">
+  <a href="#connectors.storage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        job_manager
+        storage
       
     </span>
   </a>
@@ -1003,10 +970,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager.job_dirs" class="md-nav__link">
+  <a href="#connectors.storage.create_job" class="md-nav__link">
     <span class="md-ellipsis">
       
-        job_dirs
+        create_job
       
     </span>
   </a>
@@ -1014,43 +981,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#job_manager.list_all_jobs" class="md-nav__link">
+  <a href="#connectors.launcher" class="md-nav__link">
     <span class="md-ellipsis">
       
-        list_all_jobs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.launch_matlab_job" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        launch_matlab_job
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.list_completed_jobs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        list_completed_jobs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#job_manager.submit_job" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        submit_job
+        launcher
       
     </span>
   </a>
@@ -1104,7 +1038,7 @@
 
 
 
-<a id="job_manager"></a>
+<a id="connectors.storage"></a>
     <div class="doc doc-contents first">
 
 
@@ -1130,57 +1064,20 @@
 <div class="doc doc-object doc-function">
 
 
-<h2 id="job_manager.job_dirs" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">job_dirs</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span></code>
+<h2 id="connectors.storage.create_job" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">create_job</span><span class="p">(</span><span class="n">uploaded_files</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">dark_cal_bytes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
 
-<a href="#job_manager.job_dirs" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return (base, input, output) paths for a given job.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/job_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">job_dirs</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return (base, input, output) paths for a given job.&quot;&quot;&quot;</span>
-    <span class="n">base</span> <span class="o">=</span> <span class="n">DATA_DIR</span> <span class="o">/</span> <span class="n">job_id</span>
-    <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;output&quot;</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="job_manager.list_all_jobs" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">list_all_jobs</span><span class="p">()</span></code>
-
-<a href="#job_manager.list_all_jobs" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#connectors.storage.create_job" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
 
-        <p>Scan DATA_DIR for all jobs with meta.json, sorted by submission date descending.</p>
+        <p>Write job files to disk and return the new job_id. Does not launch the job.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/job_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
+              <summary>Source code in <code>streamlit/connectors/storage.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">52</span>
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
@@ -1192,50 +1089,23 @@
 <span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
-<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_all_jobs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan DATA_DIR for all jobs with meta.json, sorted by submission date descending.&quot;&quot;&quot;</span>
-    <span class="n">jobs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">DATA_DIR</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">jobs</span>
-    <span class="k">for</span> <span class="n">job_dir</span> <span class="ow">in</span> <span class="n">DATA_DIR</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">job_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="n">meta_file</span> <span class="o">=</span> <span class="n">job_dir</span> <span class="o">/</span> <span class="s2">&quot;meta.json&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">meta</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">read_status</span><span class="p">(</span><span class="n">job_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
-            <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
-            <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;[list_all_jobs] skipping </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">job_dir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-            <span class="k">continue</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitted_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="job_manager.launch_matlab_job" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">launch_matlab_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span></code>
-
-<a href="#job_manager.launch_matlab_job" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Run the compiled MATLAB algorithm as a subprocess.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/job_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">80</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
@@ -1243,132 +1113,14 @@
 <span class="normal">85</span>
 <span class="normal">86</span>
 <span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span>
-<span class="normal">98</span>
-<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">launch_matlab_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the compiled MATLAB algorithm as a subprocess.&quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">job_dirs</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
-    <span class="n">out</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[launch] job=</span><span class="si">%s</span><span class="s2"> inp=</span><span class="si">%s</span><span class="s2"> out=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
-
-    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">MATLAB_APP</span><span class="p">,</span> <span class="n">MCR_ROOT</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">inp</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">)],</span>
-        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
-        <span class="n">cwd</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">MATLAB_APP</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[launch] pid=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
-
-    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
-        <span class="n">target</span><span class="o">=</span><span class="n">_process_reaper</span><span class="p">,</span>
-        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">out</span> <span class="o">/</span> <span class="s2">&quot;matlab.log&quot;</span><span class="p">),</span>
-        <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="job_manager.list_completed_jobs" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">list_completed_jobs</span><span class="p">()</span></code>
-
-<a href="#job_manager.list_completed_jobs" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return only jobs with status 'completed'.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/job_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_completed_jobs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return only jobs with status &#39;completed&#39;.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">list_all_jobs</span><span class="p">()</span> <span class="k">if</span> <span class="n">j</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;completed&quot;</span><span class="p">]</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="job_manager.submit_job" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">submit_job</span><span class="p">(</span><span class="n">uploaded_files</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">dark_cal_bytes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
-
-<a href="#job_manager.submit_job" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Write uploaded files to disk, save config/meta, and launch MATLAB analysis. Returns job_id.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/job_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">submit_job</span><span class="p">(</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_job</span><span class="p">(</span>
     <span class="n">uploaded_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">dark_cal_bytes</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write uploaded files to disk, save config/meta, and launch MATLAB analysis. Returns job_id.&quot;&quot;&quot;</span>
-    <span class="n">job_id</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">_TZ</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write job files to disk and return the new job_id. Does not launch the job.&quot;&quot;&quot;</span>
+    <span class="n">job_id</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">TZ</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span>
     <span class="n">base</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">job_dirs</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
     <span class="n">inp</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1384,7 +1136,7 @@
         <span class="p">(</span><span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;dark_cal.mat&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">dark_cal_bytes</span><span class="p">)</span>
 
     <span class="p">(</span><span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">_TZ</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">TZ</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
     <span class="p">(</span><span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;meta.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
         <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
             <span class="p">{</span>
@@ -1397,14 +1149,47 @@
             <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="p">)</span>
-
-    <span class="n">launch_matlab_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">job_id</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="connectors.launcher"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
 
 
 

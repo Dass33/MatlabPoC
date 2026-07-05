@@ -470,7 +470,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population" class="md-nav__link">
+  <a href="#tabs.population" class="md-nav__link">
     <span class="md-ellipsis">
       
         population
@@ -481,7 +481,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population.page_population_analysis" class="md-nav__link">
+  <a href="#tabs.population.page_population_analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
         page_population_analysis
@@ -848,7 +848,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population" class="md-nav__link">
+  <a href="#tabs.population" class="md-nav__link">
     <span class="md-ellipsis">
       
         population
@@ -859,7 +859,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#population.page_population_analysis" class="md-nav__link">
+  <a href="#tabs.population.page_population_analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
         page_population_analysis
@@ -896,7 +896,7 @@
 
 
 
-<a id="population"></a>
+<a id="tabs.population"></a>
     <div class="doc doc-contents first">
 
 
@@ -922,10 +922,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h2 id="population.page_population_analysis" class="doc doc-heading">
+<h2 id="tabs.population.page_population_analysis" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">page_population_analysis</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span></code>
 
-<a href="#population.page_population_analysis" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#tabs.population.page_population_analysis" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -934,18 +934,8 @@
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/population.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 17</span>
-<span class="normal"> 18</span>
-<span class="normal"> 19</span>
-<span class="normal"> 20</span>
-<span class="normal"> 21</span>
-<span class="normal"> 22</span>
-<span class="normal"> 23</span>
-<span class="normal"> 24</span>
-<span class="normal"> 25</span>
-<span class="normal"> 26</span>
-<span class="normal"> 27</span>
+              <summary>Source code in <code>streamlit/tabs/population.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 27</span>
 <span class="normal"> 28</span>
 <span class="normal"> 29</span>
 <span class="normal"> 30</span>
@@ -1033,7 +1023,15 @@
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
-<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_population_analysis</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@st</span><span class="o">.</span><span class="n">fragment</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">page_population_analysis</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Population Analysis tab - compute population statistics on a postprocessed collection.&quot;&quot;&quot;</span>
     <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;Population Analysis&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">job_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1085,29 +1083,25 @@
     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Run Population Analysis&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pop_run_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Computing...&quot;</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">matlab_bridge</span><span class="o">.</span><span class="n">run_population_analysis</span><span class="p">(</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">algorithms</span><span class="o">.</span><span class="n">run_population_analysis</span><span class="p">(</span>
                     <span class="n">collection</span><span class="p">,</span>
                     <span class="p">{</span><span class="s2">&quot;Title&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="n">selected_props</span><span class="p">},</span>
                 <span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Population analysis failed: invalid data or parameter error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">return</span>
-            <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># includes opaque MatlabRuntimeError</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Population analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span>
         <span class="n">_save_population</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">selected_props</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_kept&quot;</span><span class="p">))</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pop_result_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pop_method_used_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pop_props_used_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected_props</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pop_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_PopResult</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="n">selected_props</span>
+        <span class="p">)</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_result_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">pop</span><span class="p">:</span> <span class="n">_PopResult</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
-    <span class="n">method_used</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_method_used_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-    <span class="n">props_used</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_props_used_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">selected_props</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">result</span>
+    <span class="n">method_used</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">method</span>
+    <span class="n">props_used</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">props</span>
 
     <span class="n">scaled_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;MEAN&quot;</span><span class="p">,</span> <span class="s2">&quot;STD&quot;</span><span class="p">,</span> <span class="s2">&quot;FWHM&quot;</span><span class="p">}</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MEAN&quot;</span><span class="p">,</span> <span class="s2">&quot;STD&quot;</span><span class="p">,</span> <span class="s2">&quot;FWHM&quot;</span><span class="p">,</span> <span class="s2">&quot;RESOLUTION&quot;</span><span class="p">]</span>

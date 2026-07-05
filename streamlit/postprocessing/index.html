@@ -492,7 +492,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#postprocessing" class="md-nav__link">
+  <a href="#tabs.postprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
         postprocessing
@@ -503,7 +503,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#postprocessing.page_postprocessing" class="md-nav__link">
+  <a href="#tabs.postprocessing.page_postprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
         page_postprocessing
@@ -948,7 +948,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#postprocessing" class="md-nav__link">
+  <a href="#tabs.postprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
         postprocessing
@@ -959,7 +959,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#postprocessing.page_postprocessing" class="md-nav__link">
+  <a href="#tabs.postprocessing.page_postprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
         page_postprocessing
@@ -1009,11 +1009,8 @@
 
 
 
-<a id="postprocessing"></a>
+<a id="tabs.postprocessing"></a>
     <div class="doc doc-contents first">
-
-        <p>Per property threshold configuration: each property gets its own σ value and direction.
-Manual overrides always win over threshold-based classification.</p>
 
 
 
@@ -1038,10 +1035,10 @@ Manual overrides always win over threshold-based classification.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="postprocessing.page_postprocessing" class="doc doc-heading">
+<h2 id="tabs.postprocessing.page_postprocessing" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">page_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span></code>
 
-<a href="#postprocessing.page_postprocessing" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#tabs.postprocessing.page_postprocessing" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -1050,36 +1047,32 @@ Manual overrides always win over threshold-based classification.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/postprocessing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <summary>Source code in <code>streamlit/tabs/postprocessing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@st</span><span class="o">.</span><span class="n">fragment</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">page_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Post-processing tab — review trajectories, adjust outlier thresholds, run iOC calibration.&quot;&quot;&quot;</span>
     <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;Post-processing&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">job_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1091,23 +1084,17 @@ Manual overrides always win over threshold-based classification.</p>
         <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;collection.mat not found for this job.&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;overrides_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pp_axes_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;iOC&quot;</span><span class="p">,</span> <span class="s2">&quot;velocity&quot;</span><span class="p">))</span>
-    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pp_dirty_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-    <span class="n">stored</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pp_thresholds_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">stored</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">FILTER_DEFAULTS</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pp_thresholds_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">p</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                <span class="s2">&quot;value_lo&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                <span class="s2">&quot;value_hi&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">defaults</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">defaults</span> <span class="ow">in</span> <span class="n">FILTER_DEFAULTS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
+    <span class="k">if</span> <span class="n">saved</span> <span class="o">:=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pp_saved_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">kept</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">saved</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Saved </span><span class="si">{</span><span class="n">kept</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2"> trajectories to `collection_postprocessed.json`.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Head to the **Population Analysis** tab to compute population statistics.&quot;</span>
+        <span class="p">)</span>
 
-    <span class="n">_render_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">collection</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">_get_state</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+    <span class="n">_render_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
