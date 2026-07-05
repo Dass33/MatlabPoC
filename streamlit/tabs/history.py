@@ -34,11 +34,13 @@ def page_history() -> None:
         st.info("No jobs found yet.")
         return
 
-    tiff_stems = lambda j: ", ".join(
-        Path(f).stem
-        for f in j.get("filenames", [])
-        if f.lower().endswith((".tif", ".tiff"))
-    )
+    def tiff_stems(j: dict) -> str:
+        return ", ".join(
+            Path(f).stem
+            for f in j.get("filenames", [])
+            if f.lower().endswith((".tif", ".tiff"))
+        )
+
     st.dataframe(
         pd.DataFrame([
             {
