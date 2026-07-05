@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import logging
 from dataclasses import dataclass, field
 from typing import cast
 
@@ -23,6 +25,8 @@ from core.postprocessing import (
     compute_states,
     default_thresholds,
     filter_collection,
+    thresholds_from_jsonable,
+    thresholds_to_jsonable,
 )
 from env import job_dirs
 
@@ -61,13 +65,52 @@ class _PostprocessingState:
     calibration: dict[str, object] | None = None
 
 
+log = logging.getLogger(__name__)
+
+
+def _state_path(job_id: str):
+    _, _, out = job_dirs(job_id)
+    return out / "postprocessing_state.json"
+
+
+def _load_persisted_state(job_id: str) -> _PostprocessingState:
+    """Restore the user's saved curation (thresholds + manual overrides) from disk,
+    falling back to defaults. Derived fields (cal_updates, calibration) are not persisted
+    — they are recomputed on the next Accept & Save."""
+    path = _state_path(job_id)
+    if path.exists():
+        try:
+            data = json.loads(path.read_text())
+            return _PostprocessingState(
+                thresholds=thresholds_from_jsonable(data.get("thresholds", {})),
+                overrides={int(k): v for k, v in data.get("overrides", {}).items()},
+            )
+        except (json.JSONDecodeError, OSError, TypeError, ValueError) as e:
+            log.warning("[postprocessing] could not load saved state for %s: %s", job_id, e)
+    return _PostprocessingState(thresholds=default_thresholds())
+
+
+def _save_persisted_state(job_id: str, state: _PostprocessingState) -> None:
+    data = {
+        "thresholds": thresholds_to_jsonable(state.thresholds),
+        "overrides": {str(k): v for k, v in state.overrides.items()},
+    }
+    _state_path(job_id).write_text(u.to_json(data, indent=2))
+
+
 def _get_state(job_id: str) -> _PostprocessingState:
     key = f"pp_{job_id}"
     if key not in st.session_state:
-        st.session_state[key] = _PostprocessingState(thresholds=default_thresholds())
+        st.session_state[key] = _load_persisted_state(job_id)
     return st.session_state[key]
 
 
+@st.cache_data(show_spinner=False)
+def _cached_not_outlier(collection_json: str, setting_json: str) -> np.ndarray:
+    return algorithms.find_outliers_json(collection_json, setting_json)
+
+
+@st.fragment
 def page_postprocessing(job_id: str | None) -> None:
     """Post-processing tab — review trajectories, adjust outlier thresholds, run iOC calibration."""
     st.subheader("Post-processing")
@@ -79,6 +122,15 @@ def page_postprocessing(job_id: str | None) -> None:
     if collection is None:
         st.warning("collection.mat not found for this job.")
         return
+
+    if saved := st.session_state.pop(f"pp_saved_{job_id}", None):
+        kept, total = saved
+        st.success(
+            f"Saved {kept} / {total} trajectories to `collection_postprocessed.json`."
+        )
+        st.info(
+            "Head to the **Population Analysis** tab to compute population statistics."
+        )
 
     state = _get_state(job_id)
     _render_postprocessing(job_id, collection, state)
@@ -93,7 +145,14 @@ def _render_postprocessing(
     matlab_setting = build_matlab_setting(state.thresholds)
     n_traj = len(effective_collection["iOC"])
     if matlab_setting["filterProperties"]:
-        not_outlier = algorithms.find_outliers(effective_collection, matlab_setting)
+        try:
+            not_outlier = _cached_not_outlier(
+                algorithms.serialize_collection(effective_collection),
+                u.to_json(matlab_setting),
+            )
+        except Exception as e:  # opaque MatlabRuntimeError; degrade instead of crashing the tab
+            st.error(f"Outlier filtering failed: {e}")
+            not_outlier = np.ones(n_traj, dtype=bool)
     else:
         not_outlier = np.ones(n_traj, dtype=bool)
     states = compute_states(n_traj, not_outlier, state.overrides)
@@ -489,7 +548,7 @@ def _accept(
             result = algorithms.run_postprocessing(
                 collection, matlab_setting, keep_mask, force_keep, calibration_on
             )
-        except (RuntimeError, ValueError) as e:
+        except Exception as e:  # includes opaque MatlabRuntimeError
             st.error(f"Postprocessing failed: {e}")
             return
 
@@ -512,10 +571,7 @@ def _accept(
     state.cal_updates = cal_updates
     state.calibration = calibration
     state.dirty = False
-
-    st.success(
-        f"Saved {final_mask.sum()} / {len(final_mask)} trajectories to `collection_postprocessed.json`."
-    )
-    if calibration:
-        _render_calibration(calibration)
-    st.info("Head to the **Population Analysis** tab to compute population statistics.")
+    _save_persisted_state(job_id, state)
+    st.session_state[f"pp_saved_{job_id}"] = (int(final_mask.sum()), int(len(final_mask)))
+    # Full app rerun (not fragment-scoped) so the Population tab picks up the new file.
+    st.rerun()

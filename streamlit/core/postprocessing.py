@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 import numpy as np
 
@@ -50,6 +50,20 @@ def default_thresholds() -> dict[str, ThresholdConfig]:
         p: ThresholdConfig(enabled=True, direction=d["direction"], tv=d["tv"])
         for p, d in FILTER_DEFAULTS.items()
     }
+
+
+def thresholds_to_jsonable(thresholds: dict[str, ThresholdConfig]) -> dict[str, dict]:
+    return {p: asdict(cfg) for p, cfg in thresholds.items()}
+
+
+def thresholds_from_jsonable(d: dict) -> dict[str, ThresholdConfig]:
+    """Rebuild from a persisted dict, starting from defaults so missing/renamed
+    properties still get a valid config."""
+    result = default_thresholds()
+    for p, cfg in d.items():
+        if p in result and isinstance(cfg, dict):
+            result[p] = ThresholdConfig(**cfg)
+    return result
 
 
 def compute_states(
