@@ -13,7 +13,7 @@ Centralising constants prevents magic numbers from spreading throughout individu
 
 ## Code Reference
 
-::: constants
+::: core.postprocessing
 
 <details>
 <summary>Source Code</summary>

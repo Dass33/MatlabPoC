@@ -29,4 +29,4 @@ If a system reboot or an unexpected hardware crash occurs during a job execution
 
 ## Code Reference
 
-::: history
+::: tabs.history

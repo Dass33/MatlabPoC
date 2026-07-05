@@ -18,4 +18,4 @@ The **Submit** tab provides the user interface for initiating new analysis jobs.
 
 ## Code Reference
 
-::: submit
+::: tabs.submit

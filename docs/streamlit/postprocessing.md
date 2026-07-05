@@ -24,4 +24,4 @@ Interferometric Scattering Microscopy detects signal contrast ($iOC$). To map th
 
 ## Code Reference
 
-::: postprocessing
+::: tabs.postprocessing

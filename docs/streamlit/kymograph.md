@@ -6,4 +6,4 @@ The **Kymograph Analysis** tab allows researchers to visually inspect raw signal
 
 ## Code Reference
 
-::: kymograph
+::: tabs.kymograph

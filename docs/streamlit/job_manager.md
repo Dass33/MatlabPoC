@@ -30,4 +30,6 @@ To process a job, the manager:
 
 ## Code Reference
 
-::: job_manager
+::: connectors.storage
+
+::: connectors.launcher

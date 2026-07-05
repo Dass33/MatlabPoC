@@ -6,4 +6,4 @@ The **Population Analysis** tab aggregates data across all channels of an experi
 
 ## Code Reference
 
-::: population
+::: tabs.population

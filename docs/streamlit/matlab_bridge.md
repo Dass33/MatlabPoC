@@ -16,4 +16,4 @@ The bridge serialises all parameters to JSON string format before passing them t
 
 ## Code Reference
 
-::: matlab_bridge
+::: connectors.algorithms
