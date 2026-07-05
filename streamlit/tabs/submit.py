@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import streamlit as st
@@ -19,6 +18,10 @@ def page_submit(config: dict) -> None:
 
     if toast_msg := st.session_state.pop("_submit_toast", None):
         st.toast(toast_msg)
+
+    if result := st.session_state.pop("_submit_result", None):
+        kind, msg = result
+        (st.success if kind == "success" else st.error)(msg)
 
     if UPLOADER_CLEAR not in st.session_state:
         st.session_state[UPLOADER_CLEAR] = 0
@@ -77,24 +80,7 @@ def page_submit(config: dict) -> None:
 
     active_job_id = st.session_state.get("last_job_id")
     if active_job_id and st.session_state.get("waiting"):
-        status_placeholder = st.empty()
-        status = read_status(active_job_id)
-        if status["status"] == "processing":
-            status_placeholder.info(
-                f"Running... (job `{active_job_id}`). Checking every {POLL_INTERVAL_S}s."
-            )
-            time.sleep(POLL_INTERVAL_S)
-            st.rerun()
-        else:
-            st.session_state["waiting"] = False
-            status_placeholder.empty()
-            if status["status"] == "completed":
-                st.success(
-                    "Analysis complete! View results in the **Kymograph Analysis** tab."
-                )
-            else:
-                st.error(f"Job failed: {status.get('error', 'unknown error')}")
-            st.rerun()
+        _wait_for_result(active_job_id)
 
     missing_txt = tiff_stems - txt_stems
     if missing_txt:
@@ -106,6 +92,28 @@ def page_submit(config: dict) -> None:
     with st.expander("List of all uploaded files"):
         for f in uploaded_files:
             st.write(f.name)
+
+
+@st.fragment(run_every=POLL_INTERVAL_S)
+def _wait_for_result(job_id: str) -> None:
+    """Poll job status without blocking the rest of the app. On a terminal status it
+    stashes the outcome and triggers a full rerun, which stops this fragment's loop."""
+    status = read_status(job_id)
+    if status["status"] == "processing":
+        st.info(f"Running... (job `{job_id}`). Auto-refreshing every {POLL_INTERVAL_S}s.")
+        return
+    st.session_state["waiting"] = False
+    if status["status"] == "completed":
+        st.session_state["_submit_result"] = (
+            "success",
+            "Analysis complete! View results in the **Kymograph Analysis** tab.",
+        )
+    else:
+        st.session_state["_submit_result"] = (
+            "error",
+            f"Job failed: {status.get('error', 'unknown error')}",
+        )
+    st.rerun()
 
 
 def _uploader_key() -> str:
