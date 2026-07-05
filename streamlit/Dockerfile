@@ -15,7 +15,9 @@ ENV LD_LIBRARY_PATH=/opt/matlabruntime/R2025b/runtime/glnxa64:/opt/matlabruntime
 COPY streamlit/requirements.txt .
 RUN pip3 install  --break-system-packages --no-cache-dir -r requirements.txt
 
-COPY matlab/Compiled/PythonPackage/nsm_algorithms/ ./nsm_algorithms/
+# Kept outside /app so a dev bind-mount of ./streamlit:/app doesn't shadow it.
+ENV PYTHONPATH=/opt/matlab_python
+COPY matlab/Compiled/PythonPackage/nsm_algorithms/ /opt/matlab_python/nsm_algorithms/
 
 RUN mkdir -p /opt/matlab_app
 COPY matlab/Compiled/AnalyzeExperimentApp /opt/matlab_app/
