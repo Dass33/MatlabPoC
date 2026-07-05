@@ -10,9 +10,11 @@ Environment variables (set in docker-compose / .env):
 from __future__ import annotations
 
 import logging
+import threading
 
 import streamlit as st
 
+import connectors.algorithms as algorithms
 from config import render_config_sidebar
 from connectors.storage import list_completed_jobs
 from tabs.help import page_help
@@ -29,8 +31,17 @@ logging.basicConfig(
 )
 
 
+@st.cache_resource
+def _warm_mcr() -> bool:
+    """Kick off MCR init in the background, once per process."""
+    threading.Thread(target=algorithms.warm_up, daemon=True).start()
+    return True
+
+
 def main() -> None:
     """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
+    _warm_mcr()
+
     st.set_page_config(
         page_title="NSM Data Processing",
         page_icon="🔬",
@@ -63,7 +74,7 @@ def main() -> None:
         "Help",
     ])
 
-    active_job = st.session_state.get("active_experiment")
+    active_job = st.session_state.get("active_experiment") or st.session_state.get("last_job_id")
 
     with tab_submit:
         page_submit(config)

@@ -7,14 +7,18 @@ via JSON strings.
 
 from __future__ import annotations
 
+import importlib
 import json
 import logging
+import threading
 from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 
 from utils import to_json
+
+_MCR_PACKAGE = "nsm_algorithms"  # installed at matlab/Compiled/PythonPackage
 
 
 def _prep_collection(collection: Mapping[str, Any]) -> dict[str, Any]:
@@ -62,28 +66,49 @@ class PostprocessingResult(TypedDict):
 log = logging.getLogger(__name__)
 
 _pkg = None
+_pkg_lock = threading.Lock()
 
 
 def _get_pkg() -> Any:
     global _pkg
     if _pkg is None:
-        import nsm_algorithms  # type: ignore[import]  # installed from matlab/Compiled/PythonPackage/nsm_algorithms
-
-        _pkg = nsm_algorithms.initialize()
-        log.info("MATLAB MCR initialised")
+        with _pkg_lock:
+            if _pkg is None:
+                _pkg = importlib.import_module(_MCR_PACKAGE).initialize()
+                log.info("MATLAB MCR initialised")
     return _pkg
+
+
+def warm_up() -> None:
+    """Eagerly initialise the MCR so the first interactive call isn't slow.
+
+    Intended to run in a background thread at app startup. Failures are logged,
+    not raised — the next real call will retry lazily via _get_pkg().
+    """
+    try:
+        _get_pkg()
+    except Exception as e:  # MCR init surfaces various runtime/import errors
+        log.warning("MCR warm-up failed (will retry on first call): %s", e)
+
+
+def serialize_collection(collection: Mapping[str, Any]) -> str:
+    """JSON-serialise a collection for the MATLAB bridge (numpy arrays → lists)."""
+    return to_json(_prep_collection(collection))
 
 
 def find_outliers(
     collection: Collection, matlab_setting: MatlabFilterSetting
 ) -> np.ndarray:
     """Returns a boolean mask of length N where True means the trajectory is not an outlier."""
-    preped_collection = to_json(_prep_collection(collection))
-    matlab_setting_json = to_json(matlab_setting)
+    return find_outliers_json(serialize_collection(collection), to_json(matlab_setting))
 
+
+def find_outliers_json(collection_json: str, setting_json: str) -> np.ndarray:
+    """find_outliers on pre-serialised inputs. Separated so callers can cache on the
+    JSON strings and skip the MCR round-trip on repeated identical inputs."""
     result = _get_pkg().runOutlierFiltering(
-        preped_collection,
-        matlab_setting_json,
+        collection_json,
+        setting_json,
         nargout=1,
     )
     return np.array(json.loads(str(result)), dtype=bool)
