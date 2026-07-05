@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import subprocess
 import threading
@@ -9,16 +10,60 @@ from env import MATLAB_APP, MCR_ROOT, job_dirs
 
 log = logging.getLogger(__name__)
 
+# MATLAB binary runs as a different user inside the container; all job output
+# files need to be accessible by the Streamlit process after the job completes.
+_JOB_DIR_MODE = 0o777
+
+
+def _log_tail(log_dest: Path, n_bytes: int = 2000) -> str:
+    try:
+        return log_dest.read_bytes()[-n_bytes:].decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def _fail_if_still_processing(out: Path, returncode: int, log_dest: Path) -> None:
+    """If MATLAB crashed without writing a terminal status, mark the job failed.
+
+    Covers segfault / OOM-kill / failed start — cases where MATLAB's own catch
+    block never runs, which would otherwise leave the job 'processing' forever.
+    """
+    status_file = out / "status.json"
+    current = "processing"
+    if status_file.exists():
+        try:
+            current = json.loads(status_file.read_text()).get("status", "processing")
+        except (json.JSONDecodeError, OSError):
+            pass
+    if current != "processing":
+        return
+
+    tail = _log_tail(log_dest)
+    error = f"MATLAB process exited with code {returncode} without reporting status."
+    if tail:
+        error += f"\n\nLast output:\n{tail}"
+    tmp = status_file.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"status": "failed", "error": error}))
+    tmp.replace(status_file)
+    log.error("[reaper] job marked failed (exit=%s): %s", returncode, out.parent.name)
+
 
 def _process_reaper(proc: subprocess.Popen, log_dest: Path) -> None:
     try:
-        stdout, _ = proc.communicate()
-        log_dest.write_bytes(stdout)
+        stdout = proc.stdout
+        assert stdout is not None
+        with open(log_dest, "wb") as f:
+            for line in iter(stdout.readline, b""):
+                f.write(line)
+                f.flush()
+        proc.wait()
         for p in [log_dest.parent, *log_dest.parent.rglob("*")]:
             try:
-                p.chmod(0o777)
+                p.chmod(_JOB_DIR_MODE)
             except OSError:
                 pass
+        if proc.returncode != 0:
+            _fail_if_still_processing(log_dest.parent, proc.returncode, log_dest)
     except (OSError, ValueError) as e:
         log.error("[reaper] %s", e)
 
