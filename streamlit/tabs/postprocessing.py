@@ -198,6 +198,10 @@ def _render_postprocessing(
         selection_mode=["points", "lasso", "box"],
         key=f"pp_scatter_{job_id}",
     )
+    st.caption(
+        "Click a point to inspect its trajectory · switch to the lasso/box tool "
+        "in the chart toolbar to select multiple for include/exclude."
+    )
 
     sel = _parse_selection(event)
     c1, c2, c3, c4 = st.columns(4)
@@ -408,7 +412,7 @@ def _build_scatter(
         },
         margin={"l": 40, "r": 20, "t": 40, "b": 40},
         height=450,
-        dragmode="lasso",
+        dragmode="pan",
     )
     return fig
 
