@@ -7,7 +7,7 @@ It imports page modules corresponding to each stage of the analysis workflow:
 2. **Kymograph**: To inspect raw uploaded kymograph images.
 3. **Post-processing**: For outlier filtering and IOC calibration.
 4. **Population**: For statistics.
-5. **History**: For managing and retrieving past jobs.
+5. **Overview**: For managing and retrieving past jobs.
 6. **Configuration**: For editing global thresholds and parameters.
 7. **Help**: Instructions for researchers.
 

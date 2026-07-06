@@ -1,4 +1,4 @@
-# History & Admin Tab
+# Overview & Admin Tab
 
 The system does not use a SQL database (relying on structured folder schemas in the filesystem instead), this module manages job folders.
 
@@ -29,4 +29,4 @@ If a system reboot or an unexpected hardware crash occurs during a job execution
 
 ## Code Reference
 
-::: tabs.history
+::: tabs.overview

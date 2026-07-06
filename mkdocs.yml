@@ -44,12 +44,12 @@ plugins:
 nav:
   - Home: index.md
   - Streamlit App:
-    - Overview: streamlit/index.md
+    - App Structure: streamlit/index.md
     - Submit: streamlit/submit.md
     - Kymograph Analysis: streamlit/kymograph.md
     - Post-processing: streamlit/postprocessing.md
     - Population Analysis: streamlit/population.md
-    - History: streamlit/history.md
+    - Overview: streamlit/overview.md
     - Help: streamlit/help.md
     - Configuration: streamlit/config.md
     - Constants: streamlit/constants.md
