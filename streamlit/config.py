@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import streamlit as st
+
+from env import DATA_DIR
+
+log = logging.getLogger(__name__)
+
+PRESETS_DIR = DATA_DIR / "_presets"
+NO_PRESET = "—"
 
 
 @dataclass
@@ -65,19 +74,54 @@ class Config:
     )
 
 
+def _slugify(name: str) -> str:
+    return re.sub(r"[^\w.-]+", "_", name.strip())
+
+
+def list_presets() -> dict[str, Path]:
+    PRESETS_DIR.mkdir(parents=True, exist_ok=True)
+    presets = {}
+    for f in sorted(PRESETS_DIR.glob("*.json")):
+        try:
+            presets[json.loads(f.read_text())["name"]] = f
+        except (json.JSONDecodeError, OSError, KeyError) as e:
+            log.warning("[list_presets] skipping %s: %s", f.name, e)
+    return presets
+
+
+def save_preset(name: str, config: dict) -> None:
+    PRESETS_DIR.mkdir(parents=True, exist_ok=True)
+    path = PRESETS_DIR / f"{_slugify(name)}.json"
+    path.write_text(json.dumps({"name": name, "config": config}, indent=2))
+
+
 def render_config_sidebar() -> dict:
     """Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict."""
     cfg = Config()
 
     st.sidebar.header("Algorithm Parameters")
 
-    with st.sidebar.expander("Save / Load config"):
+    presets = list_presets()
+    with st.sidebar.expander("Load config"):
+        options = [NO_PRESET, *presets]
+        selected = st.selectbox("Preset", options, key="preset_select")
+
+        if selected == NO_PRESET:
+            st.session_state["_last_applied_preset"] = None
+        elif selected != st.session_state.get("_last_applied_preset"):
+            try:
+                apply_config(json.loads(presets[selected].read_text())["config"])
+                st.session_state["_last_applied_preset"] = selected
+                st.rerun()
+            except (json.JSONDecodeError, OSError, KeyError) as e:
+                st.error(f"Could not load preset: {e}")
+
         uploaded = st.file_uploader(
             "Load config JSON", type=["json"], key="built_config_upload"
         )
         if uploaded:
             try:
-                _apply_config(json.load(uploaded))
+                apply_config(json.load(uploaded))
                 st.success("Config loaded.")
             except json.JSONDecodeError as e:
                 st.error(f"Invalid JSON in config file: {e}")
@@ -231,18 +275,37 @@ def render_config_sidebar() -> dict:
 
     result = asdict(cfg)
 
-    st.sidebar.download_button(
-        "Export current config",
-        data=json.dumps(result, indent=2),
-        file_name="config.json",
-        mime="application/json",
-        width="stretch",
-    )
+    with st.sidebar.expander("Save preset / config"):
+        st.download_button(
+            "Export current config",
+            data=json.dumps(result, indent=2),
+            file_name="config.json",
+            mime="application/json",
+            width="stretch",
+        )
+        new_name = st.text_input("Preset name", key="new_preset_name")
+        if st.button("Save preset"):
+            if not new_name.strip():
+                st.error("Preset name cannot be empty.")
+            else:
+                save_preset(new_name.strip(), result)
+                st.success(f"Saved preset '{new_name.strip()}'.")
+        if presets:
+            to_delete = st.selectbox(
+                "Delete preset", list(presets), key="preset_delete_select"
+            )
+            if st.button("Delete preset"):
+                presets[to_delete].unlink(missing_ok=True)
+                if st.session_state.get("preset_select") == to_delete:
+                    st.session_state.pop("preset_select", None)
+                    st.session_state.pop("_last_applied_preset", None)
+                st.session_state.pop("preset_delete_select", None)
+                st.rerun()
 
     return result
 
 
-def _apply_config(d: dict) -> None:
+def apply_config(d: dict) -> None:
     pp = d.get("kymographPreprocessing", {})
     dc = pp.get("darkCalibration", KymographPreprocessing().darkCalibration)
 
