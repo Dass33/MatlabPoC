@@ -896,10 +896,10 @@
 
 <h1 id="nsm-web-application-documentation">NSM Web Application Documentation<a class="headerlink" href="#nsm-web-application-documentation" title="Permanent link">&para;</a></h1>
 <p>Welcome to the documentation for the Nanofluidic Scattering Microscopy (NSM) Data Processing Web Application.</p>
-<p>This application provides a user-friendly interface for processing raw NSM kymograph data using high-performance MATLAB algorithms, visualising results, calibrating measurement instruments, and running population statistics.</p>
+<p>This application provides a user-friendly interface for processing raw NSM kymograph data.</p>
 <hr />
 <h2 id="high-level-architecture-lifecycle">High-Level Architecture &amp; Lifecycle<a class="headerlink" href="#high-level-architecture-lifecycle" title="Permanent link">&para;</a></h2>
-<p>The application is structured for easy cross-platform deployment and local development. It packages a <strong>Streamlit</strong> user interface and the compiled <strong>MATLAB Runtime (MCR)</strong> into a single, unified Docker container.</p>
+<p>Packages a <strong>Streamlit</strong> user interface and the compiled <strong>MATLAB Runtime (MCR)</strong> into a single, unified Docker container.</p>
 <pre class="mermaid"><code>flowchart TB
     User(["User"])
 
@@ -925,7 +925,7 @@
     Watchtower -.-&gt;|"Auto-recreate"| Container</code></pre>
 <h3 id="key-components">Key Components<a class="headerlink" href="#key-components" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Streamlit UI</strong>: Serves as the user frontend. It allows users to upload files, view kymograph previews, override processing settings, run population analyses, and download data as ZIP archives.</li>
+<li><strong>Streamlit UI</strong>: Serves as the user frontend. It allows users to upload files, view kymograph previews, override processing settings, run population analyses, and download data as ZIP.</li>
 <li><strong>MATLAB Subprocess</strong>: When a job is submitted, the Streamlit app spawns the compiled MATLAB executable (<code>AnalyzeExperimentApp</code>) as a background subprocess. This binary performs the heavy-duty kymograph detection and analysis.</li>
 <li><strong>MATLAB Python Package Bridge (<code>nsm_algorithms</code>)</strong>: For interactive post-processing and calibration runs, Streamlit imports a custom MATLAB compiled Python package, invoking algorithms in-memory for instant feedback.</li>
 <li><strong>Data Volume Mount</strong>: All files (raw uploads, intermediate variables, logs, and output metadata) are stored in the <code>data/jobs/&lt;uuid&gt;/</code> folder on the host machine to ensure persistent storage.</li>
@@ -941,8 +941,7 @@
 <li><strong><a href="scripts/">Developer Scripts</a></strong>: Quick reference and summaries of the Python helper scripts in the repository.</li>
 <li><strong><a href="reasoning/">Architectural Decision Records (ADR)</a></strong>: Rationale behind technologies chosen for this project (Streamlit, MATLAB runtime integration, Docker).</li>
 </ul>
-<p>New to the app? Visiting it with <code>?tutorial=on</code> added to the URL shows a step-by-step banner
-with a <strong>Run demo dataset</strong> button, so you can see the full workflow without uploading your own files first.</p>
+<p><code>?tutorial=on</code> added to the URL shows a step-by-step banner with a <strong>Run demo dataset</strong> button, so you can see the full workflow without uploading your own files first.</p>
 
 
 
