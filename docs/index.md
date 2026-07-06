@@ -54,3 +54,6 @@ flowchart TB
 *   **[Developer & Maintenance Guide](maintenance.md)**: Learn how to set up the developer workspace, recompile MATLAB binaries, and push releases.
 *   **[Developer Scripts](scripts.md)**: Quick reference and summaries of the Python helper scripts in the repository.
 *   **[Architectural Decision Records (ADR)](reasoning.md)**: Rationale behind technologies chosen for this project (Streamlit, MATLAB runtime integration, Docker).
+
+New to the app? Visiting it with `?tutorial=on` added to the URL shows a step-by-step banner
+with a **Run demo dataset** button, so you can see the full workflow without uploading your own files first.

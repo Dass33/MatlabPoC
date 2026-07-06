@@ -12,8 +12,14 @@ Raw molecular trajectories contain noise or artifacts (such as dust or aggregate
 *   They choose standard deviation thresholds (e.g., `mean ± 3 * STD`) or custom numeric limits.
 *   The system calls `matlab_bridge.find_outliers` to compute a boolean keep/discard mask and renders interactive scatter plots using **Plotly**.
 
-### 2. Trajectory Preview
-Users can click points in the scatter plot or choose specific indices to display raw position vs. frame trajectories for individual molecules, ensuring data validity.
+### 2. Trajectory Inspector
+Clicking a point in the scatter plot opens an inspector below the curation buttons for that
+trajectory: its scalar properties (iOC/STDiOC in µ, N, D, velocity), its position-vs-time trace,
+and its iOC profile. This lets researchers judge whether an outlier is a real particle or a
+tracking artifact before excluding it. The inspected trajectory is also highlighted in white in
+the kymograph track preview. The chart's default tool is pan/click-to-inspect; switch to the
+lasso or box-select tool in the chart toolbar to select multiple trajectories for bulk
+include/exclude.
 
 ### 3. iOC Calibration
 Interferometric Scattering Microscopy detects signal contrast ($iOC$). To map these values to actual molecular weights or refractive indices, a calibration is required:

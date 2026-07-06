@@ -13,6 +13,9 @@ The **Submit** tab provides the user interface for initiating new analysis jobs.
    - They choose whether to wait synchronously for the processing to finish or submit it to the background (asynchronous processing).
    - Upon clicking "Submit", a unique UUID is generated for the job, and files are streamed to `data/jobs/<uuid>/input/`.
    - The job is registered, and a background thread is spawned to execute the compiled MATLAB analysis.
+4. **Live Kymographs**: With "Wait for result" enabled, kymograph images appear on this tab as
+   soon as MATLAB produces them — one per input TIFF — so users can watch progress instead of
+   waiting for the whole job to finish.
 
 ---
 
