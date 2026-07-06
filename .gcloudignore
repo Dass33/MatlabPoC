@@ -1,0 +1,15 @@
+.git
+.gitignore
+.claude/
+.github/
+data/
+DemoData/
+__pycache__/
+*.py[cod]
+*venv*/
+env/
+ENV/
+.env
+context.txt
+site/
+docs/

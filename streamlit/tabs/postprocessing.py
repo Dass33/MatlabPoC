@@ -341,13 +341,17 @@ def _render_postprocessing(
         )
 
 
-@st.cache_data
 def _load_collection(job_id: str) -> Collection | None:
     _, _, out = job_dirs(job_id)
     mat_path = out / "collection" / "collection.mat"
     if not mat_path.exists():
         return None
-    m = scipy.io.loadmat(str(mat_path), squeeze_me=True)
+    return _load_collection_cached(str(mat_path))
+
+
+@st.cache_data
+def _load_collection_cached(mat_path_str: str) -> Collection:
+    m = scipy.io.loadmat(mat_path_str, squeeze_me=True)
     c = m["collection"]
     data = {f: c[f].item() for f in c.dtype.names}
     return cast(Collection, data)
