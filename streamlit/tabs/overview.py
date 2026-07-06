@@ -188,14 +188,17 @@ def _zip_results(job_id: str) -> bytes:
             for f in sorted(kymo_dir.glob("*.png")):
                 zf.write(f, Path("kymographs") / f.name)
 
-        for name in (
-            "collection/collection.mat",
-            "collection_postprocessed.json",
-            "population.json",
+        for src, arc in (
+            ("collection/collection.mat", "collection/collection.mat"),
+            (
+                "collection_postprocessed.json",
+                "collection/collection_postprocessed.json",
+            ),
+            ("population.json", "population.json"),
         ):
-            p = out / name
+            p = out / src
             if p.is_file():
-                zf.write(p, name)
+                zf.write(p, arc)
 
         setting = out / "Setting.json"
         if setting.is_file():
@@ -209,7 +212,8 @@ def _zip_results(job_id: str) -> bytes:
                 if collection:
                     zf.writestr("trajectories.csv", trajectories_csv(collection))
                     zf.writestr(
-                        "collection_postprocessed.mat", collection_mat(postprocessed)
+                        "collection/collection_postprocessed.mat",
+                        collection_mat(postprocessed),
                     )
             except Exception as e:
                 log.error(

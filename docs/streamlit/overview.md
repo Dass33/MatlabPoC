@@ -21,9 +21,9 @@ Users can compile and download a ZIP file containing the outputs of a completed 
 *   `config.json` and `Setting.json` — the parameters used for the run.
 *   `kymographs/*.png` — kymograph previews.
 *   `collection/collection.mat` — the raw MATLAB trajectory collection.
-*   `collection_postprocessed.json` and `population.json`.
+*   `collection/collection_postprocessed.json` and `collection/collection_postprocessed.mat` — the curated collection as JSON and as a MATLAB struct.
+*   `population.json` — population statistics.
 *   `trajectories.csv` — per-trajectory scalar properties, Excel/Origin-friendly.
-*   `collection_postprocessed.mat` — the curated collection as a MATLAB struct.
 *   `report.html` — a self-contained summary report.
 
 ### 3. Clone & Re-run
