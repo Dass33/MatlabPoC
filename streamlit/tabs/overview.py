@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import shutil
 import time
 import zipfile
@@ -10,7 +11,10 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from connectors.storage import delete_job, list_all_jobs
+from core.report import build_report
 from env import job_dirs
+
+log = logging.getLogger(__name__)
 
 _STATUS_ICON: dict[str, str] = {
     "processing": "⏳",
@@ -145,5 +149,10 @@ def _zip_results(job_id: str) -> bytes:
         setting = out / "Setting.json"
         if setting.is_file():
             zf.write(setting, "Setting.json")
+
+        try:
+            zf.writestr("report.html", build_report(job_id))
+        except Exception as e:
+            log.error("[_zip_results] report generation failed for %s: %s", job_id, e)
 
     return buffer.getvalue()
