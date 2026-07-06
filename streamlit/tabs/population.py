@@ -11,10 +11,14 @@ import plotly.graph_objects as go
 import plotly.subplots as sp
 import streamlit as st
 
-import connectors.algorithms as algorithms
 import utils as u
+from connectors import algorithms
+from connectors.storage import list_completed_jobs
 from core.postprocessing import AVAILABLE_PROPS, MICRO_PROPS
 from env import job_dirs
+
+_SCALED_KEYS = {"MEAN", "STD", "FWHM"}
+_COMPARE_COLORS = ["#4C72B0", "#D9534F", "#55A868"]
 
 
 @dataclass
@@ -24,10 +28,21 @@ class _PopResult:
     props: list[str]
 
 
+def _display_val(prop: str, key: str, val: float) -> float:
+    if prop in MICRO_PROPS and key in _SCALED_KEYS:
+        return val * 1e6
+    return val
+
+
 @st.fragment
 def page_population_analysis(job_id: str | None) -> None:
     """Population Analysis tab - compute population statistics on a postprocessed collection."""
     st.subheader("Population Analysis")
+    _render_single_job_section(job_id)
+    _render_compare_section()
+
+
+def _render_single_job_section(job_id: str | None) -> None:
     if job_id is None:
         st.info("Select a completed experiment from the dropdown above.")
         return
@@ -97,13 +112,7 @@ def page_population_analysis(job_id: str | None) -> None:
     method_used = pop.method
     props_used = pop.props
 
-    scaled_keys = {"MEAN", "STD", "FWHM"}
     keys = ["MEAN", "STD", "FWHM", "RESOLUTION"]
-
-    def _display_val(prop: str, key: str, val: float) -> float:
-        if prop in MICRO_PROPS and key in scaled_keys:
-            return val * 1e6
-        return val
 
     st.dataframe(
         pd.DataFrame([
@@ -180,6 +189,132 @@ def _render_histograms(
             )
     fig.update_layout(
         height=300, margin={"l": 40, "r": 20, "t": 40, "b": 40}, bargap=0.05
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _render_compare_section() -> None:
+    st.divider()
+    st.subheader("Compare experiments")
+
+    eligible = []
+    for j in list_completed_jobs():
+        _, _, out = job_dirs(j["job_id"])
+        if (out / "population.json").is_file() and (
+            out / "collection_postprocessed.json"
+        ).is_file():
+            eligible.append(j)
+
+    if len(eligible) < 2:
+        st.info(
+            "Run population analysis on at least 2 experiments to compare them here."
+        )
+        return
+
+    labels = {j["job_id"]: j.get("name") or j["job_id"] for j in eligible}
+    selected = st.multiselect(
+        "Experiments to compare",
+        [j["job_id"] for j in eligible],
+        format_func=lambda x: labels[x],
+        max_selections=3,
+        key="compare_jobs",
+    )
+    if len(selected) < 2:
+        st.info("Select 2–3 experiments.")
+        return
+
+    loaded = {}
+    for jid in selected:
+        _, _, out = job_dirs(jid)
+        loaded[jid] = (
+            json.loads((out / "population.json").read_text()),
+            json.loads((out / "collection_postprocessed.json").read_text()),
+        )
+
+    common_props = set(loaded[selected[0]][0]["properties"])
+    for jid in selected[1:]:
+        common_props &= set(loaded[jid][0]["properties"])
+    common_props = [p for p in AVAILABLE_PROPS if p in common_props]
+    if not common_props:
+        st.warning("No common properties across the selected experiments.")
+        return
+
+    props = st.multiselect(
+        "Properties",
+        common_props,
+        default=common_props,
+        key="compare_props",
+    )
+    if not props:
+        return
+
+    keys = ["STD", "MEAN"]
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "Property": f"{p} (µ)" if p in MICRO_PROPS else p,
+                    **{
+                        f"{k} - {labels[jid]}": _display_val(
+                            p,
+                            k,
+                            loaded[jid][0]["results"].get(p, {}).get(k, float("nan")),
+                        )
+                        for k in keys
+                        for jid in selected
+                    },
+                }
+                for p in props
+            ],
+        ),
+        hide_index=True,
+        use_container_width=True,
+    )
+
+    titles = [f"{p} (µ)" if p in MICRO_PROPS else p for p in props]
+    fig = sp.make_subplots(rows=1, cols=len(props), subplot_titles=titles)
+    for col, prop in enumerate(props, 1):
+        scale = 1e6 if prop in MICRO_PROPS else 1.0
+        series = {}
+        for jid in selected:
+            Y = (
+                np.array(loaded[jid][1]["collection"].get(prop, []), dtype=float)
+                * scale
+            )
+            series[jid] = Y[~np.isnan(Y)]
+        all_vals = (
+            np.concatenate([Y for Y in series.values() if len(Y)])
+            if any(len(Y) for Y in series.values())
+            else np.array([])
+        )
+        if not len(all_vals):
+            continue
+        xbins = {
+            "start": float(all_vals.min()),
+            "end": float(all_vals.max()),
+            "size": (float(all_vals.max()) - float(all_vals.min())) / 20 or 1.0,
+        }
+        for i, jid in enumerate(selected):
+            if not len(series[jid]):
+                continue
+            fig.add_trace(
+                go.Histogram(
+                    x=series[jid],
+                    xbins=xbins,
+                    marker_color=_COMPARE_COLORS[i % len(_COMPARE_COLORS)],
+                    opacity=0.55,
+                    name=labels[jid],
+                    legendgroup=str(jid),
+                    showlegend=col == 1,
+                ),
+                row=1,
+                col=col,
+            )
+    fig.update_layout(
+        height=300,
+        margin={"l": 40, "r": 20, "t": 40, "b": 40},
+        barmode="overlay",
+        bargap=0.05,
     )
     st.plotly_chart(fig, use_container_width=True)
 
