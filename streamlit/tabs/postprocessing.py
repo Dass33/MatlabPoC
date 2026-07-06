@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 import plotly.subplots as sp
 import scipy.io
 import streamlit as st
-
 import utils as u
 from connectors import algorithms
 from connectors.algorithms import Collection, MatlabFilterSetting
@@ -199,7 +198,7 @@ def _render_postprocessing(
         key=f"pp_scatter_{job_id}",
     )
     st.caption(
-        "Click a point to inspect its trajectory · switch to the lasso/box tool "
+        "Click a point to inspect its trajectory, switch to the lasso/box tool "
         "in the chart toolbar to select multiple for include/exclude."
     )
 
@@ -332,12 +331,12 @@ def _render_postprocessing(
         state.dirty = True
         st.rerun()
 
-    if state.calibration:
-        _render_calibration(state.calibration)
-
     st.divider()
     with st.expander("Track preview (excluded highlighted)", expanded=True):
         _render_track_preview(effective_collection, states, job_id, inspected)
+
+    if state.calibration:
+        _render_calibration(state.calibration)
 
     calibration_on: bool = st.toggle(
         "Run iOC calibration",
