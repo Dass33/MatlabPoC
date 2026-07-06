@@ -195,7 +195,7 @@ def _render_postprocessing(
         _build_scatter(effective_collection, states, ax_x, ax_y),
         use_container_width=True,
         on_select="rerun",
-        selection_mode=["lasso", "box"],
+        selection_mode=["points", "lasso", "box"],
         key=f"pp_scatter_{job_id}",
     )
 
@@ -229,6 +229,15 @@ def _render_postprocessing(
     st.caption(
         f"{kept}/{n_traj} kept · {states.count('auto-kept')} auto-kept · {states.count('manual-kept')} manual-kept · {states.count('manual-excluded')} manual-excluded"
     )
+
+    inspected = None
+    if sel:
+        inspected = (
+            st.selectbox("Trajectory", sel, key=f"pp_inspect_{job_id}")
+            if len(sel) > 1
+            else sel[0]
+        )
+        _render_inspector(effective_collection, states, inspected, job_id)
 
     st.divider()
     st.subheader("Outlier thresholds")
@@ -324,7 +333,7 @@ def _render_postprocessing(
 
     st.divider()
     with st.expander("Track preview (excluded highlighted)", expanded=True):
-        _render_track_preview(effective_collection, states, job_id)
+        _render_track_preview(effective_collection, states, job_id, inspected)
 
     calibration_on: bool = st.toggle(
         "Run iOC calibration",
@@ -421,8 +430,74 @@ def _parse_selection(event) -> list[int]:
     return result
 
 
+_INSPECT_METRICS: list[tuple[str, str, float]] = [
+    ("iOC (µ)", "iOC", 1e6),
+    ("STDiOC (µ)", "STDiOC", 1e6),
+    ("N", "N", 1.0),
+    ("D", "D", 1.0),
+    ("velocity", "velocity", 1.0),
+]
+
+
+def _render_inspector(
+    collection: Collection, states: list[str], i: int, job_id: str
+) -> None:
+    st.caption(f"Trajectory {i} — {states[i]}")
+    metrics = [
+        (label, prop, scale)
+        for label, prop, scale in _INSPECT_METRICS
+        if prop in collection
+    ]
+    cols = st.columns(len(metrics) or 1)
+    for col, (label, prop, scale) in zip(cols, metrics):
+        try:
+            val = float(np.array(collection[prop]).flat[i]) * scale
+            col.metric(label, f"{val:.4g}")
+        except (IndexError, TypeError):
+            col.caption(f"{label}: n/a")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        try:
+            pos = np.array(collection["positionRefined"][i], dtype=float)
+            frames = np.array(collection["timeFrame"][i], dtype=float)
+            fig = go.Figure(go.Scatter(x=frames, y=pos, mode="lines+markers"))
+            fig.update_layout(
+                xaxis_title="Time frame",
+                yaxis_title="Position (px)",
+                yaxis_autorange="reversed",
+                height=280,
+                margin={"l": 40, "r": 20, "t": 20, "b": 40},
+            )
+            st.plotly_chart(
+                fig, use_container_width=True, key=f"pp_inspect_pos_{job_id}_{i}"
+            )
+        except (IndexError, TypeError, KeyError):
+            st.caption("Position trace not available.")
+    with c2:
+        try:
+            iocp = np.array(collection["iOCprofile"][i], dtype=float) * 1e6
+            frames = np.array(collection["timeFrame"][i], dtype=float)
+            x = frames if len(frames) == len(iocp) else np.arange(len(iocp))
+            fig = go.Figure(go.Scatter(x=x, y=iocp, mode="lines"))
+            fig.update_layout(
+                xaxis_title="Time frame",
+                yaxis_title="iOC (µ)",
+                height=280,
+                margin={"l": 40, "r": 20, "t": 20, "b": 40},
+            )
+            st.plotly_chart(
+                fig, use_container_width=True, key=f"pp_inspect_ioc_{job_id}_{i}"
+            )
+        except (IndexError, TypeError, KeyError):
+            st.caption("iOC profile not available.")
+
+
 def _render_track_preview(
-    collection: Collection, states: list[str], job_id: str
+    collection: Collection,
+    states: list[str],
+    job_id: str,
+    inspected: int | None = None,
 ) -> None:
     import matplotlib.pyplot as plt
     from matplotlib.axes import Axes
@@ -467,6 +542,8 @@ def _render_track_preview(
     ax.set_title(selected, color="white", fontsize=8, pad=3)
 
     for i in groups[selected]:
+        if i == inspected:
+            continue
         frames, pos = get_xy(i)
         if states[i] in ("auto-excluded", "manual-excluded"):
             ax.plot(
@@ -477,6 +554,10 @@ def _render_track_preview(
             )
         else:
             ax.plot(frames, pos, color="#5599cc", linewidth=1, alpha=0.85)
+
+    if inspected is not None and inspected in groups[selected]:
+        frames, pos = get_xy(inspected)
+        ax.plot(frames, pos, color="white", linewidth=2.5)
 
     ax.invert_yaxis()
     ax.tick_params(colors="white", labelsize=7)
