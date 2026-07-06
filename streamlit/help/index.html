@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../history/">
+        <link rel="prev" href="../overview/">
       
       
         <link rel="next" href="../config/">
@@ -294,7 +294,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    App Structure
   
 
     
@@ -427,14 +427,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../history/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    History
+    Overview
   
 
     
@@ -984,30 +984,38 @@
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_help</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_help</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Help tab — static usage instructions and output file reference.&quot;&quot;&quot;</span>
     <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        ### How to use</span>
+<span class="s2">        ### Documentation</span>
+<span class="s2">        Link to app documentation: [here](https://dass33.github.io/MatlabPoC/)</span>
 
-<span class="s2">        1. Configure algorithm parameters in the sidebar.</span>
-<span class="s2">        2. Upload your `.tiff` files **and their paired `.txt` metadata files** in the **Submit** tab.</span>
+<span class="s2">        ### App walkthrough</span>
+
+<span class="s2">        1. Configure algorithm parameters in the sidebar. Use **Load config** to reuse a saved</span>
+<span class="s2">           preset or an exported config file, and **Save preset / config** to keep your own.</span>
+<span class="s2">        2. **Submit** tab:  upload your `.tiff` files **and their paired `.txt` metadata files**.</span>
 <span class="s2">           Each TIFF must have a matching TXT with the same base name (e.g. `data_001.tiff` + `data_001.txt`).</span>
-<span class="s2">        3. Click **Submit job**. Files are written to disk immediately and the container starts in the</span>
-<span class="s2">           background — your browser does not need to stay open.</span>
-<span class="s2">        4. Enable **Wait for result** if you prefer to watch progress on this page.</span>
-<span class="s2">        5. Once complete, select the experiment from the dropdown at the top of the page to load it.</span>
-
-<span class="s2">        ---</span>
-
-<span class="s2">        ### Tabs</span>
-
-<span class="s2">        | Tab | Description |</span>
-<span class="s2">        |-----|-------------|</span>
-<span class="s2">        | **Submit** | Upload files and start a new analysis job |</span>
-<span class="s2">        | **Kymograph Analysis** | Browse kymograph images produced by the algorithm |</span>
-<span class="s2">        | **Post-processing** | Filter trajectories by outlier thresholds, manually include/exclude points, run iOC calibration |</span>
-<span class="s2">        | **Population Analysis** | Compute population statistics (robustMean or Gaussian fit) on the filtered collection |</span>
-<span class="s2">        | **History** | View all submitted jobs and their status |</span>
+<span class="s2">        3. Click **Submit job**. Files are written to disk immediately and the container starts in the background,</span>
+<span class="s2">           your browser does not need to stay open.</span>
+<span class="s2">        4. Enable **Wait for result** if you prefer to watch progress on this page — kymographs</span>
+<span class="s2">           appear here one by one as MATLAB finishes each one.</span>
+<span class="s2">        5. Once complete, select the experiment from the dropdown at the top of the page, then work</span>
+<span class="s2">           through **Post-processing** (review thresholds, inspect trajectories, **Accept &amp; Save**) and</span>
+<span class="s2">           **Population Analysis** (**Run Population Analysis**).</span>
+<span class="s2">        6. In **Population Analysis**, use **Compare experiments** to overlay 2–3 completed</span>
+<span class="s2">           experiments&#39; results. In **Overview**, use **Clone &amp; Re-run** to re-analyze a job&#39;s</span>
+<span class="s2">           inputs with a tweaked config, or download results.</span>
 
 <span class="s2">        ---</span>
 
@@ -1021,6 +1029,10 @@
 <span class="s2">        | `population.json` | Population statistics after population analysis |</span>
 <span class="s2">        | `status.json` | Job status and error message if failed |</span>
 
+<span class="s2">        The downloadable results ZIP (from **Overview**) additionally bundles a `trajectories.csv`</span>
+<span class="s2">        (per-trajectory properties, Excel/Origin-friendly), a `collection_postprocessed.mat`</span>
+<span class="s2">        (curated collection for MATLAB), and a self-contained `report.html` summary.</span>
+
 <span class="s2">        ---</span>
 
 <span class="s2">        ### Post-processing</span>
@@ -1029,6 +1041,14 @@
 <span class="s2">        - **auto-kept** — passes the configured outlier thresholds</span>
 <span class="s2">        - **auto-excluded** — rejected by outlier thresholds</span>
 <span class="s2">        - **manual-kept / manual-excluded** — overridden by lasso/box selection</span>
+
+<span class="s2">        **Trajectory inspector** — click any point in the scatter to open an inspector right below</span>
+<span class="s2">        the curation buttons. It shows that trajectory&#39;s key numbers (iOC/STDiOC in µ, N, D,</span>
+<span class="s2">        velocity), its position-over-time trace, and its iOC profile — everything you need to judge</span>
+<span class="s2">        whether a point is a real particle or a tracking artifact before deciding to exclude it. The</span>
+<span class="s2">        inspected trajectory is also highlighted in white in the kymograph track preview below. To</span>
+<span class="s2">        select several trajectories at once for **Include/Exclude selected**, switch to the lasso or</span>
+<span class="s2">        box-select tool in the chart&#39;s toolbar (the default click tool is for panning/inspecting).</span>
 
 <span class="s2">        Use the threshold table to adjust per-property thresholds (`3std`, `3std_conditional`, or a fixed number).</span>
 <span class="s2">        Click **Accept &amp; Save** when satisfied — this writes `collection_postprocessed.json` and optionally</span>

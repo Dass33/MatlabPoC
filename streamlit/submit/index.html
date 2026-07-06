@@ -294,7 +294,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    App Structure
   
 
     
@@ -518,14 +518,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../history/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    History
+    Overview
   
 
     
@@ -920,6 +920,9 @@
 <li>They choose whether to wait synchronously for the processing to finish or submit it to the background (asynchronous processing).</li>
 <li>Upon clicking "Submit", a unique UUID is generated for the job, and files are streamed to <code>data/jobs/&lt;uuid&gt;/input/</code>.</li>
 <li>The job is registered, and a background thread is spawned to execute the compiled MATLAB analysis.</li>
+<li><strong>Live Kymographs</strong>: With "Wait for result" enabled, kymograph images appear on this tab as
+   soon as MATLAB produces them — one per input TIFF — so users can watch progress instead of
+   waiting for the whole job to finish.</li>
 </ol>
 <hr />
 <h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
@@ -968,8 +971,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/tabs/submit.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
-<span class="normal">16</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">16</span>
 <span class="normal">17</span>
 <span class="normal">18</span>
 <span class="normal">19</span>
@@ -1047,7 +1049,9 @@
 <span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
-<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_submit</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">page_submit</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Submit tab — upload TIFF/TXT files, configure job, and launch MATLAB analysis.&quot;&quot;&quot;</span>
     <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;Submit Analysis&quot;</span><span class="p">)</span>
 
@@ -1093,6 +1097,7 @@
     <span class="n">col_submit</span><span class="p">,</span> <span class="n">col_wait</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">submit</span> <span class="o">=</span> <span class="n">col_submit</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Submit job&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;stretch&quot;</span><span class="p">)</span>
     <span class="n">wait_for_result</span> <span class="o">=</span> <span class="n">col_wait</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span><span class="s2">&quot;Wait for result&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;Use wait for result to see kymos streaming in.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">submit</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Writing files to disk...&quot;</span><span class="p">):</span>

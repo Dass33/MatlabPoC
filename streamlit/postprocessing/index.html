@@ -294,7 +294,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    App Structure
   
 
     
@@ -454,10 +454,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-trajectory-preview" class="md-nav__link">
+  <a href="#2-trajectory-inspector" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Trajectory Preview
+        2. Trajectory Inspector
       
     </span>
   </a>
@@ -557,14 +557,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../history/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    History
+    Overview
   
 
     
@@ -910,10 +910,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-trajectory-preview" class="md-nav__link">
+  <a href="#2-trajectory-inspector" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Trajectory Preview
+        2. Trajectory Inspector
       
     </span>
   </a>
@@ -995,8 +995,14 @@
 *   Researchers select which physical property to filter on (e.g., <code>N</code>, <code>iOC</code>, <code>D</code>, or <code>velocity</code>).
 *   They choose standard deviation thresholds (e.g., <code>mean ± 3 * STD</code>) or custom numeric limits.
 *   The system calls <code>matlab_bridge.find_outliers</code> to compute a boolean keep/discard mask and renders interactive scatter plots using <strong>Plotly</strong>.</p>
-<h3 id="2-trajectory-preview">2. Trajectory Preview<a class="headerlink" href="#2-trajectory-preview" title="Permanent link">&para;</a></h3>
-<p>Users can click points in the scatter plot or choose specific indices to display raw position vs. frame trajectories for individual molecules, ensuring data validity.</p>
+<h3 id="2-trajectory-inspector">2. Trajectory Inspector<a class="headerlink" href="#2-trajectory-inspector" title="Permanent link">&para;</a></h3>
+<p>Clicking a point in the scatter plot opens an inspector below the curation buttons for that
+trajectory: its scalar properties (iOC/STDiOC in µ, N, D, velocity), its position-vs-time trace,
+and its iOC profile. This lets researchers judge whether an outlier is a real particle or a
+tracking artifact before excluding it. The inspected trajectory is also highlighted in white in
+the kymograph track preview. The chart's default tool is pan/click-to-inspect; switch to the
+lasso or box-select tool in the chart toolbar to select multiple trajectories for bulk
+include/exclude.</p>
 <h3 id="3-ioc-calibration">3. iOC Calibration<a class="headerlink" href="#3-ioc-calibration" title="Permanent link">&para;</a></h3>
 <p>Interferometric Scattering Microscopy detects signal contrast ($iOC$). To map these values to actual molecular weights or refractive indices, a calibration is required:
 *   A polynomial or linear regression calibration curve is fitted to the data.
@@ -1048,8 +1054,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/tabs/postprocessing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
-<span class="normal">114</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
 <span class="normal">117</span>
@@ -1071,7 +1076,8 @@
 <span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
-<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@st</span><span class="o">.</span><span class="n">fragment</span>
+<span class="normal">136</span>
+<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@st</span><span class="o">.</span><span class="n">fragment</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">page_postprocessing</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Post-processing tab — review trajectories, adjust outlier thresholds, run iOC calibration.&quot;&quot;&quot;</span>
     <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;Post-processing&quot;</span><span class="p">)</span>
