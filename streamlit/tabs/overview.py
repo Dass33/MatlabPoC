@@ -25,6 +25,40 @@ _STATUS_ICON: dict[str, str] = {
 }
 
 
+def _mtime(p: Path) -> float | None:
+    return p.stat().st_mtime if p.is_file() else None
+
+
+def _parse_job_stats(pp_path: Path, pop_path: Path) -> tuple[str, str]:
+    kept = "—"
+    if pp_path.is_file():
+        try:
+            pp = json.loads(pp_path.read_text())
+            kept = f"{pp['n_kept']}/{pp['n_total']}"
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as e:
+            log.warning("[_parse_job_stats] %s: %s", pp_path, e)
+
+    ioc_mean = "—"
+    if pop_path.is_file():
+        try:
+            pop = json.loads(pop_path.read_text())
+            ioc_mean = f"{pop['results']['iOC']['MEAN'] * 1e6:.3g}"
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as e:
+            log.warning("[_parse_job_stats] %s: %s", pop_path, e)
+
+    return kept, ioc_mean
+
+
+@st.cache_data(show_spinner=False)
+def _job_stats(
+    job_id: str, pp_mtime: float | None, pop_mtime: float | None
+) -> tuple[str, str]:
+    _, _, out = job_dirs(job_id)
+    return _parse_job_stats(
+        out / "collection_postprocessed.json", out / "population.json"
+    )
+
+
 def page_overview() -> None:
     """Overview tab - list all jobs, download completed results, admin-stuck-job recovery."""
     st.subheader("Experiment Overview")
@@ -46,16 +80,32 @@ def page_overview() -> None:
             if f.lower().endswith((".tif", ".tiff"))
         )
 
-    st.dataframe(
-        pd.DataFrame([
+    def stats(j: dict) -> tuple[str, str]:
+        if j["status"] != "completed":
+            return "—", "—"
+        _, _, out = job_dirs(j["job_id"])
+        return _job_stats(
+            j["job_id"],
+            _mtime(out / "collection_postprocessed.json"),
+            _mtime(out / "population.json"),
+        )
+
+    rows = []
+    for j in jobs:
+        kept, ioc_mean = stats(j)
+        rows.append(
             {
                 "Name": j.get("name") or j["job_id"],
                 "Submitted": j.get("submitted_at", "-"),
                 "Files": tiff_stems(j),
+                "Kept": kept,
+                "iOC µ (mean)": ioc_mean,
                 "Status": f"{_STATUS_ICON.get(j['status'], '❓')} {j['status']}",
             }
-            for j in jobs
-        ]),
+        )
+
+    st.dataframe(
+        pd.DataFrame(rows),
         width="stretch",
         hide_index=True,
     )
