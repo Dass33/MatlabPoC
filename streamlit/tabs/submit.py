@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import streamlit as st
-
 from connectors.launcher import launch_matlab_job
 from connectors.storage import create_job, read_status
 from env import POLL_INTERVAL_S, job_dirs
@@ -60,6 +59,7 @@ def page_submit(config: dict) -> None:
     col_submit, col_wait = st.columns(2)
     submit = col_submit.button("Submit job", type="primary", width="stretch")
     wait_for_result = col_wait.toggle("Wait for result", value=False)
+    st.caption("Use wait for result to see kymos streaming in.")
 
     if submit:
         with st.spinner("Writing files to disk..."):
