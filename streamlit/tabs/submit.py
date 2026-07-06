@@ -6,7 +6,9 @@ import streamlit as st
 
 from connectors.launcher import launch_matlab_job
 from connectors.storage import create_job, read_status
-from env import POLL_INTERVAL_S
+from env import POLL_INTERVAL_S, job_dirs
+
+PNG_EOF = b"IEND\xaeB\x60\x82"
 
 UPLOADER_CLEAR = "uploader_clear"
 UPLOADER = "uploader_"
@@ -103,6 +105,7 @@ def _wait_for_result(job_id: str) -> None:
         st.info(
             f"Running... (job `{job_id}`). Auto-refreshing every {POLL_INTERVAL_S}s."
         )
+        _render_partial_kymographs(job_id)
         return
     st.session_state["waiting"] = False
     if status["status"] == "completed":
@@ -116,6 +119,22 @@ def _wait_for_result(job_id: str) -> None:
             f"Job failed: {status.get('error', 'unknown error')}",
         )
     st.rerun()
+
+
+def _render_partial_kymographs(job_id: str) -> None:
+    _, _, out = job_dirs(job_id)
+    pngs = sorted((out / "kymographs").glob("*.png"))
+    if not pngs:
+        return
+    st.caption(f"{len(pngs)} kymograph(s) so far")
+    for f in pngs:
+        try:
+            data = f.read_bytes()
+        except OSError:
+            continue
+        # MATLAB may still be mid-write; only render PNGs with a complete IEND chunk.
+        if data.endswith(PNG_EOF):
+            st.image(data, caption=f.name, use_container_width=True)
 
 
 def _uploader_key() -> str:
