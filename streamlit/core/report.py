@@ -7,9 +7,11 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from env import TZ, job_dirs
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +27,10 @@ _KEY_PARAMS = [
     ("Detection.peakSign", ("Detection", "peakSign")),
     ("Detection.pfa", ("Detection", "pfa")),
     ("Linking.minTrackLength", ("Linking", "minTrackLength")),
-    ("kymographPreprocessing.removeBackground", ("kymographPreprocessing", "removeBackground")),
+    (
+        "kymographPreprocessing.removeBackground",
+        ("kymographPreprocessing", "removeBackground"),
+    ),
     ("kymographPreprocessing.Wx", ("kymographPreprocessing", "Wx")),
     ("kymographPreprocessing.Wt", ("kymographPreprocessing", "Wt")),
 ]
@@ -153,7 +158,11 @@ def _build_kymographs_section(kymo_dir: Path) -> str:
             f'<figure><img src="data:image/png;base64,{b64}" alt="{html.escape(f.name)}">'
             f"<figcaption>{html.escape(f.name)}</figcaption></figure>"
         )
-    body = "\n".join(figures) if figures else '<p class="note">No kymographs available.</p>'
+    body = (
+        "\n".join(figures)
+        if figures
+        else '<p class="note">No kymographs available.</p>'
+    )
     return f"<h2>Kymographs</h2>\n{body}"
 
 
@@ -174,7 +183,9 @@ def _build_key_params_section(config: dict[str, Any] | None) -> str:
         val = _config_lookup(config, path)
         if val is None:
             continue
-        rows.append(f"<tr><td>{html.escape(label)}</td><td>{html.escape(str(val))}</td></tr>")
+        rows.append(
+            f"<tr><td>{html.escape(label)}</td><td>{html.escape(str(val))}</td></tr>"
+        )
     if not rows:
         return ""
     return f"""
@@ -198,7 +209,7 @@ def _scatter_png(x_prop: str, y_prop: str, x: list[float], y: list[float]) -> st
     x_label = f"{x_prop} (µ)" if x_prop in _MICRO_PROPS else x_prop
     y_label = f"{y_prop} (µ)" if y_prop in _MICRO_PROPS else y_prop
 
-    fig, ax = plt.subplots(figsize=(4, 3), dpi=100)
+    fig, ax = cast(tuple[Figure, Axes], plt.subplots(figsize=(4, 3), dpi=100))
     try:
         ax.scatter(x_vals, y_vals, s=8)
         ax.set_xlabel(x_label)
