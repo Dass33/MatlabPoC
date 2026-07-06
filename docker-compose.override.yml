@@ -1,12 +1,7 @@
-# Dev-only overrides. Compose merges this on top of docker-compose.yml automatically.
-# Live-edits Python without rebuilding the image: the host ./streamlit is mounted over
-# /app and Streamlit reruns on save. Rebuild only when requirements.txt or the compiled
-# MATLAB artifacts change.
-services:
+# Dev-only override, live-edits Python without rebuilding the image
   streamlit:
     volumes:
       - ./streamlit:/app
     environment:
       STREAMLIT_SERVER_RUN_ON_SAVE: "true"
-      # poll is reliable across bind-mounts where inotify events don't propagate.
       STREAMLIT_SERVER_FILE_WATCHER_TYPE: poll

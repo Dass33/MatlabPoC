@@ -100,7 +100,9 @@ def _wait_for_result(job_id: str) -> None:
     stashes the outcome and triggers a full rerun, which stops this fragment's loop."""
     status = read_status(job_id)
     if status["status"] == "processing":
-        st.info(f"Running... (job `{job_id}`). Auto-refreshing every {POLL_INTERVAL_S}s.")
+        st.info(
+            f"Running... (job `{job_id}`). Auto-refreshing every {POLL_INTERVAL_S}s."
+        )
         return
     st.session_state["waiting"] = False
     if status["status"] == "completed":

@@ -4,27 +4,23 @@ import streamlit as st
 def page_help() -> None:
     """Help tab — static usage instructions and output file reference."""
     st.markdown("""
-        ### How to use
+        ### Documnetation
+        Link to app documentation: [here](https://dass33.github.io/MatlabPoC/)
 
-        1. Configure algorithm parameters in the sidebar.
-        2. Upload your `.tiff` files **and their paired `.txt` metadata files** in the **Submit** tab.
+        ### App walkthrough
+
+        1. Configure algorithm parameters in the sidebar
+        2. **Submit** tab:  upload your `.tiff` files **and their paired `.txt` metadata files**.
            Each TIFF must have a matching TXT with the same base name (e.g. `data_001.tiff` + `data_001.txt`).
-        3. Click **Submit job**. Files are written to disk immediately and the container starts in the
-           background — your browser does not need to stay open.
+        3. Click **Submit job**. Files are written to disk immediately and the container starts in the background,
+           your browser does not need to stay open.
         4. Enable **Wait for result** if you prefer to watch progress on this page.
-        5. Once complete, select the experiment from the dropdown at the top of the page to load it.
-
-        ---
-
-        ### Tabs
-
-        | Tab | Description |
-        |-----|-------------|
-        | **Submit** | Upload files and start a new analysis job |
-        | **Kymograph Analysis** | Browse kymograph images produced by the algorithm |
-        | **Post-processing** | Filter trajectories by outlier thresholds, manually include/exclude points, run iOC calibration |
-        | **Population Analysis** | Compute population statistics (robustMean or Gaussian fit) on the filtered collection |
-        | **History** | View all submitted jobs and their status |
+        5. Once complete, select the experiment from the dropdown at the top of the page, then work
+           through **Post-processing** (review thresholds, **Accept & Save**) and **Population
+           Analysis** (**Run Population Analysis**).
+        6. In **Population Analysis**, use **Compare experiments** to overlay 2–3 completed
+           experiments' results. In **Overview**, use **Clone & Re-run** to re-analyze a job's
+           inputs with a tweaked config, or download results.
 
         ---
 

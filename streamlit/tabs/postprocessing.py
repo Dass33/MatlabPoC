@@ -11,8 +11,8 @@ import plotly.subplots as sp
 import scipy.io
 import streamlit as st
 
-import connectors.algorithms as algorithms
 import utils as u
+from connectors import algorithms
 from connectors.algorithms import Collection, MatlabFilterSetting
 from core.postprocessing import (
     DIR_OPTIONS,
@@ -86,7 +86,9 @@ def _load_persisted_state(job_id: str) -> _PostprocessingState:
                 overrides={int(k): v for k, v in data.get("overrides", {}).items()},
             )
         except (json.JSONDecodeError, OSError, TypeError, ValueError) as e:
-            log.warning("[postprocessing] could not load saved state for %s: %s", job_id, e)
+            log.warning(
+                "[postprocessing] could not load saved state for %s: %s", job_id, e
+            )
     return _PostprocessingState(thresholds=default_thresholds())
 
 
@@ -150,7 +152,9 @@ def _render_postprocessing(
                 algorithms.serialize_collection(effective_collection),
                 u.to_json(matlab_setting),
             )
-        except Exception as e:  # opaque MatlabRuntimeError; degrade instead of crashing the tab
+        except (
+            Exception
+        ) as e:  # opaque MatlabRuntimeError; degrade instead of crashing the tab
             st.error(f"Outlier filtering failed: {e}")
             not_outlier = np.ones(n_traj, dtype=bool)
     else:
@@ -421,6 +425,8 @@ def _render_track_preview(
     collection: Collection, states: list[str], job_id: str
 ) -> None:
     import matplotlib.pyplot as plt
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
     pos_refined = collection.get("positionRefined")
     if pos_refined is None or len(pos_refined) == 0:
@@ -455,7 +461,7 @@ def _render_track_preview(
         "Kymograph", list(groups.keys()), key=f"pp_kymo_sel_{job_id}"
     )
 
-    fig, ax = plt.subplots(figsize=(12, 3))
+    fig, ax = cast(tuple[Figure, Axes], plt.subplots(figsize=(12, 3)))
     fig.patch.set_facecolor("#111111")
     ax.set_facecolor("#111111")
     ax.set_title(selected, color="white", fontsize=8, pad=3)
@@ -468,7 +474,6 @@ def _render_track_preview(
                 pos,
                 color=_TRACK_PALETTE[i % len(_TRACK_PALETTE)],
                 linewidth=2,
-                label=f"#{i}",
             )
         else:
             ax.plot(frames, pos, color="#5599cc", linewidth=1, alpha=0.85)
@@ -534,7 +539,7 @@ def _accept(
         or collection.get("positionRefined") is None
     ):
         st.warning(
-            "Collection missing iOCprofile or positionRefined — cannot run calibration."
+            "Collection missing iOCprofile or positionRefined - cannot run calibration."
         )
         return
 
@@ -576,6 +581,9 @@ def _accept(
     state.calibration = calibration
     state.dirty = False
     _save_persisted_state(job_id, state)
-    st.session_state[f"pp_saved_{job_id}"] = (int(final_mask.sum()), int(len(final_mask)))
+    st.session_state[f"pp_saved_{job_id}"] = (
+        int(final_mask.sum()),
+        len(final_mask),
+    )
     # Full app rerun (not fragment-scoped) so the Population tab picks up the new file.
     st.rerun()

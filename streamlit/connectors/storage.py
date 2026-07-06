@@ -6,7 +6,7 @@ import shutil
 import uuid
 from datetime import datetime
 
-from env import DATA_DIR, TZ, job_dirs
+from env import DATA_DIR, DEMO_DATA_DIR, TZ, job_dirs
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +49,35 @@ def list_completed_jobs() -> list[dict]:
     return [j for j in list_all_jobs() if j["status"] == "completed"]
 
 
+def _new_job_id() -> str:
+    return datetime.now(TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+
+
+def _write_job(
+    base,
+    job_id: str,
+    config: dict,
+    filenames: list[str],
+    name: str,
+    parent_job_id: str | None = None,
+) -> None:
+    (base / "config.json").write_text(json.dumps(config, indent=2))
+    now = datetime.now(TZ).isoformat(timespec="seconds")
+    (base / "meta.json").write_text(
+        json.dumps(
+            {
+                "job_id": job_id,
+                "name": name.strip() or None,
+                "filenames": filenames,
+                "submitted_at": now,
+                "started_at": now,
+                "parent_job_id": parent_job_id,
+            },
+            indent=2,
+        )
+    )
+
+
 def create_job(
     uploaded_files: list,
     config: dict,
@@ -56,7 +85,7 @@ def create_job(
     name: str = "",
 ) -> str:
     """Write job files to disk and return the new job_id. Does not launch the job."""
-    job_id = datetime.now(TZ).strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+    job_id = _new_job_id()
     base, inp, out = job_dirs(job_id)
     inp.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
@@ -71,18 +100,46 @@ def create_job(
     if dark_cal_bytes is not None:
         (base / "dark_cal.mat").write_bytes(dark_cal_bytes)
 
-    (base / "config.json").write_text(json.dumps(config, indent=2))
-    now = datetime.now(TZ).isoformat(timespec="seconds")
-    (base / "meta.json").write_text(
-        json.dumps(
-            {
-                "job_id": job_id,
-                "name": name.strip() or None,
-                "filenames": filenames,
-                "submitted_at": now,
-                "started_at": now,
-            },
-            indent=2,
-        )
-    )
+    _write_job(base, job_id, config, filenames, name)
     return job_id
+
+
+def clone_job(source_job_id: str, config: dict, name: str = "") -> str:
+    """Copy a completed job's input files into a new job with a (possibly edited) config."""
+    job_id = _new_job_id()
+    base, inp, out = job_dirs(job_id)
+    src_base, src_inp, _ = job_dirs(source_job_id)
+
+    shutil.copytree(src_inp, inp)
+    out.mkdir(parents=True, exist_ok=True)
+    filenames = sorted(f.name for f in inp.iterdir())
+
+    src_dark_cal = src_base / "dark_cal.mat"
+    if src_dark_cal.exists():
+        shutil.copy(src_dark_cal, base / "dark_cal.mat")
+
+    _write_job(base, job_id, config, filenames, name, parent_job_id=source_job_id)
+    return job_id
+
+
+def create_demo_job(config: dict, name: str = "Demo experiment") -> str:
+    """Load the bundled demo TIFF+txt pairs into a new job."""
+    job_id = _new_job_id()
+    base, inp, out = job_dirs(job_id)
+    inp.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
+
+    filenames = []
+    for f in sorted(DEMO_DATA_DIR.glob("*")):
+        if f.is_file():
+            shutil.copy(f, inp / f.name)
+            filenames.append(f.name)
+
+    _write_job(base, job_id, config, filenames, name)
+    return job_id
+
+
+def delete_job(job_id: str) -> None:
+    base, _, _ = job_dirs(job_id)
+    if base.exists() and base.is_dir():
+        shutil.rmtree(base)
