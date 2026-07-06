@@ -22,9 +22,9 @@ This document tracks major design choices made throughout the development of the
 
 ## 3. Using docker
 
-*   **Decision**: TODO
-*   **Rationale**: TODO
-    **Trade-off**: TODO
+*   **Decision**: Use docker contianer to boundle our application.
+*   **Rationale**: It makes it way eaiser to deploy to different machines.
+    **Trade-off**: Slower iteration development speed, storage overhead due to matlab runtime big size.
 
 ## 4. Using file system instead of DB
 

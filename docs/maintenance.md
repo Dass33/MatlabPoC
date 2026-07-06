@@ -24,3 +24,5 @@ To start the full stack locally (build + run):
 ```bash
 docker compose up --build
 ```
+
+## TODO add  more  detail
