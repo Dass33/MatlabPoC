@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from connectors.storage import delete_job, list_all_jobs
+from core.exports import collection_mat, trajectories_csv
 from core.report import build_report
 from env import job_dirs
 
@@ -149,6 +150,21 @@ def _zip_results(job_id: str) -> bytes:
         setting = out / "Setting.json"
         if setting.is_file():
             zf.write(setting, "Setting.json")
+
+        postprocessed_path = out / "collection_postprocessed.json"
+        if postprocessed_path.is_file():
+            try:
+                postprocessed = json.loads(postprocessed_path.read_text())
+                collection = postprocessed.get("collection")
+                if collection:
+                    zf.writestr("trajectories.csv", trajectories_csv(collection))
+                    zf.writestr(
+                        "collection_postprocessed.mat", collection_mat(postprocessed)
+                    )
+            except Exception as e:
+                log.error(
+                    "[_zip_results] trajectory export failed for %s: %s", job_id, e
+                )
 
         try:
             zf.writestr("report.html", build_report(job_id))
