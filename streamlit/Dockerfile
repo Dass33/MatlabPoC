@@ -30,4 +30,9 @@ COPY streamlit/ .
 
 EXPOSE 8501
 
-CMD ["python3", "-m", "streamlit", "run", "main.py", "--server.address", "0.0.0.0", "--server.enableStaticServing", "true"]
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV STREAMLIT_SERVER_ENABLE_STATIC_SERVING=true
+ENV STREAMLIT_SERVER_HEADLESS=true
+
+# serve.py (not `streamlit run`) so the idle probe starts with the server.
+CMD ["python3", "serve.py"]
