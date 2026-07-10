@@ -1,8 +1,8 @@
 """
 Bridge to the compiled MATLAB nsm_algorithms package.
 
-MCR is initialised once per process on first call. All functions communicate
-via JSON strings.
+MCR is initialised once per process on first call.
+All functions communicate via JSON strings.
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
 import numpy as np
-
 from utils import to_json
 
 _MCR_PACKAGE = "nsm_algorithms"  # installed at matlab/Compiled/PythonPackage

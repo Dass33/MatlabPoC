@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 
 import numpy as np
-
 from connectors.algorithms import Collection, MatlabFilterSetting
 
 MICRO_PROPS: frozenset[str] = frozenset({"iOC", "STDiOC"})
