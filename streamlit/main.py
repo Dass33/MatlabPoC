@@ -3,6 +3,7 @@
 Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
+  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800)
   MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
   MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)
 """
@@ -14,12 +15,14 @@ import logging
 import threading
 
 import streamlit as st
+import streamlit.components.v1 as st_components
 
 from config import apply_config, render_config_sidebar
 from connectors import algorithms
 from connectors.launcher import launch_matlab_job
 from connectors.storage import clone_job, create_demo_job, list_completed_jobs
-from env import DEMO_DATA_DIR, job_dirs
+from env import DEMO_DATA_DIR, IDLE_TIMEOUT_S, job_dirs
+from idle import start_probe_writer
 from tabs.help import page_help
 from tabs.kymograph import page_kymograph_analysis
 from tabs.overview import page_overview
@@ -41,9 +44,17 @@ def _warm_mcr() -> bool:
     return True
 
 
+@st.cache_resource
+def _start_idle_probe() -> bool:
+    """Start the idle-probe writer thread, once per process."""
+    start_probe_writer()
+    return True
+
+
 def main() -> None:
     """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
     _warm_mcr()
+    _start_idle_probe()
 
     st.set_page_config(
         page_title="NSM Data Processing",
@@ -52,6 +63,8 @@ def main() -> None:
         initial_sidebar_state="auto",
         menu_items={"About": "NSM data processing — Streamlit frontend"},
     )
+
+    render_idle_watchdog()
 
     st.session_state.setdefault("last_job_id", None)
     st.session_state.setdefault("waiting", False)
@@ -83,14 +96,16 @@ def main() -> None:
         tab_population,
         tab_overview,
         tab_help,
-    ) = st.tabs([
-        "Submit",
-        "Kymograph Analysis",
-        "Post-processing",
-        "Population Analysis",
-        "Overview",
-        "Help",
-    ])
+    ) = st.tabs(
+        [
+            "Submit",
+            "Kymograph Analysis",
+            "Post-processing",
+            "Population Analysis",
+            "Overview",
+            "Help",
+        ]
+    )
 
     active_job = st.session_state.get("active_experiment") or st.session_state.get(
         "last_job_id"
@@ -113,6 +128,83 @@ def main() -> None:
 
     with tab_help:
         page_help()
+
+
+def render_idle_watchdog() -> None:
+    """Disconnect idle browsers so the container can scale to zero.
+
+    After IDLE_TIMEOUT_S without user input the watchdog fetches the idle probe
+    (see idle.py); if no MATLAB job is running it navigates the tab to a static
+    "disconnected" page, which closes the websocket. While a job is running it
+    rechecks every minute instead of disconnecting, because scaling to zero
+    would kill the MATLAB subprocess.
+
+    Component iframes are sandboxed without allow-top-navigation, so the
+    watchdog cannot navigate the tab from inside the iframe. Instead its source
+    is injected as a <script> into the parent page (permitted because the
+    sandbox grants allow-same-origin) and runs in the parent realm.
+    """
+    st_components.html(
+        f"""
+        <script>
+        function nsmIdleWatchdog(cfg) {{
+            let timer = null;
+            let probeFailures = 0;
+
+            function arm(delayMs) {{
+                clearTimeout(timer);
+                timer = setTimeout(onIdle, delayMs);
+            }}
+            function reset() {{ arm(cfg.idleMs); }}
+
+            async function onIdle() {{
+                let jobRunning = false;
+                let probeOk = false;
+                try {{
+                    const url = new URL('./app/static/idle_probe.json', location.href);
+                    const resp = await fetch(url, {{cache: 'no-store'}});
+                    if (resp.ok) {{
+                        jobRunning = (await resp.json()).job_running === true;
+                        probeOk = true;
+                    }}
+                }} catch (e) {{ /* fall through to failure handling */ }}
+
+                if (jobRunning) {{
+                    probeFailures = 0;
+                    arm(cfg.recheckMs);
+                    return;
+                }}
+                // If the probe is unreadable, assume a job might be running and
+                // retry a few times before giving up and disconnecting anyway.
+                if (!probeOk && ++probeFailures < cfg.maxProbeFailures) {{
+                    arm(cfg.recheckMs);
+                    return;
+                }}
+                location.href = new URL('./app/static/disconnected.xml', location.href);
+            }}
+
+            const events = ['mousemove', 'mousedown', 'touchstart', 'click', 'keydown', 'scroll'];
+            events.forEach(ev => window.addEventListener(ev, reset, {{capture: true, passive: true}}));
+            window.__nsmIdleWatchdog = true;
+            reset();
+        }}
+
+        const p = window.parent;
+        if (!p.__nsmIdleWatchdog) {{
+            const cfg = {{
+                idleMs: {IDLE_TIMEOUT_S * 1000},
+                recheckMs: 60000,
+                maxProbeFailures: 5,
+            }};
+            const s = p.document.createElement('script');
+            s.textContent = '(' + nsmIdleWatchdog.toString() + ')(' + JSON.stringify(cfg) + ');';
+            p.document.head.appendChild(s);
+            s.remove();
+        }}
+        </script>
+        """,
+        height=0,
+    )
 
 
 def render_tour_banner(config) -> None:

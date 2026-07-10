@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- XHTML served as .xml: Streamlit's static file handler only sends a real
+     content type for a whitelist of extensions (.html would be text/plain),
+     and browsers render XHTML-rooted XML documents as normal pages. -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<title>NSM Data Processing - Disconnected</title>
+<style>
+  body {
+    font-family: "Source Sans Pro", -apple-system, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #f0f2f6;
+    color: #262730;
+  }
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    max-width: 26rem;
+  }
+  a.button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    background: #ff4b4b;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Session disconnected</h2>
+  <p>Your submitted experiments are safe.</p>
+  <!-- Relative to /app/static/disconnected.xml the app root is ../../ -->
+  <a class="button" href="../../">Reconnect</a>
+</div>
+</body>
+</html>

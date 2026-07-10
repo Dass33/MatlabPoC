@@ -30,4 +30,4 @@ COPY streamlit/ .
 
 EXPOSE 8501
 
-CMD ["python3", "-m", "streamlit", "run", "main.py", "--server.address", "0.0.0.0"]
+CMD ["python3", "-m", "streamlit", "run", "main.py", "--server.address", "0.0.0.0", "--server.enableStaticServing", "true"]

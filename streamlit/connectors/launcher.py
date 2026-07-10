@@ -14,6 +14,20 @@ log = logging.getLogger(__name__)
 # files need to be accessible by the Streamlit process after the job completes.
 _JOB_DIR_MODE = 0o777
 
+# Live MATLAB subprocesses launched by this process. Used by the idle probe to
+# decide whether the container may be disconnected and scaled to zero. Tracked
+# as processes (not status.json) so a stale "processing" status left behind by
+# an earlier container can never keep the instance alive forever.
+_active_procs: list[subprocess.Popen] = []
+_active_lock = threading.Lock()
+
+
+def has_active_jobs() -> bool:
+    """True while any MATLAB job subprocess is still running."""
+    with _active_lock:
+        _active_procs[:] = [p for p in _active_procs if p.poll() is None]
+        return bool(_active_procs)
+
 
 def _log_tail(log_dest: Path, n_bytes: int = 2000) -> str:
     try:
@@ -81,6 +95,9 @@ def launch_matlab_job(job_id: str) -> None:
         cwd=str(Path(MATLAB_APP).parent),
     )
     log.info("[launch] pid=%s", proc.pid)
+
+    with _active_lock:
+        _active_procs.append(proc)
 
     threading.Thread(
         target=_process_reaper,

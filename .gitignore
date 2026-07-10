@@ -18,5 +18,7 @@ ENV/
 **/.env
 context.txt
 
+streamlit/static/idle_probe.json
+
 docs/roadmap.md
 .claude/

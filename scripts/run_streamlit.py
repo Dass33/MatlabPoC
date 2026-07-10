@@ -46,7 +46,13 @@ def main():
         )
         sys.exit(1)
 
-    cmd = [str(streamlit_bin), "run", str(project_root / "streamlit" / "main.py")]
+    cmd = [
+        str(streamlit_bin),
+        "run",
+        str(project_root / "streamlit" / "main.py"),
+        "--server.enableStaticServing",
+        "true",
+    ]
 
     print(f"Starting Streamlit: {' '.join(cmd)}")
     try:
