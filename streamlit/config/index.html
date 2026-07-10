@@ -575,6 +575,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#config.apply_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apply_config
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -863,6 +874,17 @@
     <span class="md-ellipsis">
       
         render_config_sidebar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.apply_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apply_config
       
     </span>
   </a>
@@ -1353,6 +1375,61 @@ preset for reuse.</p>
                 <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="config.apply_config" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">apply_config</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></code>
+
+<a href="#config.apply_config" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Restore sidebar widget state from a config dict.</p>
+<p>Widget keys equal dataclass field names, so the field lists are derived
+from the dataclasses; darkCalibration is special-cased (scalar vs template).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/config.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">apply_config</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Restore sidebar widget state from a config dict.</span>
+
+<span class="sd">    Widget keys equal dataclass field names, so the field lists are derived</span>
+<span class="sd">    from the dataclasses; darkCalibration is special-cased (scalar vs template).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">Config</span><span class="p">)</span>
+    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">KymographPreprocessing</span><span class="p">)</span>
+    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">Detection</span><span class="p">)</span>
+    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Linking&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">Linking</span><span class="p">)</span>
+
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span> <span class="n">KymographPreprocessing</span><span class="p">()</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Template&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;Scalar&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dc</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
