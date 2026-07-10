@@ -14,9 +14,6 @@ import json
 import logging
 import threading
 
-import streamlit as st
-import streamlit.components.v1 as st_components
-
 from config import apply_config, render_config_sidebar
 from connectors import algorithms
 from connectors.launcher import launch_matlab_job
@@ -29,6 +26,9 @@ from tabs.overview import page_overview
 from tabs.population import page_population_analysis
 from tabs.postprocessing import page_postprocessing
 from tabs.submit import page_submit
+from idle_watchdog import render_idle_watchdog
+
+import streamlit as st
 
 logging.basicConfig(
     level=logging.INFO,
@@ -66,7 +66,7 @@ def main() -> None:
     )
 
     if IDLE_TIMEOUT_S > 0:
-        render_idle_watchdog()
+        render_idle_watchdog(IDLE_TIMEOUT_S)
 
     st.session_state.setdefault("last_job_id", None)
     st.session_state.setdefault("waiting", False)
@@ -130,97 +130,6 @@ def main() -> None:
 
     with tab_help:
         page_help()
-
-
-def render_idle_watchdog() -> None:
-    """Disconnect idle browsers so the container can scale to zero.
-
-    After IDLE_TIMEOUT_S without user input the watchdog fetches the idle probe
-    (see idle.py); if no MATLAB job is running it navigates the tab to a static
-    "disconnected" page, which closes the websocket. While a job is running it
-    rechecks every minute instead of disconnecting, because scaling to zero
-    would kill the MATLAB subprocess.
-
-    Component iframes are sandboxed without allow-top-navigation, so the
-    watchdog cannot navigate the tab from inside the iframe. Instead its source
-    is injected as a <script> into the parent page (permitted because the
-    sandbox grants allow-same-origin) and runs in the parent realm.
-    """
-    st_components.html(
-        f"""
-        <script>
-        function nsmIdleWatchdog(cfg) {{
-            let timer = null;
-            let probeFailures = 0;
-
-            function arm(delayMs) {{
-                clearTimeout(timer);
-                timer = setTimeout(onIdle, delayMs);
-            }}
-            function reset() {{ arm(cfg.idleMs); }}
-
-            async function onIdle() {{
-                let jobRunning = false;
-                let probeOk = false;
-                try {{
-                    const url = new URL('./app/static/idle_probe.json', location.href);
-                    const resp = await fetch(url, {{cache: 'no-store'}});
-                    if (resp.ok) {{
-                        jobRunning = (await resp.json()).job_running === true;
-                        probeOk = true;
-                    }}
-                }} catch (e) {{ /* fall through to failure handling */ }}
-
-                if (jobRunning) {{
-                    probeFailures = 0;
-                    arm(cfg.recheckMs);
-                    return;
-                }}
-                // If the probe is unreadable, assume a job might be running and
-                // retry a few times before giving up and disconnecting anyway.
-                if (!probeOk && ++probeFailures < cfg.maxProbeFailures) {{
-                    arm(cfg.recheckMs);
-                    return;
-                }}
-                location.href = new URL('./app/static/disconnected.xml', location.href);
-            }}
-
-            // Only events a physical input device can produce: Streamlit
-            // re-renders (e.g. fragment-driven chart updates) fire synthetic
-            // 'scroll' events that would reset the timer forever, so 'wheel'
-            // and 'touchmove' stand in for scrolling.
-            const events = ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'click', 'keydown', 'wheel'];
-            events.forEach(ev => window.addEventListener(ev, reset, {{capture: true, passive: true}}));
-            window.__nsmIdleWatchdogDispose = () => {{
-                clearTimeout(timer);
-                events.forEach(ev => window.removeEventListener(ev, reset, {{capture: true}}));
-            }};
-            reset();
-        }}
-
-        // Versioned so a redeploy can replace a watchdog already injected into
-        // a long-lived page (v1 pages predate the dispose hook; their stale
-        // listeners only reset a timer that is no longer armed, which is harmless).
-        const WATCHDOG_VERSION = 2;
-        const p = window.parent;
-        if (p.__nsmIdleWatchdogVersion !== WATCHDOG_VERSION) {{
-            p.__nsmIdleWatchdogVersion = WATCHDOG_VERSION;
-            const cfg = {{
-                idleMs: {IDLE_TIMEOUT_S * 1000},
-                recheckMs: 60000,
-                maxProbeFailures: 5,
-            }};
-            const s = p.document.createElement('script');
-            s.textContent =
-                'if (window.__nsmIdleWatchdogDispose) window.__nsmIdleWatchdogDispose();' +
-                '(' + nsmIdleWatchdog.toString() + ')(' + JSON.stringify(cfg) + ');';
-            p.document.head.appendChild(s);
-            s.remove();
-        }}
-        </script>
-        """,
-        height=0,
-    )
 
 
 def render_tour_banner(config) -> None:
