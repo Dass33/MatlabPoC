@@ -3,7 +3,7 @@
 Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
-  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800)
+  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800, 0 = off)
   MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
   MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)
 """
@@ -54,7 +54,8 @@ def _start_idle_probe() -> bool:
 def main() -> None:
     """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
     _warm_mcr()
-    _start_idle_probe()
+    if IDLE_TIMEOUT_S > 0:
+        _start_idle_probe()
 
     st.set_page_config(
         page_title="NSM Data Processing",
@@ -64,7 +65,8 @@ def main() -> None:
         menu_items={"About": "NSM data processing — Streamlit frontend"},
     )
 
-    render_idle_watchdog()
+    if IDLE_TIMEOUT_S > 0:
+        render_idle_watchdog()
 
     st.session_state.setdefault("last_job_id", None)
     st.session_state.setdefault("waiting", False)
