@@ -809,6 +809,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-idle-disconnect-of-browser-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Idle disconnect of browser tabs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -887,6 +898,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-idle-disconnect-of-browser-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Idle disconnect of browser tabs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -933,6 +955,21 @@
 <li><strong>Rationale</strong>: TODO
     <strong>Trade-off</strong>: TODO</li>
 </ul>
+<hr />
+<h2 id="5-idle-disconnect-of-browser-tabs">5. Idle disconnect of browser tabs<a class="headerlink" href="#5-idle-disconnect-of-browser-tabs" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision</strong>: Disconnect browsers after <code>IDLE_TIMEOUT_S</code> without user input (default 30 min, <code>0</code> = off), but never while a MATLAB job runs. A page watchdog (<code>streamlit/main.py</code>) checks a probe file written by a server thread (<code>streamlit/idle.py</code>) and navigates the tab to a static page, closing the websocket.</li>
+<li><strong>Rationale</strong>: An open Streamlit tab holds a websocket forever, which on pay-per-use hosting (Cloud Run) keeps the instance alive and billing. One forgotten tab kept the service running for ~36 hours. The mechanism is host-independent: it simply sheds dead connections, whatever the deployment.</li>
+<li><strong>Trade-off</strong>: Surprising for users who return to a disconnected tab (one click reconnects), and it took several attempts to get right - see lessons below.</li>
+</ul>
+<p>Lessons learned while building it (all cost a failed deploy or hours of log digging):</p>
+<ol>
+<li><strong>Component iframes cannot navigate the tab.</strong> <code>st.components.v1.html</code> runs in a sandbox without <code>allow-top-navigation</code>; the naive <code>window.parent.location = ...</code> fails silently. The watchdog injects itself into the parent page instead (possible because the sandbox grants <code>allow-same-origin</code>).</li>
+<li><strong>"User activity" must mean physical input only.</strong> Listening to <code>scroll</code> never fires the timer on pages with periodically re-rendering charts - re-renders emit synthetic scroll events. Listen to <code>wheel</code>/<code>touchmove</code>/<code>mousemove</code>/<code>keydown</code> instead.</li>
+<li><strong>Old tabs reconnect but never rerun the script</strong> ("zombie" sessions): the server creates a session, no script runs, nothing new is ever delivered - so a fix shipped in the app never reaches the tabs that need it, and they hold the websocket forever. During the migration a server-side kicker force-reran such sessions to deliver the watchdog; it was removed once no pre-watchdog tabs remained (commit f6a133e has it), because current tabs keep their watchdog across reconnects and the probe-missing fallback (below) covers fresh containers.</li>
+<li><strong>Streamlit static serving whitelists content types.</strong> <code>.html</code> is served as <code>text/plain</code>; the disconnected page is XHTML named <code>.xml</code>.</li>
+<li><strong>A missing probe file is a safe state.</strong> The watchdog treats repeated probe-fetch failures as "no job" and disconnects after a few retries - correct on a fresh container that never ran a script, and the reason the probe thread can start lazily with the first script run.</li>
+</ol>
 
 
 

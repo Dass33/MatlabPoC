@@ -752,10 +752,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#todo-add-more-detail" class="md-nav__link">
+  <a href="#idle-disconnect" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TODO add more detail
+        Idle disconnect
       
     </span>
   </a>
@@ -835,10 +835,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#todo-add-more-detail" class="md-nav__link">
+  <a href="#idle-disconnect" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TODO add more detail
+        Idle disconnect
       
     </span>
   </a>
@@ -876,7 +876,8 @@
 <p>To start the full stack locally (build + run):</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
-<h2 id="todo-add-more-detail">TODO add  more  detail<a class="headerlink" href="#todo-add-more-detail" title="Permanent link">&para;</a></h2>
+<h2 id="idle-disconnect">Idle disconnect<a class="headerlink" href="#idle-disconnect" title="Permanent link">&para;</a></h2>
+<p>Idle browser tabs are disconnected after <code>IDLE_TIMEOUT_S</code> seconds (default 1800, <code>0</code> = off, set per deployment; off on the labs compose since it does not scale to zero). Never triggers while a MATLAB job runs. Design and lessons: see <a href="../reasoning/">Architectural Decisions no. 5</a>.</p>
 
 
 

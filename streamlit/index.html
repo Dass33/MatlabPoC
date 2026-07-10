@@ -391,17 +391,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#main.render_idle_watchdog" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render_idle_watchdog
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#main.render_tour_banner" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -925,17 +914,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#main.render_idle_watchdog" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render_idle_watchdog
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#main.render_tour_banner" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1135,7 +1113,7 @@
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">IDLE_TIMEOUT_S</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">render_idle_watchdog</span><span class="p">()</span>
+        <span class="n">render_idle_watchdog</span><span class="p">(</span><span class="n">IDLE_TIMEOUT_S</span><span class="p">)</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;last_job_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;waiting&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -1208,24 +1186,15 @@
 <div class="doc doc-object doc-function">
 
 
-<h2 id="main.render_idle_watchdog" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">render_idle_watchdog</span><span class="p">()</span></code>
+<h2 id="main.render_tour_banner" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
 
-<a href="#main.render_idle_watchdog" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#main.render_tour_banner" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
 
-        <p>Disconnect idle browsers so the container can scale to zero.</p>
-<p>After IDLE_TIMEOUT_S without user input the watchdog fetches the idle probe
-(see idle.py); if no MATLAB job is running it navigates the tab to a static
-"disconnected" page, which closes the websocket. While a job is running it
-rechecks every minute instead of disconnecting, because scaling to zero
-would kill the MATLAB subprocess.</p>
-<p>Component iframes are sandboxed without allow-top-navigation, so the
-watchdog cannot navigate the tab from inside the iframe. Instead its source
-is injected as a <script> into the parent page (permitted because the
-sandbox grants allow-same-origin) and runs in the parent realm.</p>
+        <p>First-run banner walking a new user through the pipeline unattended.</p>
 
 
             <details class="mkdocstrings-source">
@@ -1265,178 +1234,7 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_idle_watchdog</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Disconnect idle browsers so the container can scale to zero.</span>
-
-<span class="sd">    After IDLE_TIMEOUT_S without user input the watchdog fetches the idle probe</span>
-<span class="sd">    (see idle.py); if no MATLAB job is running it navigates the tab to a static</span>
-<span class="sd">    &quot;disconnected&quot; page, which closes the websocket. While a job is running it</span>
-<span class="sd">    rechecks every minute instead of disconnecting, because scaling to zero</span>
-<span class="sd">    would kill the MATLAB subprocess.</span>
-
-<span class="sd">    Component iframes are sandboxed without allow-top-navigation, so the</span>
-<span class="sd">    watchdog cannot navigate the tab from inside the iframe. Instead its source</span>
-<span class="sd">    is injected as a &lt;script&gt; into the parent page (permitted because the</span>
-<span class="sd">    sandbox grants allow-same-origin) and runs in the parent realm.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">st_components</span><span class="o">.</span><span class="n">html</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        &lt;script&gt;</span>
-<span class="s2">        function nsmIdleWatchdog(cfg) </span><span class="se">{{</span>
-<span class="s2">            let timer = null;</span>
-<span class="s2">            let probeFailures = 0;</span>
-
-<span class="s2">            function arm(delayMs) </span><span class="se">{{</span>
-<span class="s2">                clearTimeout(timer);</span>
-<span class="s2">                timer = setTimeout(onIdle, delayMs);</span>
-<span class="s2">            </span><span class="se">}}</span>
-<span class="s2">            function reset() </span><span class="se">{{</span><span class="s2"> arm(cfg.idleMs); </span><span class="se">}}</span>
-
-<span class="s2">            async function onIdle() </span><span class="se">{{</span>
-<span class="s2">                let jobRunning = false;</span>
-<span class="s2">                let probeOk = false;</span>
-<span class="s2">                try </span><span class="se">{{</span>
-<span class="s2">                    const url = new URL(&#39;./app/static/idle_probe.json&#39;, location.href);</span>
-<span class="s2">                    const resp = await fetch(url, </span><span class="se">{{</span><span class="s2">cache: &#39;no-store&#39;</span><span class="se">}}</span><span class="s2">);</span>
-<span class="s2">                    if (resp.ok) </span><span class="se">{{</span>
-<span class="s2">                        jobRunning = (await resp.json()).job_running === true;</span>
-<span class="s2">                        probeOk = true;</span>
-<span class="s2">                    </span><span class="se">}}</span>
-<span class="s2">                </span><span class="se">}}</span><span class="s2"> catch (e) </span><span class="se">{{</span><span class="s2"> /* fall through to failure handling */ </span><span class="se">}}</span>
-
-<span class="s2">                if (jobRunning) </span><span class="se">{{</span>
-<span class="s2">                    probeFailures = 0;</span>
-<span class="s2">                    arm(cfg.recheckMs);</span>
-<span class="s2">                    return;</span>
-<span class="s2">                </span><span class="se">}}</span>
-<span class="s2">                // If the probe is unreadable, assume a job might be running and</span>
-<span class="s2">                // retry a few times before giving up and disconnecting anyway.</span>
-<span class="s2">                if (!probeOk &amp;&amp; ++probeFailures &lt; cfg.maxProbeFailures) </span><span class="se">{{</span>
-<span class="s2">                    arm(cfg.recheckMs);</span>
-<span class="s2">                    return;</span>
-<span class="s2">                </span><span class="se">}}</span>
-<span class="s2">                location.href = new URL(&#39;./app/static/disconnected.xml&#39;, location.href);</span>
-<span class="s2">            </span><span class="se">}}</span>
-
-<span class="s2">            const events = [&#39;mousemove&#39;, &#39;mousedown&#39;, &#39;touchstart&#39;, &#39;click&#39;, &#39;keydown&#39;, &#39;scroll&#39;];</span>
-<span class="s2">            events.forEach(ev =&gt; window.addEventListener(ev, reset, </span><span class="se">{{</span><span class="s2">capture: true, passive: true</span><span class="se">}}</span><span class="s2">));</span>
-<span class="s2">            window.__nsmIdleWatchdog = true;</span>
-<span class="s2">            reset();</span>
-<span class="s2">        </span><span class="se">}}</span>
-
-<span class="s2">        const p = window.parent;</span>
-<span class="s2">        if (!p.__nsmIdleWatchdog) </span><span class="se">{{</span>
-<span class="s2">            const cfg = </span><span class="se">{{</span>
-<span class="s2">                idleMs: </span><span class="si">{</span><span class="n">IDLE_TIMEOUT_S</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="si">}</span><span class="s2">,</span>
-<span class="s2">                recheckMs: 60000,</span>
-<span class="s2">                maxProbeFailures: 5,</span>
-<span class="s2">            </span><span class="se">}}</span><span class="s2">;</span>
-<span class="s2">            const s = p.document.createElement(&#39;script&#39;);</span>
-<span class="s2">            s.textContent = &#39;(&#39; + nsmIdleWatchdog.toString() + &#39;)(&#39; + JSON.stringify(cfg) + &#39;);&#39;;</span>
-<span class="s2">            p.document.head.appendChild(s);</span>
-<span class="s2">            s.remove();</span>
-<span class="s2">        </span><span class="se">}}</span>
-<span class="s2">        &lt;/script&gt;</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="main.render_tour_banner" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
-
-<a href="#main.render_tour_banner" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>First-run banner walking a new user through the pipeline unattended.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;First-run banner walking a new user through the pipeline unattended.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tutorial&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
         <span class="k">return</span>
@@ -1494,21 +1292,21 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dropdown at the top of the page to pick a completed experiment.&quot;&quot;&quot;</span>
     <span class="n">completed</span> <span class="o">=</span> <span class="n">list_completed_jobs</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">completed</span><span class="p">:</span>
