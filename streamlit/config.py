@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 import streamlit as st
@@ -305,46 +305,31 @@ def render_config_sidebar() -> dict:
     return result
 
 
+# config fields that have no sidebar widget of the same key
+_NO_WIDGET = {"inputDataFormat", "trajectoryProperties", "darkCalibration"}
+
+
+def _apply_section(section: dict, cls: type) -> None:
+    for f in fields(cls):
+        v = section.get(f.name)
+        if f.name in _NO_WIDGET or v is None or isinstance(v, (dict, list)):
+            continue
+        st.session_state[f.name] = v
+
+
 def apply_config(d: dict) -> None:
+    """Restore sidebar widget state from a config dict.
+
+    Widget keys equal dataclass field names, so the field lists are derived
+    from the dataclasses; darkCalibration is special-cased (scalar vs template).
+    """
+    _apply_section(d, Config)
+    _apply_section(d.get("kymographPreprocessing", {}), KymographPreprocessing)
+    _apply_section(d.get("Detection", {}), Detection)
+    _apply_section(d.get("Linking", {}), Linking)
+
     pp = d.get("kymographPreprocessing", {})
     dc = pp.get("darkCalibration", KymographPreprocessing().darkCalibration)
-
-    st.session_state.update({
-        k: d[k]
-        for k in (
-            "Dt",
-            "Dx",
-            "flipIntensity",
-            "flowEstimate",
-            "tracker",
-            "Tlength",
-            "thresholdLimit",
-            "TmaxNo",
-            "exportOptionalFigures",
-        )
-        if k in d
-    })
-    st.session_state.update({
-        k: pp[k] for k in ("Wx", "Wt", "ws", "removeBackground") if k in pp
-    })
-    st.session_state.update({
-        k: d["Detection"][k]
-        for k in ("peakSign", "pfa", "localOptimumRange")
-        if k in d.get("Detection", {})
-    })
-    st.session_state.update({
-        k: d["Linking"][k]
-        for k in (
-            "minTrackLength",
-            "cut_off_distance",
-            "unmatched_penalty_distance",
-            "maxNegativeGab",
-            "maxPositiveGab",
-            "gab_closing_cut_off_distance",
-            "gab_closing_penalty_distance",
-        )
-        if k in d.get("Linking", {})
-    })
     st.session_state["dark_cal_mode"] = "Template" if isinstance(dc, str) else "Scalar"
     if not isinstance(dc, str):
         st.session_state["darkCalibration"] = float(dc)
