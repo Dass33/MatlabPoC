@@ -31,3 +31,19 @@ This document tracks major design choices made throughout the development of the
 *   **Decision**: TODO
 *   **Rationale**: TODO
     **Trade-off**: TODO
+
+---
+
+## 5. Idle disconnect of browser tabs
+
+*   **Decision**: Disconnect browsers after `IDLE_TIMEOUT_S` without user input (default 30 min, `0` = off), but never while a MATLAB job runs. A page watchdog (`streamlit/main.py`) checks a probe file written by a server thread (`streamlit/idle.py`) and navigates the tab to a static page, closing the websocket.
+*   **Rationale**: An open Streamlit tab holds a websocket forever, which on pay-per-use hosting (Cloud Run) keeps the instance alive and billing. One forgotten tab kept the service running for ~36 hours. The mechanism is host-independent: it simply sheds dead connections, whatever the deployment.
+*   **Trade-off**: Surprising for users who return to a disconnected tab (one click reconnects), and it took several attempts to get right - see lessons below.
+
+Lessons learned while building it (all cost a failed deploy or hours of log digging):
+
+1.  **Component iframes cannot navigate the tab.** `st.components.v1.html` runs in a sandbox without `allow-top-navigation`; the naive `window.parent.location = ...` fails silently. The watchdog injects itself into the parent page instead (possible because the sandbox grants `allow-same-origin`).
+2.  **"User activity" must mean physical input only.** Listening to `scroll` never fires the timer on pages with periodically re-rendering charts - re-renders emit synthetic scroll events. Listen to `wheel`/`touchmove`/`mousemove`/`keydown` instead.
+3.  **Old tabs reconnect but never rerun the script** ("zombie" sessions): the server creates a session, no script runs, nothing new is ever delivered - so a fix shipped in the app never reaches the tabs that need it, and they hold the websocket forever. The probe thread force-reruns such sessions (`kick_zombie_sessions`), and the container starts through `streamlit/serve.py` instead of `streamlit run` so that thread exists even when only zombies are connected.
+4.  **Streamlit static serving whitelists content types.** `.html` is served as `text/plain`; the disconnected page is XHTML named `.xml`.
+5.  The kicker and `serve.py` touch Streamlit-internal APIs; after a streamlit upgrade run `scripts/check_legacy_reconnect.py` (playwright) which replays the whole zombie scenario against a real browser.

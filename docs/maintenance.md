@@ -25,4 +25,6 @@ To start the full stack locally (build + run):
 docker compose up --build
 ```
 
-## TODO add  more  detail
+## Idle disconnect
+
+Idle browser tabs are disconnected after `IDLE_TIMEOUT_S` seconds (default 1800, `0` = off, set per deployment; off on the labs compose since it does not scale to zero). Never triggers while a MATLAB job runs. Design and lessons: see [Architectural Decisions no. 5](reasoning.md). After a streamlit upgrade, verify with `streamlit/venv/bin/python scripts/check_legacy_reconnect.py`.
