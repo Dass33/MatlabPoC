@@ -185,21 +185,35 @@ def render_idle_watchdog() -> None:
                 location.href = new URL('./app/static/disconnected.xml', location.href);
             }}
 
-            const events = ['mousemove', 'mousedown', 'touchstart', 'click', 'keydown', 'scroll'];
+            // Only events a physical input device can produce: Streamlit
+            // re-renders (e.g. fragment-driven chart updates) fire synthetic
+            // 'scroll' events that would reset the timer forever, so 'wheel'
+            // and 'touchmove' stand in for scrolling.
+            const events = ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'click', 'keydown', 'wheel'];
             events.forEach(ev => window.addEventListener(ev, reset, {{capture: true, passive: true}}));
-            window.__nsmIdleWatchdog = true;
+            window.__nsmIdleWatchdogDispose = () => {{
+                clearTimeout(timer);
+                events.forEach(ev => window.removeEventListener(ev, reset, {{capture: true}}));
+            }};
             reset();
         }}
 
+        // Versioned so a redeploy can replace a watchdog already injected into
+        // a long-lived page (v1 pages predate the dispose hook; their stale
+        // listeners only reset a timer that is no longer armed, which is harmless).
+        const WATCHDOG_VERSION = 2;
         const p = window.parent;
-        if (!p.__nsmIdleWatchdog) {{
+        if (p.__nsmIdleWatchdogVersion !== WATCHDOG_VERSION) {{
+            p.__nsmIdleWatchdogVersion = WATCHDOG_VERSION;
             const cfg = {{
                 idleMs: {IDLE_TIMEOUT_S * 1000},
                 recheckMs: 60000,
                 maxProbeFailures: 5,
             }};
             const s = p.document.createElement('script');
-            s.textContent = '(' + nsmIdleWatchdog.toString() + ')(' + JSON.stringify(cfg) + ');';
+            s.textContent =
+                'if (window.__nsmIdleWatchdogDispose) window.__nsmIdleWatchdogDispose();' +
+                '(' + nsmIdleWatchdog.toString() + ')(' + JSON.stringify(cfg) + ');';
             p.document.head.appendChild(s);
             s.remove();
         }}
