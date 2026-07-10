@@ -1002,7 +1002,7 @@
 <p>Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
-  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800)
+  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800, 0 = off)
   MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
   MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)</p>
 
@@ -1118,10 +1118,13 @@
 <span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
-<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Application entry point. Renders sidebar config, experiment selector, and tabbed UI.&quot;&quot;&quot;</span>
     <span class="n">_warm_mcr</span><span class="p">()</span>
-    <span class="n">_start_idle_probe</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">IDLE_TIMEOUT_S</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">_start_idle_probe</span><span class="p">()</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">set_page_config</span><span class="p">(</span>
         <span class="n">page_title</span><span class="o">=</span><span class="s2">&quot;NSM Data Processing&quot;</span><span class="p">,</span>
@@ -1131,7 +1134,8 @@
         <span class="n">menu_items</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;About&quot;</span><span class="p">:</span> <span class="s2">&quot;NSM data processing — Streamlit frontend&quot;</span><span class="p">},</span>
     <span class="p">)</span>
 
-    <span class="n">render_idle_watchdog</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">IDLE_TIMEOUT_S</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">render_idle_watchdog</span><span class="p">()</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;last_job_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;waiting&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -1226,9 +1230,7 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
@@ -1300,7 +1302,9 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 <span class="normal">204</span>
 <span class="normal">205</span>
 <span class="normal">206</span>
-<span class="normal">207</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_idle_watchdog</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_idle_watchdog</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Disconnect idle browsers so the container can scale to zero.</span>
 
 <span class="sd">    After IDLE_TIMEOUT_S without user input the watchdog fetches the idle probe</span>
@@ -1397,9 +1401,7 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">212</span>
 <span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
@@ -1432,7 +1434,9 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 <span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
-<span class="normal">245</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;First-run banner walking a new user through the pipeline unattended.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tutorial&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
         <span class="k">return</span>
@@ -1490,9 +1494,7 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">250</span>
 <span class="normal">251</span>
 <span class="normal">252</span>
 <span class="normal">253</span>
@@ -1504,7 +1506,9 @@ sandbox grants allow-same-origin) and runs in the parent realm.</p>
 <span class="normal">259</span>
 <span class="normal">260</span>
 <span class="normal">261</span>
-<span class="normal">262</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dropdown at the top of the page to pick a completed experiment.&quot;&quot;&quot;</span>
     <span class="n">completed</span> <span class="o">=</span> <span class="n">list_completed_jobs</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">completed</span><span class="p">:</span>
