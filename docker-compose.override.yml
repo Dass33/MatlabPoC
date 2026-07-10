@@ -1,4 +1,5 @@
 # Dev-only override, live-edits Python without rebuilding the image
+services:
   streamlit:
     volumes:
       - ./streamlit:/app
