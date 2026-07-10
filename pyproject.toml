@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["streamlit", "tests", "."]
+addopts = "-v"
+markers = [
+    "integration: exercises the real compiled MATLAB bridge (skipped unless the MCR runtime is present)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:streamlit",
+]

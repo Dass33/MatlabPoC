@@ -6,6 +6,7 @@ data/
 DemoData/
 
 __pycache__/
+.coverage
 *.py[cod]
 build/
 site/
