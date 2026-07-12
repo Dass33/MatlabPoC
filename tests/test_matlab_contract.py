@@ -11,18 +11,21 @@ image that ships the MCR. Run there with:  pytest -m integration
 
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+
 import numpy as np
 import pytest
 
-# Importing the compiled package raises ImportError when it isn't installed, and
-# a RuntimeError when it is installed but LD_LIBRARY_PATH doesn't point at the
-# MATLAB runtime. Skip cleanly on either so plain `pytest` stays green.
-try:
-    import nsm_algorithms  # type: ignore[import-not-found]  # noqa: F401
-except Exception as e:  # noqa: BLE001
+from env import MCR_ROOT
+
+# The MCR now runs in a worker subprocess which sets LD_LIBRARY_PATH for
+# itself, so this process must not import nsm_algorithms - just check that
+# the package and the runtime are present.
+if importlib.util.find_spec("nsm_algorithms") is None or not Path(MCR_ROOT).is_dir():
     pytest.skip(
-        f"compiled MATLAB runtime unavailable ({e}); "
-        "set LD_LIBRARY_PATH to the R2025b runtime to enable",
+        "compiled MATLAB runtime unavailable; "
+        "needs the nsm_algorithms package on PYTHONPATH and the R2025b runtime",
         allow_module_level=True,
     )
 

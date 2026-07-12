@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 ENV AGREE_TO_MATLAB_RUNTIME_LICENSE=yes
-ENV LD_LIBRARY_PATH=/opt/matlabruntime/R2025b/runtime/glnxa64:/opt/matlabruntime/R2025b/bin/glnxa64:/opt/matlabruntime/R2025b/sys/os/glnxa64:/opt/matlabruntime/R2025b/extern/bin/glnxa64
+# No global LD_LIBRARY_PATH: MATLAB runtime libs (own libstdc++, TBB) must not
+# load into the Streamlit server process. The MCR worker (mcr_worker.py) and
+# the compiled app's run script each set it for themselves.
 
 COPY streamlit/requirements.txt .
 RUN pip3 install  --break-system-packages --no-cache-dir -r requirements.txt
