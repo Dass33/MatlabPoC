@@ -24,6 +24,10 @@ spec:
       - env:
         - name: IDLE_TIMEOUT_S
           value: '3600'
+        # Without this, jobs fall back to ./data/jobs on the ephemeral
+        # in-memory filesystem instead of the gcsfuse bucket mount.
+        - name: DATA_DIR
+          value: /data/jobs
         image: gcr.io/matlab-poc-1770323194/nsm-streamlit:latest
         ports:
         - containerPort: 8501
