@@ -1,0 +1,62 @@
+# Cloud Run service definition for the GCP deployment.
+# Apply with:
+#   gcloud run services replace cloudrun-service.yaml --region europe-west1
+# Probes cannot be set via plain gcloud flags, which is why this file exists.
+# The liveness probe kills a wedged instance (process alive, app dead) in
+# ~3 min; without it Cloud Run only checks that the TCP port is open.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+  name: nsm-streamlit
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '1'
+        run.googleapis.com/cpu-throttling: 'false'
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: IDLE_TIMEOUT_S
+          value: '3600'
+        image: gcr.io/matlab-poc-1770323194/nsm-streamlit:latest
+        ports:
+        - containerPort: 8501
+          name: http1
+        resources:
+          limits:
+            cpu: '4'
+            memory: 8Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8501
+          timeoutSeconds: 240
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 6
+        volumeMounts:
+        - mountPath: /data/jobs
+          name: jobs-volume
+      serviceAccountName: 61598324860-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+      volumes:
+      - csi:
+          driver: gcsfuse.run.googleapis.com
+          volumeAttributes:
+            bucketName: nsm-jobs-data-1770323194
+        name: jobs-volume
+  traffic:
+  - latestRevision: true
+    percent: 100
