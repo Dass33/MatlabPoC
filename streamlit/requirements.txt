@@ -1,4 +1,6 @@
 streamlit>=1.32,<2.0
+# transitive dep of streamlit, pinned so image builds don't drift
+pyarrow==25.0.0
 numpy>=1.26,<3.0
 pandas>=2.2,<3.0
 matplotlib>=3.8,<4.0
