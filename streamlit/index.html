@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -603,7 +603,35 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Parameter Sidebar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="presets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets
   
 
     
@@ -960,8 +988,10 @@
 3. <strong>Post-processing</strong>: For outlier filtering and IOC calibration.
 4. <strong>Population</strong>: For statistics.
 5. <strong>Overview</strong>: For managing and retrieving past jobs.
-6. <strong>Configuration</strong>: For editing global thresholds and parameters.
-7. <strong>Help</strong>: Instructions for researchers.</p>
+6. <strong>Help</strong>: Instructions for researchers.</p>
+<p>Alongside the tabs there is the parameter sidebar, whose widgets are generated from the selected
+<a href="presets/">preset</a>, and the <a href="presets/">preset editor</a> behind <code>?preset-editor=on</code> where those
+presets are curated.</p>
 <hr />
 <h2 id="technical-architecture">Technical Architecture<a class="headerlink" href="#technical-architecture" title="Permanent link">&para;</a></h2>
 <p>Streamlit executes the script from top to bottom on every user interaction. To retain state across tabs, the app utilizes <code>st.session_state</code> to store job configurations, status info, overrides, and results in-memory.</p>
@@ -980,7 +1010,6 @@
 <p>Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
-  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800, 0 = off)
   MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
   MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)</p>
 
@@ -1020,8 +1049,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 54</span>
-<span class="normal"> 55</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 55</span>
 <span class="normal"> 56</span>
 <span class="normal"> 57</span>
 <span class="normal"> 58</span>
@@ -1089,43 +1117,26 @@
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Application entry point. Renders sidebar config, experiment selector, and tabbed UI.&quot;&quot;&quot;</span>
     <span class="n">_warm_mcr</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">IDLE_TIMEOUT_S</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">_start_idle_probe</span><span class="p">()</span>
-
-    <span class="n">st</span><span class="o">.</span><span class="n">set_page_config</span><span class="p">(</span>
-        <span class="n">page_title</span><span class="o">=</span><span class="s2">&quot;NSM Data Processing&quot;</span><span class="p">,</span>
-        <span class="n">page_icon</span><span class="o">=</span><span class="s2">&quot;🔬&quot;</span><span class="p">,</span>
-        <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;wide&quot;</span><span class="p">,</span>
-        <span class="n">initial_sidebar_state</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
-        <span class="n">menu_items</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;About&quot;</span><span class="p">:</span> <span class="s2">&quot;NSM data processing — Streamlit frontend&quot;</span><span class="p">},</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">IDLE_TIMEOUT_S</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">render_idle_watchdog</span><span class="p">(</span><span class="n">IDLE_TIMEOUT_S</span><span class="p">)</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;last_job_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;waiting&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;active_experiment&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;_tour_seen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preset-editor&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
+        <span class="n">page_preset_editor</span><span class="p">()</span>
+        <span class="k">return</span>
+
     <span class="n">pending</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_clone_pending&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">pending</span> <span class="ow">and</span> <span class="n">pending</span><span class="p">[</span><span class="s2">&quot;use_original&quot;</span><span class="p">]:</span>
         <span class="n">base</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">job_dirs</span><span class="p">(</span><span class="n">pending</span><span class="p">[</span><span class="s2">&quot;source_job_id&quot;</span><span class="p">])</span>
         <span class="n">config_file</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span>
-        <span class="k">if</span> <span class="n">config_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="n">apply_config</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">config_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()))</span>
+        <span class="n">preset</span> <span class="o">=</span> <span class="n">active_preset</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">config_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">preset</span><span class="p">:</span>
+            <span class="n">apply_settings</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">config_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()))</span>
 
     <span class="n">config</span> <span class="o">=</span> <span class="n">render_config_sidebar</span><span class="p">()</span>
 
@@ -1145,16 +1156,14 @@
         <span class="n">tab_population</span><span class="p">,</span>
         <span class="n">tab_overview</span><span class="p">,</span>
         <span class="n">tab_help</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="s2">&quot;Submit&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Kymograph Analysis&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Post-processing&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Population Analysis&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Overview&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Help&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span>
+        <span class="s2">&quot;Submit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Kymograph Analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Post-processing&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Population Analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Overview&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Help&quot;</span><span class="p">,</span>
+    <span class="p">])</span>
 
     <span class="n">active_job</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;active_experiment&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
         <span class="s2">&quot;last_job_id&quot;</span>
@@ -1199,7 +1208,16 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
@@ -1225,16 +1243,7 @@
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_tour_banner</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;First-run banner walking a new user through the pipeline unattended.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tutorial&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
         <span class="k">return</span>
@@ -1292,21 +1301,21 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/main.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
 <span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
 <span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_experiment_selector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dropdown at the top of the page to pick a completed experiment.&quot;&quot;&quot;</span>
     <span class="n">completed</span> <span class="o">=</span> <span class="n">list_completed_jobs</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">completed</span><span class="p">:</span>
@@ -1392,7 +1401,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

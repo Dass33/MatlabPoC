@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="../favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -486,7 +486,35 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Parameter Sidebar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streamlit/presets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets
   
 
     
@@ -810,10 +838,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-idle-disconnect-of-browser-tabs" class="md-nav__link">
+  <a href="#5-idle-disconnect-of-browser-tabs-decommissioned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Idle disconnect of browser tabs
+        5. Idle disconnect of browser tabs — DECOMMISSIONED
       
     </span>
   </a>
@@ -899,10 +927,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-idle-disconnect-of-browser-tabs" class="md-nav__link">
+  <a href="#5-idle-disconnect-of-browser-tabs-decommissioned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Idle disconnect of browser tabs
+        5. Idle disconnect of browser tabs — DECOMMISSIONED
       
     </span>
   </a>
@@ -956,7 +984,16 @@
     <strong>Trade-off</strong>: TODO</li>
 </ul>
 <hr />
-<h2 id="5-idle-disconnect-of-browser-tabs">5. Idle disconnect of browser tabs<a class="headerlink" href="#5-idle-disconnect-of-browser-tabs" title="Permanent link">&para;</a></h2>
+<h2 id="5-idle-disconnect-of-browser-tabs-decommissioned">5. Idle disconnect of browser tabs — DECOMMISSIONED<a class="headerlink" href="#5-idle-disconnect-of-browser-tabs-decommissioned" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Removed from the app.</strong> The code, its tests and the <code>IDLE_TIMEOUT_S</code> variable are
+gone; the last state that still had them is the <code>idle-checks-archive</code> branch, and the
+removal is one commit, so <code>git revert</code> restores the feature whole. The entry below is
+kept as-is because the lessons cost real deploys — read them before rebuilding this.</p>
+<p>What removing it costs: nothing on the labs compose (it ran with <code>IDLE_TIMEOUT_S: 0</code>),
+but on Cloud Run it reinstates the billing bug in the Rationale — a forgotten tab holds
+the websocket and keeps the instance alive.</p>
+</blockquote>
 <ul>
 <li><strong>Decision</strong>: Disconnect browsers after <code>IDLE_TIMEOUT_S</code> without user input (default 30 min, <code>0</code> = off), but never while a MATLAB job runs. A page watchdog (<code>streamlit/main.py</code>) checks a probe file written by a server thread (<code>streamlit/idle.py</code>) and navigates the tab to a static page, closing the websocket.</li>
 <li><strong>Rationale</strong>: An open Streamlit tab holds a websocket forever, which on pay-per-use hosting (Cloud Run) keeps the instance alive and billing. One forgotten tab kept the service running for ~36 hours. The mechanism is host-independent: it simply sheds dead connections, whatever the deployment.</li>
@@ -1028,7 +1065,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

@@ -12,22 +12,22 @@
         <link rel="prev" href="../help/">
       
       
-        <link rel="next" href="../constants/">
+        <link rel="next" href="../presets/">
       
       
         
       
       
       <link rel="icon" href="../../favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Configuration - NSM Docs</title>
+        <title>Parameter Sidebar - NSM Docs</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#configuration-tab" class="md-skip">
+        <a href="#parameter-sidebar" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Configuration
+              Parameter Sidebar
             
           </span>
         </div>
@@ -499,7 +499,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Parameter Sidebar
   
 
     
@@ -517,7 +517,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Parameter Sidebar
   
 
     
@@ -565,6 +565,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#config.widget_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        widget_key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.apply_settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apply_settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.render_preset_widgets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_preset_widgets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#config.render_config_sidebar" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -575,21 +608,38 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#config.apply_config" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        apply_config
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../presets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -870,10 +920,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#config.render_config_sidebar" class="md-nav__link">
+  <a href="#config.widget_key" class="md-nav__link">
     <span class="md-ellipsis">
       
-        render_config_sidebar
+        widget_key
       
     </span>
   </a>
@@ -881,10 +931,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#config.apply_config" class="md-nav__link">
+  <a href="#config.apply_settings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        apply_config
+        apply_settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.render_preset_widgets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_preset_widgets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config.render_config_sidebar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        render_config_sidebar
       
     </span>
   </a>
@@ -908,11 +980,15 @@
 
 
 
-<h1 id="configuration-tab">Configuration Tab<a class="headerlink" href="#configuration-tab" title="Permanent link">&para;</a></h1>
-<p>The <strong>Configuration</strong> tab handles the physical parameters of the Nanofluidic Scattering Microscopy (NSM) experiment.</p>
-<p>A <strong>Load config</strong> expander lets users apply a saved preset or an uploaded config JSON file, and a
-<strong>Save preset / config</strong> expander lets them export the current settings or save them as a named
-preset for reuse.</p>
+<h1 id="parameter-sidebar">Parameter Sidebar<a class="headerlink" href="#parameter-sidebar" title="Permanent link">&para;</a></h1>
+<p>The sidebar holds the algorithm parameters a job runs with. It has no built-in list of
+parameters: the widgets, their labels, grouping and defaults all come from the selected
+<a href="../presets/">preset</a>.</p>
+<p>Users pick a preset at the top of the sidebar, adjust the fields it exposes, and submit. Everything
+the preset does not expose is still sent to MATLAB, unchanged, from the preset's base settings.
+<strong>Load settings</strong> re-applies the parameters of an existing settings JSON (a cloned job, a colleague's
+export), and <strong>Export current settings</strong> downloads exactly what the next job would run with.</p>
+<p>Presets themselves are authored in the <a href="../presets/">Preset editor</a>, not here.</p>
 <hr />
 <h2 id="code-reference">Code Reference<a class="headerlink" href="#code-reference" title="Permanent link">&para;</a></h2>
 
@@ -923,6 +999,11 @@ preset for reuse.</p>
 
 <a id="config"></a>
     <div class="doc doc-contents first">
+
+        <p>Preset-driven parameter sidebar.</p>
+<p>Which widgets exist, how they are labelled and grouped, and what they start at
+all come from the active preset (see presets.py); nothing here is per-parameter
+knowledge. The return value is the settings document the job runs with.</p>
 
 
 
@@ -947,57 +1028,120 @@ preset for reuse.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="config.render_config_sidebar" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">render_config_sidebar</span><span class="p">()</span></code>
+<h2 id="config.widget_key" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">widget_key</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">ns</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
-<a href="#config.render_config_sidebar" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#config.widget_key" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
 
-        <p>Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict.</p>
+        <p>Namespaced per preset and per publish.</p>
+<p>The id keeps two presets that expose the same parameter apart; updated_at
+retires the keys of a republished preset, so an open session picks up an
+edited default instead of silently keeping the old one. <code>ns</code> overrides the
+publish stamp for the editor's preview, whose widgets must be rebuilt after
+every draft edit (an item can change type under the same key).</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>streamlit/config.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widget_key</span><span class="p">(</span><span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PresetItem</span><span class="p">,</span> <span class="n">ns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Namespaced per preset and per publish.</span>
+
+<span class="sd">    The id keeps two presets that expose the same parameter apart; updated_at</span>
+<span class="sd">    retires the keys of a republished preset, so an open session picks up an</span>
+<span class="sd">    edited default instead of silently keeping the old one. `ns` overrides the</span>
+<span class="sd">    publish stamp for the editor&#39;s preview, whose widgets must be rebuilt after</span>
+<span class="sd">    every draft edit (an item can change type under the same key).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;p:</span><span class="si">{</span><span class="n">preset</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">ns</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">preset</span><span class="o">.</span><span class="n">updated_at</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="config.apply_settings" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">apply_settings</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span></code>
+
+<a href="#config.apply_settings" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Seed the sidebar widgets from an existing settings document.</p>
+<p>Used when cloning a job or loading a settings file: any parameter the preset
+exposes takes its value from <code>settings</code>, the rest of that document is ignored
+(the preset's own base decides those).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/config.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">apply_settings</span><span class="p">(</span><span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Seed the sidebar widgets from an existing settings document.</span>
+
+<span class="sd">    Used when cloning a job or loading a settings file: any parameter the preset</span>
+<span class="sd">    exposes takes its value from `settings`, the rest of that document is ignored</span>
+<span class="sd">    (the preset&#39;s own base decides those).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">preset</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">get_path</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">FILE</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">widget_key</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">item</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="config.render_preset_widgets" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">render_preset_widgets</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">ns</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#config.render_preset_widgets" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render one expander per group into the sidebar; return the values entered.</p>
+<p>Shared by the real sidebar and the editor's preview, which is why it takes a
+key namespace and does no preset selection of its own.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/config.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
@@ -1011,10 +1155,44 @@ preset for reuse.</p>
 <span class="normal">146</span>
 <span class="normal">147</span>
 <span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_preset_widgets</span><span class="p">(</span><span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span> <span class="n">ns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render one expander per group into the sidebar; return the values entered.</span>
+
+<span class="sd">    Shared by the real sidebar and the editor&#39;s preview, which is why it takes a</span>
+<span class="sd">    key namespace and does no preset selection of its own.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">preset</span><span class="o">.</span><span class="n">ordered_groups</span><span class="p">():</span>
+        <span class="n">visible</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">preset</span><span class="o">.</span><span class="n">items_in</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">visible</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">visible</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">visible</span><span class="p">:</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_render_item</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="config.render_config_sidebar" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">render_config_sidebar</span><span class="p">()</span></code>
+
+<a href="#config.render_config_sidebar" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Sidebar UI for the active preset. Returns a MATLAB-ready settings dict.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>streamlit/config.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
@@ -1051,385 +1229,44 @@ preset for reuse.</p>
 <span class="normal">186</span>
 <span class="normal">187</span>
 <span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_config_sidebar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict.&quot;&quot;&quot;</span>
-    <span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+<span class="normal">189</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_config_sidebar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sidebar UI for the active preset. Returns a MATLAB-ready settings dict.&quot;&quot;&quot;</span>
+    <span class="n">presets</span> <span class="o">=</span> <span class="n">ensure_presets</span><span class="p">()</span>
 
     <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Algorithm Parameters&quot;</span><span class="p">)</span>
 
-    <span class="n">presets</span> <span class="o">=</span> <span class="n">list_presets</span><span class="p">()</span>
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Load config&quot;</span><span class="p">):</span>
-        <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">NO_PRESET</span><span class="p">,</span> <span class="o">*</span><span class="n">presets</span><span class="p">]</span>
-        <span class="n">selected</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="s2">&quot;Preset&quot;</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;preset_select&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">presets</span><span class="p">:</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;No presets available. Open the preset editor (`?preset-editor=on`) to create one.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{}</span>
 
-        <span class="k">if</span> <span class="n">selected</span> <span class="o">==</span> <span class="n">NO_PRESET</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;_last_applied_preset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">elif</span> <span class="n">selected</span> <span class="o">!=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_last_applied_preset&quot;</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">apply_config</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">presets</span><span class="p">[</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">read_text</span><span class="p">())[</span><span class="s2">&quot;config&quot;</span><span class="p">])</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;_last_applied_preset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
-            <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not load preset: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">presets</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">presets</span><span class="p">}</span>
+    <span class="n">selected_id</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+        <span class="s2">&quot;Preset&quot;</span><span class="p">,</span>
+        <span class="n">ids</span><span class="p">,</span>
+        <span class="n">format_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;preset_select&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Presets decide which parameters are shown. Edit them in the preset editor.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">preset</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">presets</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">selected_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">preset</span><span class="o">.</span><span class="n">description</span><span class="p">:</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="n">preset</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
 
-        <span class="n">uploaded</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span>
-            <span class="s2">&quot;Load config JSON&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;built_config_upload&quot;</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">uploaded</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">apply_config</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">uploaded</span><span class="p">))</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config loaded.&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid JSON in config file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config format error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_render_settings_loader</span><span class="p">(</span><span class="n">preset</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Acquisition&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Dt (frame duration, s)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dt</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dt&quot;</span>
-        <span class="p">)</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Dx (pixel size, μm)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">Dx</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Dx&quot;</span>
-        <span class="p">)</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
-            <span class="s2">&quot;Flip intensity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flipIntensity</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flipIntensity&quot;</span>
-        <span class="p">)</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Flow estimate (px/frame)&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">flowEstimate</span><span class="p">,</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;flowEstimate&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">build_config</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">render_preset_widgets</span><span class="p">(</span><span class="n">preset</span><span class="p">))</span>
 
-    <span class="n">pp</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">kymographPreprocessing</span>
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Preprocessing&quot;</span><span class="p">):</span>
-        <span class="n">dark_cal_mode</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
-            <span class="s2">&quot;Dark calibration source&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Scalar&quot;</span><span class="p">,</span> <span class="s2">&quot;Template&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dark_cal_mode&quot;</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">dark_cal_mode</span> <span class="o">==</span> <span class="s2">&quot;Scalar&quot;</span><span class="p">:</span>
-            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                    <span class="s2">&quot;Dark calibration value&quot;</span><span class="p">,</span>
-                    <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-                    <span class="k">else</span> <span class="mf">8.0</span><span class="p">,</span>
-                    <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">dark_cal_template</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-                <span class="s2">&quot;Dark calibration .mat template&quot;</span><span class="p">,</span>
-                <span class="p">[</span><span class="s2">&quot;some&quot;</span><span class="p">,</span> <span class="s2">&quot;different&quot;</span><span class="p">,</span> <span class="s2">&quot;templates&quot;</span><span class="p">],</span>
-                <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dark_cal_template&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">dark_calibration_path</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;templates&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dark_cal_template</span><span class="si">}</span><span class="s2">.mat&quot;</span>
-            <span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_bytes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dark_calibration_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
-            <span class="n">pp</span><span class="o">.</span><span class="n">darkCalibration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dark_calibration_path</span><span class="p">)</span>
-        <span class="n">pp</span><span class="o">.</span><span class="n">Wx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Wx (spatial window, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wx</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wx&quot;</span>
-        <span class="p">)</span>
-        <span class="n">pp</span><span class="o">.</span><span class="n">Wt</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Wt (temporal window, frames)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">Wt</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Wt&quot;</span>
-        <span class="p">)</span>
-        <span class="n">pp</span><span class="o">.</span><span class="n">ws</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;ws (PSF width, px)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">pp</span><span class="o">.</span><span class="n">ws</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ws&quot;</span>
-        <span class="p">)</span>
-        <span class="n">pp</span><span class="o">.</span><span class="n">removeBackground</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-            <span class="s2">&quot;Remove background mode&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;movmedian&quot;</span><span class="p">,</span> <span class="s2">&quot;movmean&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;removeBackground&quot;</span>
-        <span class="p">)</span>
-
-    <span class="n">det</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Detection</span>
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">):</span>
-        <span class="n">det</span><span class="o">.</span><span class="n">peakSign</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-            <span class="s2">&quot;Peak sign&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">,</span> <span class="s2">&quot;negative-positive&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;peakSign&quot;</span>
-        <span class="p">)</span>
-        <span class="n">det</span><span class="o">.</span><span class="n">pfa</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;pfa&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;pfa&quot;</span><span class="p">)</span>
-        <span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Local optimum range&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">det</span><span class="o">.</span><span class="n">localOptimumRange</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;localOptimumRange&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="n">lnk</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Linking</span>
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Tracking&quot;</span><span class="p">):</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-            <span class="s2">&quot;Tracker algorithm&quot;</span><span class="p">,</span>
-            <span class="p">[</span><span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">,</span> <span class="s2">&quot;trackBeforeDetect&quot;</span><span class="p">],</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;tracker&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Min track length&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">minTrackLength</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;minTrackLength&quot;</span>
-        <span class="p">)</span>
-        <span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Cut-off distance&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">cut_off_distance</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cut_off_distance&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-            <span class="s2">&quot;Unmatched penalty distance&quot;</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">unmatched_penalty_distance</span><span class="p">,</span>
-            <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;unmatched_penalty_distance&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">tracker</span> <span class="o">==</span> <span class="s2">&quot;gabClosingTracker&quot;</span><span class="p">:</span>
-            <span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Max negative gap&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxNegativeGab</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxNegativeGab&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Max positive gap&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">maxPositiveGab</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;maxPositiveGab&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Gap closing cut-off distance&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_cut_off_distance</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_cut_off_distance&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Gap closing penalty distance&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">lnk</span><span class="o">.</span><span class="n">gab_closing_penalty_distance</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;gab_closing_penalty_distance&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_tlengths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-                <span class="s2">&quot;Track length (Tlength)&quot;</span><span class="p">,</span>
-                <span class="n">_tlengths</span><span class="p">,</span>
-                <span class="n">index</span><span class="o">=</span><span class="n">_tlengths</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">Tlength</span><span class="p">),</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;Tlength&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Intensity threshold limit&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">thresholdLimit</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;thresholdLimit&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
-                <span class="s2">&quot;Max associations per DIPS (TmaxNo)&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TmaxNo</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;TmaxNo&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-    <span class="n">cfg</span><span class="o">.</span><span class="n">exportOptionalFigures</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
-        <span class="s2">&quot;Export optional figures&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;exportOptionalFigures&quot;</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+        <span class="s2">&quot;Export current settings&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;settings.json&quot;</span><span class="p">,</span>
+        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="s2">&quot;stretch&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-
-    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Save preset / config&quot;</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
-            <span class="s2">&quot;Export current config&quot;</span><span class="p">,</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-            <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.json&quot;</span><span class="p">,</span>
-            <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
-            <span class="n">width</span><span class="o">=</span><span class="s2">&quot;stretch&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">new_name</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Preset name&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;new_preset_name&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Save preset&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">new_name</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Preset name cannot be empty.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">save_preset</span><span class="p">(</span><span class="n">new_name</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">result</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved preset &#39;</span><span class="si">{</span><span class="n">new_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">presets</span><span class="p">:</span>
-            <span class="n">to_delete</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-                <span class="s2">&quot;Delete preset&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">presets</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;preset_delete_select&quot;</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Delete preset&quot;</span><span class="p">):</span>
-                <span class="n">presets</span><span class="p">[</span><span class="n">to_delete</span><span class="p">]</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preset_select&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">to_delete</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;preset_select&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_last_applied_preset&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;preset_delete_select&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">result</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="config.apply_config" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">apply_config</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></code>
-
-<a href="#config.apply_config" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Restore sidebar widget state from a config dict.</p>
-<p>Widget keys equal dataclass field names, so the field lists are derived
-from the dataclasses; darkCalibration is special-cased (scalar vs template).</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>streamlit/config.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">apply_config</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Restore sidebar widget state from a config dict.</span>
-
-<span class="sd">    Widget keys equal dataclass field names, so the field lists are derived</span>
-<span class="sd">    from the dataclasses; darkCalibration is special-cased (scalar vs template).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">Config</span><span class="p">)</span>
-    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">KymographPreprocessing</span><span class="p">)</span>
-    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Detection&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">Detection</span><span class="p">)</span>
-    <span class="n">_apply_section</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Linking&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">Linking</span><span class="p">)</span>
-
-    <span class="n">pp</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kymographPreprocessing&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">dc</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">,</span> <span class="n">KymographPreprocessing</span><span class="p">()</span><span class="o">.</span><span class="n">darkCalibration</span><span class="p">)</span>
-    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;dark_cal_mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Template&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;Scalar&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;darkCalibration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1501,7 +1338,7 @@ from the dataclasses; darkCalibration is special-cased (scalar vs template).</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
