@@ -34,7 +34,16 @@ This document tracks major design choices made throughout the development of the
 
 ---
 
-## 5. Idle disconnect of browser tabs
+## 5. Idle disconnect of browser tabs — DECOMMISSIONED
+
+> **Removed from the app.** The code, its tests and the `IDLE_TIMEOUT_S` variable are
+> gone; the last state that still had them is the `idle-checks-archive` branch, and the
+> removal is one commit, so `git revert` restores the feature whole. The entry below is
+> kept as-is because the lessons cost real deploys — read them before rebuilding this.
+>
+> What removing it costs: nothing on the labs compose (it ran with `IDLE_TIMEOUT_S: 0`),
+> but on Cloud Run it reinstates the billing bug in the Rationale — a forgotten tab holds
+> the websocket and keeps the instance alive.
 
 *   **Decision**: Disconnect browsers after `IDLE_TIMEOUT_S` without user input (default 30 min, `0` = off), but never while a MATLAB job runs. A page watchdog (`streamlit/main.py`) checks a probe file written by a server thread (`streamlit/idle.py`) and navigates the tab to a static page, closing the websocket.
 *   **Rationale**: An open Streamlit tab holds a websocket forever, which on pay-per-use hosting (Cloud Run) keeps the instance alive and billing. One forgotten tab kept the service running for ~36 hours. The mechanism is host-independent: it simply sheds dead connections, whatever the deployment.

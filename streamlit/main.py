@@ -3,7 +3,6 @@
 Environment variables (set in docker-compose / .env):
   DATA_DIR          base path for jobs inside container  (default: /data/jobs)
   POLL_INTERVAL_S   seconds between status polls         (default: 5)
-  IDLE_TIMEOUT_S    browser inactivity before disconnect (default: 1800, 0 = off)
   MCR_ROOT          MATLAB runtime root                  (default: /opt/matlabruntime/R2025b)
   MATLAB_APP        path to run_AnalyzeExperimentApp.sh  (default: /opt/matlab_app/...)
 """
@@ -18,15 +17,13 @@ from config import apply_config, render_config_sidebar
 from connectors import algorithms
 from connectors.launcher import launch_matlab_job
 from connectors.storage import clone_job, create_demo_job, list_completed_jobs
-from env import DEMO_DATA_DIR, IDLE_TIMEOUT_S, job_dirs
-from idle import start_probe_writer
+from env import DEMO_DATA_DIR, job_dirs
 from tabs.help import page_help
 from tabs.kymograph import page_kymograph_analysis
 from tabs.overview import page_overview
 from tabs.population import page_population_analysis
 from tabs.postprocessing import page_postprocessing
 from tabs.submit import page_submit
-from idle_watchdog import render_idle_watchdog
 
 import streamlit as st
 
@@ -44,18 +41,9 @@ def _warm_mcr() -> bool:
     return True
 
 
-@st.cache_resource
-def _start_idle_probe() -> bool:
-    """Start the idle-probe writer thread, once per process."""
-    start_probe_writer()
-    return True
-
-
 def main() -> None:
     """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
     _warm_mcr()
-    if IDLE_TIMEOUT_S > 0:
-        _start_idle_probe()
 
     st.set_page_config(
         page_title="NSM Data Processing",
@@ -64,9 +52,6 @@ def main() -> None:
         initial_sidebar_state="auto",
         menu_items={"About": "NSM data processing — Streamlit frontend"},
     )
-
-    if IDLE_TIMEOUT_S > 0:
-        render_idle_watchdog(IDLE_TIMEOUT_S)
 
     st.session_state.setdefault("last_job_id", None)
     st.session_state.setdefault("waiting", False)
@@ -81,6 +66,9 @@ def main() -> None:
             apply_config(json.loads(config_file.read_text()))
 
     config = render_config_sidebar()
+
+    if st.query_params.get("config-editor") == "on":
+        page_config_editor()
 
     if pending := st.session_state.pop("_clone_pending", None):
         new_id = clone_job(pending["source_job_id"], config, name=pending["name"])
@@ -98,16 +86,14 @@ def main() -> None:
         tab_population,
         tab_overview,
         tab_help,
-    ) = st.tabs(
-        [
-            "Submit",
-            "Kymograph Analysis",
-            "Post-processing",
-            "Population Analysis",
-            "Overview",
-            "Help",
-        ]
-    )
+    ) = st.tabs([
+        "Submit",
+        "Kymograph Analysis",
+        "Post-processing",
+        "Population Analysis",
+        "Overview",
+        "Help",
+    ])
 
     active_job = st.session_state.get("active_experiment") or st.session_state.get(
         "last_job_id"

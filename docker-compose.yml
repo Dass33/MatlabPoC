@@ -13,8 +13,6 @@ services:
     environment:
       DATA_DIR: /data/jobs
       POLL_INTERVAL_S: 5
-      # The labs machine does not scale to zero, so idle disconnect is off.
-      IDLE_TIMEOUT_S: 0
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
