@@ -1,3 +1,3 @@
-[submodule "matlab/nsm-data-analysis"]
-	path = matlab/nsm-data-analysis
-	url = git@gitlab.com:Dass331/nsm-data-analysis.git
+[submodule "nsm_data_processing_v2"]
+	path = matlab/nsm_data_processing_v2
+	url = git@gitlab.com:hekrdla/nsm_data_processing_v2.git

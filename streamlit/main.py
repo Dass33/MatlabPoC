@@ -14,6 +14,7 @@ import logging
 import threading
 
 from config import apply_config, render_config_sidebar
+from preset_editor import page_preset_editor
 from connectors import algorithms
 from connectors.launcher import launch_matlab_job
 from connectors.storage import clone_job, create_demo_job, list_completed_jobs
@@ -33,6 +34,16 @@ logging.basicConfig(
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
 
+st.set_page_config(
+    page_title="NSM Data Processing",
+    page_icon="🔬",
+    layout="wide",
+    initial_sidebar_state="auto",
+    menu_items={"About": "NSM data processing — Streamlit frontend"},
+)
+
+st.html("style.css")
+
 
 @st.cache_resource
 def _warm_mcr() -> bool:
@@ -44,14 +55,6 @@ def _warm_mcr() -> bool:
 def main() -> None:
     """Application entry point. Renders sidebar config, experiment selector, and tabbed UI."""
     _warm_mcr()
-
-    st.set_page_config(
-        page_title="NSM Data Processing",
-        page_icon="🔬",
-        layout="wide",
-        initial_sidebar_state="auto",
-        menu_items={"About": "NSM data processing — Streamlit frontend"},
-    )
 
     st.session_state.setdefault("last_job_id", None)
     st.session_state.setdefault("waiting", False)
@@ -68,7 +71,8 @@ def main() -> None:
     config = render_config_sidebar()
 
     if st.query_params.get("config-editor") == "on":
-        page_config_editor()
+        page_preset_editor()
+        return
 
     if pending := st.session_state.pop("_clone_pending", None):
         new_id = clone_job(pending["source_job_id"], config, name=pending["name"])

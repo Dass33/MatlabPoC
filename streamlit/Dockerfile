@@ -21,8 +21,6 @@ COPY matlab/Compiled/AnalyzeExperimentApp /opt/matlab_app/
 COPY matlab/Compiled/run_AnalyzeExperimentApp.sh /opt/matlab_app/
 RUN chmod +x /opt/matlab_app/run_AnalyzeExperimentApp.sh /opt/matlab_app/AnalyzeExperimentApp
 
-COPY matlab/nsm-data-analysis/data/demo_data/2025-09-23-dna-origami/ /opt/demo_data/
-
 COPY streamlit/requirements.txt .
 RUN pip3 install  --break-system-packages --no-cache-dir -r requirements.txt
 

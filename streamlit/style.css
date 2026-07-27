@@ -1,0 +1,4 @@
+[data-testid="stCheckbox"] label p {
+    position: relative;
+    top: 2px;
+}
