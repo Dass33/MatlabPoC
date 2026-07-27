@@ -9,8 +9,9 @@ def page_help() -> None:
 
         ### App walkthrough
 
-        1. Configure algorithm parameters in the sidebar. Use **Load config** to reuse a saved
-           preset or an exported config file, and **Save preset / config** to keep your own.
+        1. Configure algorithm parameters in the sidebar. Pick a **Preset** to choose which
+           parameters apply to your kind of experiment, or use **Load settings** to reuse an
+           exported settings file.
         2. **Submit** tab:  upload your `.tiff` files **and their paired `.txt` metadata files**.
            Each TIFF must have a matching TXT with the same base name (e.g. `data_001.tiff` + `data_001.txt`).
         3. Click **Submit job**. Files are written to disk immediately and the container starts in the background,

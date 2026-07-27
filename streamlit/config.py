@@ -1,335 +1,213 @@
+"""Preset-driven parameter sidebar.
+
+Which widgets exist, how they are labelled and grouped, and what they start at
+all come from the active preset (see presets.py); nothing here is per-parameter
+knowledge. The return value is the settings document the job runs with.
+"""
+
 from __future__ import annotations
 
 import json
 import logging
-import re
-from dataclasses import asdict, dataclass, field, fields
-from pathlib import Path
+from typing import Any
 
 import streamlit as st
 
-from env import DATA_DIR
+from presets import (
+    BOOL,
+    ENUM,
+    FILE,
+    INTEGER,
+    NUMBER,
+    Preset,
+    PresetItem,
+    build_config,
+    calibration_files,
+    ensure_presets,
+    get_path,
+)
 
 log = logging.getLogger(__name__)
 
-PRESETS_DIR = DATA_DIR / "_presets"
-NO_PRESET = "—"
+
+def widget_key(preset: Preset, item: PresetItem, ns: str | None = None) -> str:
+    """Namespaced per preset and per publish.
+
+    The id keeps two presets that expose the same parameter apart; updated_at
+    retires the keys of a republished preset, so an open session picks up an
+    edited default instead of silently keeping the old one. `ns` overrides the
+    publish stamp for the editor's preview, whose widgets must be rebuilt after
+    every draft edit (an item can change type under the same key).
+    """
+    return f"p:{preset.id}:{ns or preset.updated_at}:{item.key}"
 
 
-@dataclass
-class KymographPreprocessing:
-    darkCalibration: float | str = 8
-    Wx: float = 15.0
-    Wt: float = 50.0
-    ws: float = 2.36
-    removeBackground: str = "movmedian"
+def active_preset() -> Preset | None:
+    presets = ensure_presets()
+    if not presets:
+        return None
+    selected = st.session_state.get("preset_select")
+    return next((p for p in presets if p.id == selected), presets[0])
 
 
-@dataclass
-class Detection:
-    peakSign: str = "negative"
-    pfa: float = 1e-5
-    localOptimumRange: int = 6
+def apply_settings(preset: Preset, settings: dict) -> None:
+    """Seed the sidebar widgets from an existing settings document.
+
+    Used when cloning a job or loading a settings file: any parameter the preset
+    exposes takes its value from `settings`, the rest of that document is ignored
+    (the preset's own base decides those).
+    """
+    for item in preset.items:
+        value = get_path(settings, item.key)
+        if value is None or not item.ui.visible:
+            continue
+        if item.schema.type == FILE:
+            value = str(value).rsplit("/", 1)[-1]
+        st.session_state[widget_key(preset, item)] = value
 
 
-@dataclass
-class Linking:
-    minTrackLength: int = 10
-    cut_off_distance: float = 20.0
-    unmatched_penalty_distance: float = 15.0
-    maxNegativeGab: int = 2
-    maxPositiveGab: int = 3
-    gab_closing_cut_off_distance: float = 40.0
-    gab_closing_penalty_distance: float = 30.0
+def _number_format(value: float) -> str | None:
+    """Small magnitudes need scientific notation or the widget renders them as 0.00."""
+    return "%.1e" if value and abs(value) < 1e-3 else None
 
 
-@dataclass
-class Config:
-    exportOptionalFigures: bool = False
-    inputDataFormat: str = "tiff2"
-    Dt: float = 0.007
-    Dx: float = 0.066
-    flipIntensity: bool = True
-    flowEstimate: float = -3.4
-    kymographPreprocessing: KymographPreprocessing = field(
-        default_factory=KymographPreprocessing
-    )
-    Detection: Detection = field(default_factory=Detection)
-    tracker: str = "gabClosingTracker"
-    Tlength: int = 4
-    thresholdLimit: float = -2.0
-    TmaxNo: int = 8
-    Linking: Linking = field(default_factory=Linking)
-    trajectoryProperties: list[str] = field(
-        default_factory=lambda: [
-            "positionRefined",
-            "timeFrame",
-            "iOCprofile",
-            "N",
-            "iOC",
-            "STDiOC",
-            "D",
-            "velocity",
-        ]
-    )
+def _render_item(preset: Preset, item: PresetItem, ns: str | None = None) -> Any:
+    schema = item.schema
+    key = widget_key(preset, item, ns)
+    label = f"{item.label} ({schema.unit})" if schema.unit else item.label
+    help_ = item.ui.help or item.key
+
+    if schema.type == BOOL:
+        return st.checkbox(label, value=bool(schema.default), key=key, help=help_)
+
+    if schema.type == ENUM:
+        options = list(schema.options or [])
+        if schema.default in options:
+            index = options.index(schema.default)
+        else:
+            index = 0
+            options = (
+                [schema.default, *options] if schema.default is not None else options
+            )
+        if not options:
+            st.warning(f"{item.label}: enum with no options")
+            return schema.default
+        return st.selectbox(label, options, index=index, key=key, help=help_)
+
+    if schema.type == FILE:
+        files = calibration_files()
+        if not files:
+            st.warning(f"{item.label}: no calibration files available")
+            return schema.default
+        default = str(schema.default).rsplit("/", 1)[-1]
+        index = files.index(default) if default in files else 0
+        return st.selectbox(label, files, index=index, key=key, help=help_)
+
+    if schema.type == INTEGER:
+        return st.number_input(
+            label,
+            value=int(schema.default or 0),
+            min_value=int(schema.min) if schema.min is not None else None,
+            max_value=int(schema.max) if schema.max is not None else None,
+            # a fractional step stored against an integer item would floor to 0,
+            # which number_input rejects
+            step=max(1, int(schema.step or 1)),
+            key=key,
+            help=help_,
+        )
+
+    if schema.type == NUMBER:
+        value = float(schema.default or 0.0)
+        return st.number_input(
+            label,
+            value=value,
+            min_value=float(schema.min) if schema.min is not None else None,
+            max_value=float(schema.max) if schema.max is not None else None,
+            step=float(schema.step) if schema.step is not None else None,
+            format=_number_format(value),
+            key=key,
+            help=help_,
+        )
+
+    return st.text_input(label, value=str(schema.default or ""), key=key, help=help_)
 
 
-def _slugify(name: str) -> str:
-    return re.sub(r"[^\w.-]+", "_", name.strip())
+def render_preset_widgets(preset: Preset, ns: str | None = None) -> dict[str, Any]:
+    """Render one expander per group into the sidebar; return the values entered.
 
-
-def list_presets() -> dict[str, Path]:
-    PRESETS_DIR.mkdir(parents=True, exist_ok=True)
-    presets = {}
-    for f in sorted(PRESETS_DIR.glob("*.json")):
-        try:
-            presets[json.loads(f.read_text())["name"]] = f
-        except (json.JSONDecodeError, OSError, KeyError) as e:
-            log.warning("[list_presets] skipping %s: %s", f.name, e)
-    return presets
-
-
-def save_preset(name: str, config: dict) -> None:
-    PRESETS_DIR.mkdir(parents=True, exist_ok=True)
-    path = PRESETS_DIR / f"{_slugify(name)}.json"
-    path.write_text(json.dumps({"name": name, "config": config}, indent=2))
+    Shared by the real sidebar and the editor's preview, which is why it takes a
+    key namespace and does no preset selection of its own.
+    """
+    values: dict[str, Any] = {}
+    for group in preset.ordered_groups():
+        visible = [i for i in preset.items_in(group) if i.ui.visible]
+        if not visible:
+            continue
+        with st.sidebar.expander(group):
+            for item in visible:
+                values[item.key] = _render_item(preset, item, ns)
+    return values
 
 
 def render_config_sidebar() -> dict:
-    """Sidebar UI for algorithm parameters. Returns a MATLAB-ready config dict."""
-    cfg = Config()
+    """Sidebar UI for the active preset. Returns a MATLAB-ready settings dict."""
+    presets = ensure_presets()
 
     st.sidebar.header("Algorithm Parameters")
 
-    presets = list_presets()
-    with st.sidebar.expander("Load config"):
-        options = [NO_PRESET, *presets]
-        selected = st.selectbox("Preset", options, key="preset_select")
+    if not presets:
+        st.sidebar.error(
+            "No presets available. Open the preset editor (`?preset-editor=on`) to create one."
+        )
+        return {}
 
-        if selected == NO_PRESET:
-            st.session_state["_last_applied_preset"] = None
-        elif selected != st.session_state.get("_last_applied_preset"):
-            try:
-                apply_config(json.loads(presets[selected].read_text())["config"])
-                st.session_state["_last_applied_preset"] = selected
-                st.rerun()
-            except (json.JSONDecodeError, OSError, KeyError) as e:
-                st.error(f"Could not load preset: {e}")
+    ids = [p.id for p in presets]
+    labels = {p.id: p.name for p in presets}
+    selected_id = st.sidebar.selectbox(
+        "Preset",
+        ids,
+        format_func=lambda i: labels[i],
+        key="preset_select",
+        help="Presets decide which parameters are shown. Edit them in the preset editor.",
+    )
+    preset = next(p for p in presets if p.id == selected_id)
+    if preset.description:
+        st.sidebar.caption(preset.description)
 
-        uploaded = st.file_uploader(
-            "Load config JSON", type=["json"], key="built_config_upload"
-        )
-        if uploaded:
-            try:
-                apply_config(json.load(uploaded))
-                st.success("Config loaded.")
-            except json.JSONDecodeError as e:
-                st.error(f"Invalid JSON in config file: {e}")
-            except (KeyError, TypeError, ValueError) as e:
-                st.error(f"Config format error: {e}")
+    _render_settings_loader(preset)
 
-    with st.sidebar.expander("Acquisition", expanded=False):
-        cfg.Dt = st.number_input(
-            "Dt (frame duration, s)", value=cfg.Dt, format="%.4f", step=0.001, key="Dt"
-        )
-        cfg.Dx = st.number_input(
-            "Dx (pixel size, μm)", value=cfg.Dx, format="%.4f", step=0.001, key="Dx"
-        )
-        cfg.flipIntensity = st.checkbox(
-            "Flip intensity", value=cfg.flipIntensity, key="flipIntensity"
-        )
-        cfg.flowEstimate = st.number_input(
-            "Flow estimate (px/frame)",
-            value=cfg.flowEstimate,
-            format="%.2f",
-            step=0.1,
-            key="flowEstimate",
-        )
+    config = build_config(preset, render_preset_widgets(preset))
 
-    pp = cfg.kymographPreprocessing
-    with st.sidebar.expander("Preprocessing"):
-        dark_cal_mode = st.radio(
-            "Dark calibration source", ["Scalar", "Template"], key="dark_cal_mode"
-        )
-        if dark_cal_mode == "Scalar":
-            pp.darkCalibration = int(
-                st.number_input(
-                    "Dark calibration value",
-                    value=float(pp.darkCalibration)
-                    if not isinstance(pp.darkCalibration, str)
-                    else 8.0,
-                    step=1.0,
-                    key="darkCalibration",
-                )
-            )
-        else:
-            dark_cal_template = st.selectbox(
-                "Dark calibration .mat template",
-                ["some", "different", "templates"],
-                index=0,
-                key="dark_cal_template",
-            )
-            dark_calibration_path = (
-                Path(__file__).parent / "templates" / f"{dark_cal_template}.mat"
-            )
-            st.session_state["dark_cal_bytes"] = dark_calibration_path.read_bytes()
-            pp.darkCalibration = str(dark_calibration_path)
-        pp.Wx = st.number_input(
-            "Wx (spatial window, px)", value=pp.Wx, step=1.0, key="Wx"
-        )
-        pp.Wt = st.number_input(
-            "Wt (temporal window, frames)", value=pp.Wt, step=1.0, key="Wt"
-        )
-        pp.ws = st.number_input(
-            "ws (PSF width, px)", value=pp.ws, format="%.2f", step=0.01, key="ws"
-        )
-        pp.removeBackground = st.selectbox(
-            "Remove background mode", ["movmedian", "movmean"], key="removeBackground"
-        )
-
-    det = cfg.Detection
-    with st.sidebar.expander("Detection"):
-        det.peakSign = st.selectbox(
-            "Peak sign", ["negative", "positive", "negative-positive"], key="peakSign"
-        )
-        det.pfa = st.number_input("pfa", value=det.pfa, format="%.e", key="pfa")
-        det.localOptimumRange = st.number_input(
-            "Local optimum range",
-            value=det.localOptimumRange,
-            step=1,
-            key="localOptimumRange",
-        )
-
-    lnk = cfg.Linking
-    with st.sidebar.expander("Tracking"):
-        cfg.tracker = st.selectbox(
-            "Tracker algorithm",
-            ["gabClosingTracker", "trackBeforeDetect"],
-            key="tracker",
-        )
-        lnk.minTrackLength = st.number_input(
-            "Min track length", value=lnk.minTrackLength, step=1, key="minTrackLength"
-        )
-        lnk.cut_off_distance = st.number_input(
-            "Cut-off distance",
-            value=lnk.cut_off_distance,
-            step=1.0,
-            key="cut_off_distance",
-        )
-        lnk.unmatched_penalty_distance = st.number_input(
-            "Unmatched penalty distance",
-            value=lnk.unmatched_penalty_distance,
-            step=1.0,
-            key="unmatched_penalty_distance",
-        )
-
-        if cfg.tracker == "gabClosingTracker":
-            lnk.maxNegativeGab = st.number_input(
-                "Max negative gap",
-                value=lnk.maxNegativeGab,
-                step=1,
-                key="maxNegativeGab",
-            )
-            lnk.maxPositiveGab = st.number_input(
-                "Max positive gap",
-                value=lnk.maxPositiveGab,
-                step=1,
-                key="maxPositiveGab",
-            )
-            lnk.gab_closing_cut_off_distance = st.number_input(
-                "Gap closing cut-off distance",
-                value=lnk.gab_closing_cut_off_distance,
-                step=1.0,
-                key="gab_closing_cut_off_distance",
-            )
-            lnk.gab_closing_penalty_distance = st.number_input(
-                "Gap closing penalty distance",
-                value=lnk.gab_closing_penalty_distance,
-                step=1.0,
-                key="gab_closing_penalty_distance",
-            )
-        else:
-            _tlengths = [2, 4, 8, 16, 32, 64]
-            cfg.Tlength = st.selectbox(
-                "Track length (Tlength)",
-                _tlengths,
-                index=_tlengths.index(cfg.Tlength),
-                key="Tlength",
-            )
-            cfg.thresholdLimit = st.number_input(
-                "Intensity threshold limit",
-                value=cfg.thresholdLimit,
-                step=0.5,
-                key="thresholdLimit",
-            )
-            cfg.TmaxNo = st.number_input(
-                "Max associations per DIPS (TmaxNo)",
-                value=cfg.TmaxNo,
-                step=1,
-                key="TmaxNo",
-            )
-
-    cfg.exportOptionalFigures = st.sidebar.checkbox(
-        "Export optional figures", key="exportOptionalFigures"
+    st.sidebar.download_button(
+        "Export current settings",
+        data=json.dumps(config, indent=2),
+        file_name="settings.json",
+        mime="application/json",
+        width="stretch",
     )
 
-    result = asdict(cfg)
+    return config
 
-    with st.sidebar.expander("Save preset / config"):
-        st.download_button(
-            "Export current config",
-            data=json.dumps(result, indent=2),
-            file_name="config.json",
-            mime="application/json",
-            width="stretch",
+
+def _render_settings_loader(preset: Preset) -> None:
+    """Must run before the parameter widgets: session_state cannot be written
+    once the widget owning the key exists."""
+    with st.sidebar.expander("Load settings"):
+        uploaded = st.file_uploader(
+            "Settings JSON", type=["json"], key="settings_upload"
         )
-        new_name = st.text_input("Preset name", key="new_preset_name")
-        if st.button("Save preset"):
-            if not new_name.strip():
-                st.error("Preset name cannot be empty.")
-            else:
-                save_preset(new_name.strip(), result)
-                st.success(f"Saved preset '{new_name.strip()}'.")
-        if presets:
-            to_delete = st.selectbox(
-                "Delete preset", list(presets), key="preset_delete_select"
-            )
-            if st.button("Delete preset"):
-                presets[to_delete].unlink(missing_ok=True)
-                if st.session_state.get("preset_select") == to_delete:
-                    st.session_state.pop("preset_select", None)
-                    st.session_state.pop("_last_applied_preset", None)
-                st.session_state.pop("preset_delete_select", None)
-                st.rerun()
+        if uploaded is None:
+            return
 
-    return result
-
-
-# config fields that have no sidebar widget of the same key
-_NO_WIDGET = {"inputDataFormat", "trajectoryProperties", "darkCalibration"}
-
-
-def _apply_section(section: dict, cls: type) -> None:
-    for f in fields(cls):
-        v = section.get(f.name)
-        if f.name in _NO_WIDGET or v is None or isinstance(v, (dict, list)):
-            continue
-        st.session_state[f.name] = v
-
-
-def apply_config(d: dict) -> None:
-    """Restore sidebar widget state from a config dict.
-
-    Widget keys equal dataclass field names, so the field lists are derived
-    from the dataclasses; darkCalibration is special-cased (scalar vs template).
-    """
-    _apply_section(d, Config)
-    _apply_section(d.get("kymographPreprocessing", {}), KymographPreprocessing)
-    _apply_section(d.get("Detection", {}), Detection)
-    _apply_section(d.get("Linking", {}), Linking)
-
-    pp = d.get("kymographPreprocessing", {})
-    dc = pp.get("darkCalibration", KymographPreprocessing().darkCalibration)
-    st.session_state["dark_cal_mode"] = "Template" if isinstance(dc, str) else "Scalar"
-    if not isinstance(dc, str):
-        st.session_state["darkCalibration"] = float(dc)
+        stamp = (uploaded.name, uploaded.size)
+        if st.session_state.get("_settings_upload_stamp") == stamp:
+            return
+        try:
+            apply_settings(preset, json.load(uploaded))
+        except json.JSONDecodeError as e:
+            st.error(f"Invalid JSON in settings file: {e}")
+        except (KeyError, TypeError, ValueError) as e:
+            st.error(f"Settings format error: {e}")
+        else:
+            st.session_state["_settings_upload_stamp"] = stamp
+            st.rerun()

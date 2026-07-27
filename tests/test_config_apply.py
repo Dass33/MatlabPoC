@@ -1,17 +1,22 @@
-"""apply_config must restore every widget-backed field from a config dict.
+"""apply_settings must seed sidebar widgets from an existing settings document.
 
-The mapping is derived from the Config dataclasses (widget keys equal field
-names), so a field added to a dataclass + sidebar is restored with no further
-bookkeeping. These tests pin the special cases.
+This is what the Clone & Re-run flow and the settings uploader rely on: widget
+keys are derived from the active preset, so anything the preset exposes picks up
+the value the earlier job ran with.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
+import config as C
+import presets as P
 import pytest
 import streamlit as st
-from config import Config, apply_config
+
+SETTINGS = {
+    "Acquisition": {"Dx": 0.066, "fileExtension": ".tiff"},
+    "Detection": {"pfa": 0.00001},
+    "Preprocessing": {"darkCalibration": 8.0},
+}
 
 
 @pytest.fixture
@@ -21,48 +26,66 @@ def session_state(monkeypatch):
     return state
 
 
-def test_restores_fields_from_every_section(session_state):
-    cfg = asdict(Config())
-    cfg["Dt"] = 0.5
-    cfg["kymographPreprocessing"]["Wx"] = 99.0
-    cfg["Detection"]["pfa"] = 1e-3
-    cfg["Linking"]["minTrackLength"] = 42
-
-    apply_config(cfg)
-
-    assert session_state["Dt"] == 0.5
-    assert session_state["Wx"] == 99.0
-    assert session_state["pfa"] == 1e-3
-    assert session_state["minTrackLength"] == 42
+@pytest.fixture
+def preset():
+    p = P.new_preset("Basic", SETTINGS)
+    p.updated_at = "2026-07-27T22:00:00+02:00"
+    return p
 
 
-def test_scalar_dark_calibration(session_state):
-    apply_config(asdict(Config()))
-
-    assert session_state["dark_cal_mode"] == "Scalar"
-    assert session_state["darkCalibration"] == 8.0
-
-
-def test_template_dark_calibration_keeps_widget_untouched(session_state):
-    cfg = asdict(Config())
-    cfg["kymographPreprocessing"]["darkCalibration"] = "/opt/templates/foo.mat"
-
-    apply_config(cfg)
-
-    assert session_state["dark_cal_mode"] == "Template"
-    assert "darkCalibration" not in session_state
+def _item(preset: P.Preset, key: str) -> P.PresetItem:
+    item = preset.item(key)
+    assert item is not None
+    return item
 
 
-def test_widgetless_fields_are_not_applied(session_state):
-    apply_config(asdict(Config()))
+def test_restores_values_the_preset_exposes(session_state, preset):
+    C.apply_settings(preset, {"Acquisition": {"Dx": 0.5}, "Detection": {"pfa": 0.1}})
 
-    assert "inputDataFormat" not in session_state
-    assert "trajectoryProperties" not in session_state
+    assert session_state[C.widget_key(preset, _item(preset, "Acquisition.Dx"))] == 0.5
+    assert session_state[C.widget_key(preset, _item(preset, "Detection.pfa"))] == 0.1
 
 
-def test_partial_config_applies_only_present_keys(session_state):
-    apply_config({"Dt": 0.25})
+def test_absent_keys_are_left_alone(session_state, preset):
+    C.apply_settings(preset, {"Acquisition": {"Dx": 0.5}})
 
-    assert session_state["Dt"] == 0.25
-    assert "Wx" not in session_state
-    assert "pfa" not in session_state
+    assert C.widget_key(preset, _item(preset, "Detection.pfa")) not in session_state
+
+
+def test_hidden_items_are_not_seeded(session_state, preset):
+    item = _item(preset, "Detection.pfa")
+    item.ui.visible = False
+
+    C.apply_settings(preset, {"Detection": {"pfa": 0.1}})
+
+    assert C.widget_key(preset, item) not in session_state
+
+
+def test_file_values_are_reduced_to_a_filename(session_state, preset):
+    item = _item(preset, "Preprocessing.darkCalibration")
+    item.schema.type = P.FILE
+
+    C.apply_settings(
+        preset, {"Preprocessing": {"darkCalibration": "/opt/calibration/c.mat"}}
+    )
+
+    assert session_state[C.widget_key(preset, item)] == "c.mat"
+
+
+def test_widget_keys_are_namespaced_per_preset_and_publish(preset):
+    item = _item(preset, "Acquisition.Dx")
+    other = P.new_preset("Other", SETTINGS)
+    other.updated_at = preset.updated_at
+    republished = P.Preset(
+        id=preset.id,
+        name=preset.name,
+        updated_at="2026-07-28T09:00:00+02:00",
+        base=preset.base,
+        groups=preset.groups,
+        items=preset.items,
+    )
+
+    assert C.widget_key(preset, item) != C.widget_key(
+        other, _item(other, "Acquisition.Dx")
+    )
+    assert C.widget_key(preset, item) != C.widget_key(republished, item)

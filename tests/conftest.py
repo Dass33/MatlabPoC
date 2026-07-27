@@ -12,14 +12,19 @@ def isolated_data_dir(tmp_path, monkeypatch):
     `job_dirs()` reads `env.DATA_DIR` at call time, but `storage` binds
     `DATA_DIR` by value at import (`from env import DATA_DIR`), so both bindings
     must be patched or `list_all_jobs` reads the real ./data/jobs.
+
+    `presets.PRESETS_DIR` is derived from `DATA_DIR` at import for the same
+    reason, and `ensure_presets()` writes a seed preset, so it is repointed too.
     """
     import env
+    import presets
     from connectors import storage
 
     jobs = tmp_path / "jobs"
     jobs.mkdir()
     monkeypatch.setattr(env, "DATA_DIR", jobs)
     monkeypatch.setattr(storage, "DATA_DIR", jobs)
+    monkeypatch.setattr(presets, "PRESETS_DIR", tmp_path / "_presets")
     return jobs
 
 

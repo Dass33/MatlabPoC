@@ -1,0 +1,85 @@
+{
+    "Export": {
+        "exportImages": true,
+        "exportResolution": 150.0,
+        "exportOptional": "analysis_kymographs",
+        "exportMatlabFig": false,
+        "flipIntensity": false,
+        "showTrackIds": true,
+        "view": "yx",
+        "clim": "noise"
+    },
+    "Acquisition": {
+        "fileExtension": ".tiff",
+        "Dx": 0.066,
+        "Channel": {
+            "width_nm": 200.0,
+            "height_nm": 200.0,
+            "area_um2": 0.04000000000000001,
+            "areaWithoutCoating_um2": 0.04000000000000001
+        },
+        "particleMaterial": "protein",
+        "nonDepOverDepIntensityRatio": 1.0
+    },
+    "Preprocessing": {
+        "darkCalibration": 8.0,
+        "chainOrder": "denoising_background",
+        "defluctuationMethod": "movmean",
+        "PreprocessingParams": {
+            "Kx": 101.0,
+            "Kt": 51.0
+        },
+        "backgroundEstimationMethod": "movmedian",
+        "backgroundRemovalMethod": "subtract",
+        "whiteningMethod": "std_division",
+        "spaceFilter": "gauss",
+        "DenoiseParams": {
+            "k_max": 3.0,
+            "sigma_x": 4.0
+        },
+        "timeFilter": "none",
+        "nonLinearFilter": "none"
+    },
+    "Detection": {
+        "peakSign": "negative",
+        "pfa": 0.00001,
+        "localOptimumRange": 6.0,
+        "boarderRange": 12.0,
+        "positionRefinementMethod": "centroid",
+        "fittingRadius": 3.0
+    },
+    "Linking": {
+        "pfa_flowEst": 0.00001,
+        "cut_off_distance": 20.0,
+        "unmatched_penalty_distance": 16.0,
+        "maxPositiveGap": 3.0,
+        "maxNegativeGap": 2.0,
+        "gap_closing_cut_off_distance": 40.0,
+        "gap_closing_penalty_distance": 32.0,
+        "minTrackLength": 20.0
+    },
+    "Contrast": {
+        "darkCalibration": 8.0,
+        "chainOrder": "denoising_background",
+        "defluctuationMethod": "movmean",
+        "PreprocessingParams": {
+            "Kx": 101.0,
+            "Kt": 51.0
+        },
+        "backgroundEstimationMethod": "movmedian",
+        "backgroundRemovalMethod": "subtract_divide",
+        "whiteningMethod": "none",
+        "spaceFilter": "gauss",
+        "DenoiseParams": {
+            "k_max": 3.0,
+            "sigma_x": 4.0
+        },
+        "timeFilter": "none",
+        "nonLinearFilter": "none",
+        "useExternalBackgroundRemovedSignal": false
+    },
+    "Analysis": {
+        "assumeNoFlow": false,
+        "iOCtoMass": "analytical_theory"
+    }
+}

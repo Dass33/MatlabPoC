@@ -8,8 +8,11 @@ It imports page modules corresponding to each stage of the analysis workflow:
 3. **Post-processing**: For outlier filtering and IOC calibration.
 4. **Population**: For statistics.
 5. **Overview**: For managing and retrieving past jobs.
-6. **Configuration**: For editing global thresholds and parameters.
-7. **Help**: Instructions for researchers.
+6. **Help**: Instructions for researchers.
+
+Alongside the tabs there is the parameter sidebar, whose widgets are generated from the selected
+[preset](presets.md), and the [preset editor](presets.md) behind `?preset-editor=on` where those
+presets are curated.
 
 ---
 

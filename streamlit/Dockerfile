@@ -16,6 +16,11 @@ WORKDIR /app
 # Kept outside /app so a dev bind-mount of ./streamlit:/app doesn't shadow it.
 COPY matlab/Compiled/PythonPackage/nsm_algorithms/ /opt/matlab_python/nsm_algorithms/
 
+# Dark-signal calibration files. Paths to these are written into job configs and
+# opened by MATLAB, so they live outside /app for the same bind-mount reason.
+COPY streamlit/calibration/ /opt/calibration/
+ENV CALIBRATION_DIR=/opt/calibration
+
 RUN mkdir -p /opt/matlab_app
 COPY matlab/Compiled/AnalyzeExperimentApp /opt/matlab_app/
 COPY matlab/Compiled/run_AnalyzeExperimentApp.sh /opt/matlab_app/

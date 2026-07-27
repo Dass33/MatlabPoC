@@ -1,4 +1,62 @@
 [data-testid="stCheckbox"] label p {
-    position: relative;
-    top: 2px;
+  position: relative;
+  top: 2px;
+}
+
+/* Preset editor: parameter rows should read as rows of one list rather than a
+   stack of separate cards. st.container(key=X) puts the class st-key-X on a
+   wrapper OUTSIDE the element that draws the border and its padding, so the
+   spacing rules have to reach the blocks inside it. */
+[class*="st-key-grp_"] [data-testid="stVerticalBlock"] {
+  gap: 0;
+  padding: 0;
+}
+
+/* A keyed container IS a stVerticalBlock, so the reset above also matches the
+   rows nested in the group and outranks a plain [class*="st-key-item_"] rule.
+   The extra attribute wins the row's own padding back. */
+[data-testid="stVerticalBlock"][class*="st-key-item_"] {
+  padding: 0 0 0 0.75rem;
+  border-radius: 0.4rem;
+}
+
+[class*="st-key-item_"] [data-testid="stHorizontalBlock"] {
+  align-items: center;
+  min-height: 2.5rem;
+}
+
+/* align-items only places the columns; each column still stacks its own
+   content from the top, which is what left the label sitting below the icons. */
+[class*="st-key-item_"] [data-testid="stColumn"] {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+}
+
+[class*="st-key-item_"] [data-testid="stColumn"]>div {
+  width: 100%;
+}
+
+/* Label and caption must share a line box, or the smaller caption text sits
+   below the label's center line. */
+[class*="st-key-item_"] [data-testid="stElementContainer"],
+[class*="st-key-item_"] [data-testid="stMarkdownContainer"],
+[class*="st-key-item_"] [data-testid="stCaptionContainer"],
+[class*="st-key-item_"] .stCaption {
+  margin: 0;
+  padding: 0;
+}
+
+[class*="st-key-item_"] p {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+[class*="st-key-item_"]:hover {
+  background: rgba(128, 128, 128, 0.10);
+}
+
+[class*="st-key-item_"]+[class*="st-key-item_"] {
+  border-top: 1px solid rgba(128, 128, 128, 0.18);
 }

@@ -10,6 +10,11 @@ DEMO_DATA_DIR = Path(os.environ.get("DEMO_DATA_DIR", "/opt/demo_data"))
 POLL_INTERVAL_S = int(os.environ.get("POLL_INTERVAL_S", "3"))
 MCR_ROOT = os.environ.get("MCR_ROOT", "/opt/matlabruntime/R2025b")
 MATLAB_APP = os.environ.get("MATLAB_APP", "/opt/matlab_app/run_AnalyzeExperimentApp.sh")
+# Dark-signal calibration .mat files. Paths from here are written into a job's
+# config.json and load()ed by MATLAB, so this must be valid for both processes.
+CALIBRATION_DIR = Path(
+    os.environ.get("CALIBRATION_DIR", Path(__file__).parent / "calibration")
+)
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 

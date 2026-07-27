@@ -13,12 +13,12 @@ import json
 import logging
 import threading
 
-from config import apply_config, render_config_sidebar
-from preset_editor import page_preset_editor
+from config import active_preset, apply_settings, render_config_sidebar
 from connectors import algorithms
 from connectors.launcher import launch_matlab_job
 from connectors.storage import clone_job, create_demo_job, list_completed_jobs
 from env import DEMO_DATA_DIR, job_dirs
+from preset_editor import page_preset_editor
 from tabs.help import page_help
 from tabs.kymograph import page_kymograph_analysis
 from tabs.overview import page_overview
@@ -61,18 +61,19 @@ def main() -> None:
     st.session_state.setdefault("active_experiment", None)
     st.session_state.setdefault("_tour_seen", False)
 
+    if st.query_params.get("preset-editor") == "on":
+        page_preset_editor()
+        return
+
     pending = st.session_state.get("_clone_pending")
     if pending and pending["use_original"]:
         base, _, _ = job_dirs(pending["source_job_id"])
         config_file = base / "config.json"
-        if config_file.is_file():
-            apply_config(json.loads(config_file.read_text()))
+        preset = active_preset()
+        if config_file.is_file() and preset:
+            apply_settings(preset, json.loads(config_file.read_text()))
 
     config = render_config_sidebar()
-
-    if st.query_params.get("config-editor") == "on":
-        page_preset_editor()
-        return
 
     if pending := st.session_state.pop("_clone_pending", None):
         new_id = clone_job(pending["source_job_id"], config, name=pending["name"])

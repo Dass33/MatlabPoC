@@ -51,7 +51,8 @@ nav:
     - Population Analysis: streamlit/population.md
     - Overview: streamlit/overview.md
     - Help: streamlit/help.md
-    - Configuration: streamlit/config.md
+    - Parameter Sidebar: streamlit/config.md
+    - Presets: streamlit/presets.md
     - Constants: streamlit/constants.md
     - Job Manager: streamlit/job_manager.md
     - MATLAB Bridge: streamlit/matlab_bridge.md
