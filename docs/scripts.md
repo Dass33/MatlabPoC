@@ -37,10 +37,16 @@ This project includes a set of Python helper scripts in the `scripts/` directory
 * **Key Tasks**:
     1. Compiles the standalone analysis application to `matlab/Compiled/AnalyzeExperimentApp`.
     2. Generates the Python package bridge `nsm_algorithms` in `matlab/Compiled/PythonPackage/`.
+    3. Builds the `nsm-mcr` Docker image: a MATLAB Runtime holding only the
+       products the compiled artifacts declare (~2.9GB, against ~7.2GB for the
+       stock MathWorks runtime image). `streamlit/Dockerfile` builds `FROM` it.
 
 ### build_streamlit.py
 * **When to run**: Run this to build the local Streamlit Docker image.
-* **Prerequisites**: Docker daemon running.
+* **Prerequisites**: Docker daemon running, and the `nsm-mcr` base image present
+  — run `compile_matlab.py` first. `deploy.py` and `start.py` already do so in
+  order. Override with `--build-arg MCR_IMAGE=...` to build against a different
+  runtime image.
 * **Key Tasks**:
     1. Builds the Docker image locally from `streamlit/Dockerfile`.
     2. Tags the image as `dass33/nsm-streamlit:latest`.

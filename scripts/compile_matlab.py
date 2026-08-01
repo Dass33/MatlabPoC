@@ -8,6 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Must match the MCR_IMAGE default in streamlit/Dockerfile.
+MCR_IMAGE_NAME = "nsm-mcr"
+
 
 def main():
     project_root = Path(__file__).resolve().parents[1]
@@ -56,6 +59,39 @@ def main():
         subprocess.run(cmd2, cwd=py_package_dir, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during Python Package compilation: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # 3. Build the MATLAB Runtime base image for streamlit/Dockerfile.
+    #
+    # createDockerImage installs only the runtime products named in the
+    # buildresult.json it is given, which is ~2.9GB against the ~7.2GB in the
+    # stock containers.mathworks.com/matlab-runtime image.
+    #
+    # Only the Python package's manifest is passed: its product set is a strict
+    # superset of the standalone app's (it adds the Python Target addon), and
+    # passing both paths makes createDockerImage silently use just the first --
+    # which drops that addon and leaves nsm_algorithms.initialize() unable to
+    # load.
+    py_buildresult = py_package_dir / "buildresult.json"
+    if not py_buildresult.is_file():
+        print(f"Error: {py_buildresult} not found; did mcc fail?", file=sys.stderr)
+        sys.exit(1)
+
+    docker_context = compiled_dir / "mcr_docker"
+    cmd3 = [
+        "matlab",
+        "-batch",
+        "compiler.runtime.createDockerImage("
+        f"'{py_buildresult}', "
+        f"ImageName='{MCR_IMAGE_NAME}', "
+        f"DockerContext='{docker_context}', "
+        "VerbosityLevel='concise')",
+    ]
+    print(f"Building MATLAB Runtime image {MCR_IMAGE_NAME}...")
+    try:
+        subprocess.run(cmd3, cwd=compiled_dir, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error building MATLAB Runtime image: {e}", file=sys.stderr)
         sys.exit(1)
 
     print("MATLAB compilation complete.")

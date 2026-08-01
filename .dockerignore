@@ -1,0 +1,49 @@
+# Only matlab/Compiled/{AnalyzeExperimentApp,run_AnalyzeExperimentApp.sh,PythonPackage/nsm_algorithms}
+# and streamlit/ are COPYed by the Dockerfile. Everything else is context bloat.
+#
+# NOTE: this is not .gitignore syntax. A pattern without a slash is matched
+# against the context root only, and `*` does not cross `/` -- so `*venv*`
+# would miss streamlit/venv. Nested matches need an explicit `**/`.
+
+.git
+.github
+.claude
+.gitignore
+.gitmodules
+.dockerignore
+
+# 1.1G local dev virtualenv -- was landing in the image via `COPY streamlit/ .`
+**/venv
+**/.venv
+**/*venv*
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.coverage
+**/.env
+
+# Job data and generated docs
+data
+DemoData
+site
+docs
+mkdocs.yml
+context.txt
+
+# MATLAB sources; only the mcc output under matlab/Compiled is deployed
+matlab/nsm_data_processing_v2
+matlab/Compiled/**/*.log
+matlab/Compiled/**/*.txt
+matlab/Compiled/buildresult.json
+matlab/Compiled/PythonPackage/setup.py
+
+tests
+synthetic
+scripts
+requirements-dev.txt
+pyproject.toml
+pyrightconfig.json
+
+# Needed by the image
+!streamlit/calibration
